@@ -40,31 +40,39 @@ tsignal like emt.
 ### $F4 -- Floating Point
 
 Floating point emulation. All 8087 opcodes are preceeded by this sequence:
+```assembler
     int     $f4
     wait
+```
 as in the following:
+```assembler
     int     $f4
     wait
     fld     (si)
+```
 
 All programs start with:
+```assembler
     int     $f4
     wait
     .byte   0xd9            | esc   $36f4
     .byte   0x2e
     .byte   0xf4
     .byte   0x36
-Note that x87 0xd9 0x2e is FLDCW to load the next two bytes into code
+```
+Note that on a 8087, bytes 0xd9 0x2e decode to FLDCW to load the next two bytes into code
 word, but the mask of valid bits for the CW is $0f3f, so the above
 number is nonsense. It's also different for every progam. It's not yet
 clear what the extra bits mean, or what it's encoding. The 'base'
 sequence in crt0.o is
+```assembler
     int     $f4
     wait
    .byte   0xd9            | esc   '+56
    .byte   0x2e
    .byte   0x38
    .byte   0x00
+```
 Here $0038 does make some sense. It decodes as
 * Round to nearest even
 * 24-bits of precision
