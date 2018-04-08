@@ -266,5 +266,84 @@ _newfunc:
 ```
 which messes with the disassembly.
 
-The setjmp jmp_buf is just 6 ints long. The format is unknown at this time.
+The setjmp jmp_buf is just 6 ints long.
 
+offset | use
+------ | ---
+0 | bp of caller
+2 | sp + 2 (after the push bp)
+4 | ip of return point
+6 | 2 (maybe the offset of fp_ctx?)
+8 | value of fp_ctx[0]?
+10 | value of fp_ctx[1]?
+
+```Assembler
+_setjmp:
+	push	bp
+	mov	bp,sp
+	mov	dx,*4(bp)	| jum_buf env
+	mov	cx,*2(bp)	| IP of caller
+	mov	bx,*0(bp)	| old bp
+	mov	bp,dx
+	mov	*0(bp),bx	| env[0] = bp
+	mov	*2(bp),sp	| env[1] = sp + 2
+	mov	*4(bp),cx	| env[2] = IP of caller
+	mov	bx,$0002		| 2? Not sure about 2, offset of current FP context?
+	mov	*6(bp),bx	| env[3] = 2 ??? FP ctx addr?
+	mov	cx,(bx)		| 
+	mov	*8(bp),cx	| env[4] = cur ctx
+	mov	cx,*2(bx)	|
+	mov	*10(bp),cx	| env[5] = cur ctx 2nd part 
+	mov	ax,#0		| return 0 the first time
+	pop	bp
+	ret
+```
+
+But longjmp is more complicated
+```Assembler
+_longjmp:				| longjmp(jmp_buf env, int val)
+	push	bp
+	mov	bp,sp
+	mov	bx,*4(bp)		| bx = env
+	mov	ax,*6(bp)		| ax = val
+	or	ax,ax			| if (ax == 0) ax++
+	jnz	L000
+	inc	ax
+L000:
+	mov	cx,(bx)			| cx = env[0] (bp of caller?)
+	j	L002
+
+|
+| Try to find the caller's frame by assuming it's stored bp is unique...
+|
+L001:
+	mov	bp,*0(bp)		| bp is different, walk up the stack one more
+	or	bp,bp
+	jz	L003			| 0 == no calling frame found, stop loop as failsafe
+L002:
+	cmp	*0(bp),cx		| Is the old bp == the bp on the stack?
+	jnz	L001
+	mov	si,*-2(bp)		| Found caller's bp, snag saved si and di from
+	mov	di,*-4(bp)		| the local stack frame (compiler assist? setjmp didn't save)
+L003:
+	mov	cx,cs
+	mov	dx,ds
+	cmp	cx,dx
+	jz	L004			| ds == cs, skip a bit
+	mov	bp,*6(bx)		| bp = env[3]
+	or	bp,bp
+	jz	L004
+	mov	$0002,bp		| if (bp != 0) { *(int *)2 = bp ??? <-- not sure about this...
+	mov	cx,*8(bx)		| restore ctx[0] and 1 from env }
+	mov	*0(bp),cx
+	mov	cx,*10(bx)
+	mov	*2(bp),cx
+L004:
+	mov	bp,(bx)			| bp = env[0]
+	mov	sp,*2(bx)		| sp = env[1]
+	pop	cx			| pop push of bp for setenv
+	pop	cx			| pop IP return from setenv
+	mov	cx,*4(bx)		| grab IP from env[2]
+	push	cx			| and arrange to go there...
+	ret
+```
