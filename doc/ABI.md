@@ -1,7 +1,9 @@
 Venix/86 ABI
 
 This document tries to describe the Venix86 ABI. It is reverse
-engineered from a copy of Venix86R 2.0 and Venix86 2.1.
+engineered from a copy of Venix86R 2.0 and Venix86 2.1. It also uses
+the ancient unix 7th edition sources (aka V7) to fill in some of the
+blanks.
 
 # Venix Origins
 
@@ -221,4 +223,16 @@ The Rainbow version has not been examined in detail yet.
 low.s stores these values in a table at the end of low.s, and then it
 gets overwritten with the stack for the kernel after the kenrel is
 relocated, but more about that in the kernel document.
+
+## Data types
+
+The data model is IP16.
+
+Type | Size
+---- | ----
+char | 1
+short | 2
+int | 2
+long | 4
+char * | 2
 
