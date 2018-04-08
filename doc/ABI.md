@@ -235,4 +235,36 @@ short | 2
 int | 2
 long | 4
 char * | 2
+float | unk
+double | unk
+
+Arguments are pushed onto the stack. Return value is in ax. Call
+pushes and pops args.
+
+By convention, globals have _ prepended to them. Symbols without _ are
+used to implement things by the compiler, or sometimes the assembler such
+that they can't be called by C routines.
+
+The C compiler generates typical stack frames in the preamble
+```Assembler
+_func
+    push    bp
+    mov     bp,sp
+```
+And cleans up in the postamble
+```Assembler
+    pop     bp
+    ret
+```
+
+The assembler will pack functions tightly, however, the linker appears to pad to the next
+even boundary when stitching files together, so often times you will see
+```Assembler
+    ret
+    .byte 0
+_newfunc:
+```
+which messes with the disassembly.
+
+The setbuf jmp_buf is just 6 ints long. The format is unknown at this time.
 
