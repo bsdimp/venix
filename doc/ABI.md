@@ -22,7 +22,7 @@ confirmed.
 This is 'emt' in the low.s. The comment says its a hold over from
 pdp11. Looks like it generates SIGEMT. In the generated code, we often
 see sequences like:
-```
+```assembler
     cmp     sp,*127
     ja      1f
     int     $f2
