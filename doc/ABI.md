@@ -14,7 +14,7 @@ v7 sources to accomodate the 8088's quirks.
 ### $F1 -- System Calls
 
 System Call number is in the `bx` register. The system calls appear to
-be the same as in pdp-11 v7 unix, but that's not be completely
+be the same as in pdp-11 v7 unix, but that's not been completely
 confirmed.
 
 ### $F2 -- EMT
@@ -22,16 +22,20 @@ confirmed.
 This is 'emt' in the low.s. The comment says its a hold over from
 pdp11. Looks like it generates SIGEMT. In the generated code, we often
 see sequences like:
+```
     cmp     sp,*127
     ja      1f
     int     $f2
-    1f:
-where various sanity checks are done on sp. Some programs just have this in main,
-while others have it more extensively. See the EMT section in the kernel reference.
+1f:
+```
+where various sanity checks are done on sp. Some programs just have
+this in main, while others have it more extensively. See the EMT
+section in the kernel reference.
 
 ### $F3 -- Abort
 
-Seems unused, but low.s lists it as 'abort'
+Seems unused, but low.s lists it as 'abort' which trap.o translates to
+tsignal like emt.
 
 ### $F4 -- Floating Point
 
