@@ -266,5 +266,5 @@ _newfunc:
 ```
 which messes with the disassembly.
 
-The setbuf jmp_buf is just 6 ints long. The format is unknown at this time.
+The setjmp jmp_buf is just 6 ints long. The format is unknown at this time.
 
