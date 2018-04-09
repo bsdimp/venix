@@ -145,10 +145,11 @@ the symbol appears in the symbol string table.
 
 ### $F1 -- System Calls
 
-System Call number is in the `bx` register. The system calls appear to
-be the same as in pdp-11 v7 unix, but that's not been completely
-confirmed. The register assignment seems to vary based on syscall for
+System Call number is in the `bx` register. The system calls are about
+the same as in pdp-11 v7 unix, but there's some differences.
+The register assignment seems to vary based on syscall for
 reasons unknown as yet.
+Not all the corresponding .o's have been disassembled / reconstructed yet.
 
 Venix Call number | function
 ----------------- | --------
@@ -160,7 +161,49 @@ Venix Call number | function
 6 | close
 7 | wait
 8 | creat
+9 | link
+10 | unlink
+11 | exec
+12 | chdir
+13 | time
+14 | mknod
+15 | chmod
+16 | chown
+17 | break
+18 | stat
 19 | lseek
+20 | getpid
+21 | mount
+22 | umount
+23 | setuid
+24 | getuid
+25 | stime
+26 | ptrace
+27 | alarm
+28 | fstat
+29 | pause
+30 | utime
+33 | access
+34 | nice
+35 | ftime
+36 | sync
+37 | kill
+41 | dup
+42 | pipe
+43 | times
+44 | profil
+45 | sema
+46 | setgid
+47 | getgid
+48 | signal
+49 | sdata
+50 | suspend
+52 | phys
+53 | lock
+54 | ioctl
+59 | exece
+60 | umask
+61 | chroot
 
 v7 pdp11 call no | function
 ------------- | --------
