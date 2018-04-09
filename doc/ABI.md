@@ -152,6 +152,9 @@ confirmed.
 Venix Call number | function
 ----------------- | --------
 1 | exit
+2 | fork
+3 | read
+4 | write
 5 | open
 8 | creat
 19 | lseek
