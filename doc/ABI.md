@@ -149,12 +149,12 @@ System Call number is in the `bx` register. The system calls appear to
 be the same as in pdp-11 v7 unix, but that's not been completely
 confirmed.
 
-function | Venix Call number
--------- | -----------
-exit | 1
-open | 5
-creat | 8
-lseek | 19
+Venix Call number | function
+----------------- | --------
+1 | exit
+5 | open
+8 | creat
+19 | lseek
 
 v7 pdp11 call no | function
 ------------- | --------
@@ -216,8 +216,8 @@ setinf  | 59
 umask   | 60
 getinf  | 60
 
-arg | reg
-___ | ___
+Argument | Register
+-------- | --------
 call no | bx
 1 | ax
 2 | dx
