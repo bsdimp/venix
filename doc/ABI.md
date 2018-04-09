@@ -151,119 +151,70 @@ The register assignment seems to vary based on syscall for
 reasons unknown as yet.
 Not all the corresponding .o's have been disassembled / reconstructed yet.
 
-Venix Call number | function
------------------ | --------
-1 | exit
-2 | fork
-3 | read
-4 | write
-5 | open
-6 | close
-7 | wait
-8 | creat
-9 | link
-10 | unlink
-11 | exec
-12 | chdir
-13 | time
-14 | mknod
-15 | chmod
-16 | chown
-17 | break
-18 | stat
-19 | lseek
-20 | getpid
-21 | mount
-22 | umount
-23 | setuid
-24 | getuid
-25 | stime
-26 | ptrace
-27 | alarm
-28 | fstat
-29 | pause
-30 | utime
-33 | access
-34 | nice
-35 | ftime
-36 | sync
-37 | kill
-41 | dup
-42 | pipe
-43 | times
-44 | profil
-45 | sema
-46 | setgid
-47 | getgid
-48 | signal
-49 | sdata
-50 | suspend
-52 | phys
-53 | lock
-54 | ioctl
-59 | exece
-60 | umask
-61 | chroot
-
-v7 pdp11 call no | function
-------------- | --------
-indir   | 0
-exit    | 1
-fork    | 2
-read    | 3
-write   | 4
-open    | 5
-close   | 6
-wait    | 7
-creat   | 8
-link    | 9
-unlink  | 10
-exec    | 11
-chdir   | 12
-time    | 13
-mknod   | 14
-chmod   | 15
-chown   | 16
-break   | 17
-stat    | 18
-lseek   | 19
-getpid  | 20
-mount   | 21
-umount  | 22
-setuid  | 23
-getuid  | 24
-stime   | 25
-ptrace  | 26
-alarm   | 27
-fstat   | 28
-pause   | 29
-utime   | 30
-smdate  | 30
-stty    | 31
-gtty    | 32
-access  | 33
-nice    | 34
-sleep   | 35
-sync    | 36
-kill    | 37
-csw     | 38
-setpgrp | 39
-dup     | 41
-pipe    | 42
-times   | 43
-profil  | 44
-setgid  | 46
-getgid  | 47
-signal  | 48
-acct    | 51
-phys    | 52
-lock    | 53
-ioctl   | 54
-reboot  | 55
-mpx     | 56
-setinf  | 59
-umask   | 60
-getinf  | 60
+Call number | Venix function | PDP-11 function
+----------- | -------------- | ---------------
+0 | indir | indir
+1 | exit | exit
+2 | fork | fork
+3 | read | read
+4 | write | write
+5 | open | open
+6 | close | close
+7 | wait | wait
+8 | creat | creat
+9 | link | link
+10 | unlink | unlink
+11 | exec | exec
+12 | chdir | chdir
+13 | time | time
+14 | mknod | mknod
+15 | chmod | chmod
+16 | chown | chown
+17 | break | break
+18 | stat | stat
+19 | lseek | lseek
+20 | getpid | getpid
+21 | mount | mount
+22 | umount | umount
+23 | setuid | setuid
+24 | getuid | getuid
+25 | stime | sttime
+26 | ptrace | ptrace
+27 | alarm | alarm
+28 | fstat | fstat
+29 | pause | pause
+30 | utime | utime
+30 | | smdate
+31 | | stty
+32 | | gtty
+33 | access | access
+34 | nice | nice
+35 | ftime | sleep
+36 | sync | sync
+37 | kill | kill
+38 | | csw
+39 | | setpgrp
+40 | |
+41 | dup | dup
+42 | pipe | pipe
+43 | times | times
+44 | profil | profil
+45 | sema |
+46 | setgid | setgid
+47 | getgid | getgid
+48 | signal | signal
+49 | sdata |
+50 | suspend |
+51 | | acct
+52 | phys | phys
+53 | lock | lock
+54 | ioctl | ioctl
+55 | | reboot
+56 | | mpx
+59 | exece | setinf
+60 | umask | umask
+60 | | getinf
+61 | chroot | 
 
 Argument | Register
 -------- | --------
