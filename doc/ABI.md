@@ -149,6 +149,89 @@ System Call number is in the `bx` register. The system calls appear to
 be the same as in pdp-11 v7 unix, but that's not been completely
 confirmed.
 
+function | Venix Call number
+-------- | -----------
+exit | 1
+open | 5
+creat | 8
+lseek | 19
+
+v7 pdp11 call no | function
+------------- | --------
+indir   | 0
+exit    | 1
+fork    | 2
+read    | 3
+write   | 4
+open    | 5
+close   | 6
+wait    | 7
+creat   | 8
+link    | 9
+unlink  | 10
+exec    | 11
+chdir   | 12
+time    | 13
+mknod   | 14
+chmod   | 15
+chown   | 16
+break   | 17
+stat    | 18
+lseek   | 19
+getpid  | 20
+mount   | 21
+umount  | 22
+setuid  | 23
+getuid  | 24
+stime   | 25
+ptrace  | 26
+alarm   | 27
+fstat   | 28
+pause   | 29
+utime   | 30
+smdate  | 30
+stty    | 31
+gtty    | 32
+access  | 33
+nice    | 34
+sleep   | 35
+sync    | 36
+kill    | 37
+csw     | 38
+setpgrp | 39
+dup     | 41
+pipe    | 42
+times   | 43
+profil  | 44
+setgid  | 46
+getgid  | 47
+signal  | 48
+acct    | 51
+phys    | 52
+lock    | 53
+ioctl   | 54
+reboot  | 55
+mpx     | 56
+setinf  | 59
+umask   | 60
+getinf  | 60
+
+arg | reg
+___ | ___
+call no | bx
+1 | ax
+2 | dx
+3 | cx
+4 | si
+
+  long args take up two slots, least significant first (little endian machine).
+
+errno is returned from the kernel in cx.
+
+It's unknown how long values are returned, but it's believed to be the
+same as the rest of the ABI: least significant word in ax, most
+significant in dx (which also mirrors the system calls).
+
 ### $F2 -- EMT
 
 This is 'emt' in the low.s. The comment says its a hold over from
@@ -238,12 +321,15 @@ char * | 2
 float | unk
 double | unk
 
-Arguments are pushed onto the stack. Return value is in ax. Call
-pushes and pops args.
+Arguments are pushed onto the stack. Return value is in ax (and we
+think dx for long values, flaot returnas are not known at this
+time. Call pushes and pops args.  Callee saves and restores bp, si and
+di.  Functions that call setjmp have to hidden local variables at
+-2(bp) and -4(bp) that are si and di respectively.
 
 By convention, globals have _ prepended to them. Symbols without _ are
-used to implement things by the compiler, or sometimes the assembler such
-that they can't be called by C routines.
+used to implement things by the compiler, or sometimes the assembler
+such that they can't be called by C routines.
 
 The C compiler generates typical stack frames in the preamble
 ```Assembler
