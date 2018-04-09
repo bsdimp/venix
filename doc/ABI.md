@@ -147,7 +147,8 @@ the symbol appears in the symbol string table.
 
 System Call number is in the `bx` register. The system calls appear to
 be the same as in pdp-11 v7 unix, but that's not been completely
-confirmed.
+confirmed. The register assignment seems to vary based on syscall for
+reasons unknown as yet.
 
 Venix Call number | function
 ----------------- | --------
@@ -156,6 +157,8 @@ Venix Call number | function
 3 | read
 4 | write
 5 | open
+6 | close
+7 | wait
 8 | creat
 19 | lseek
 
