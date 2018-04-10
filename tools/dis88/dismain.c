@@ -438,9 +438,10 @@ distext()
        * hack here to cope with odd routies ending in
        * 0x00 which disassembles to crap. So skip it.
        * c3 is ret, and 0x34 in binaries is the end
-       * of int $f1 to exit...
+       * of int $f1 to exit... It might be better to
+       * check if the byte is simply 0.
        */
-     if (PC == 0x34 || (j == 0xc3 && (PC & 1) == 0)) {
+      if ((HDR.a_stack && PC == 0x34) || (j == 0xc3 && (PC & 1) == 0)) {
 	      j = getchar();
 	      PC++;
 	      if (getlab(N_TEXT))
