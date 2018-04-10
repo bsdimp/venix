@@ -316,6 +316,8 @@ prolog()
     * XXX
     */
       if (R_IDX(relo[j]) < S_BSS)
+#else
+      if (relo[j].r_extern)
 #endif
          {
 	 char *c = getnam(R_IDX(relo[j]));
@@ -432,6 +434,12 @@ distext()
          (*f)(j);
       }
       fflush(stdout);
+      /*
+       * hack here to cope with odd routies ending in
+       * 0x00 which disassembles to crap. So skip it.
+       * c3 is ret, and 0x34 in binaries is the end
+       * of int $f1 to exit...
+       */
      if (PC == 0x34 || (j == 0xc3 && (PC & 1) == 0)) {
 	      j = getchar();
 	      PC++;
@@ -678,6 +686,8 @@ main(argc,argv)
    reloff = N_TXTOFF(HDR) + HDR.a_text + HDR.a_data;
    relnum =
       (HDR.a_trsize + HDR.a_drsize) / sizeof(struct relocation_info);
+   printf("trsize %d drsize %d each %zd\n", HDR.a_trsize, HDR.a_drsize,
+       sizeof(struct relocation_info));
 #else
    reloff = HDR.a_text        /* Compute reloc data offset  */
           + HDR.a_data
@@ -710,12 +720,20 @@ main(argc,argv)
          fatal(PRG,"lseek error");
       else
          {
-         for (relptr = 0; relptr < relnum; ++relptr)
+         for (relptr = 0; relptr < relnum; ++relptr) {
 #ifdef VENIX
             read(fd, (char *) &relo[relptr],sizeof(struct relocation_info));
+	    printf("Relo %d: addr %#x symnum %d pcrel %d len %d extern %d\n",
+		relptr,
+		relo[relptr].r_address,
+		relo[relptr].r_symbolnum,
+		relo[relptr].r_pcrel,
+		1 << relo[relptr].r_length,
+		relo[relptr].r_extern);
 #else
             read(fd, (char *) &relo[relptr],sizeof(struct reloc));
 #endif
+         }
          relptr--;
          }
    }

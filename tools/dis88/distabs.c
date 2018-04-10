@@ -430,6 +430,8 @@ lookext(off,loc,buf)
          if (relo[k].r_vaddr == loc
 #ifdef S_BSS
 	   && (R_IDX(relo[k]) < S_BSS)
+#else
+	   && relo[k].r_extern == 1
 #endif
 	   )
             {
