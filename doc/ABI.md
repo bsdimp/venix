@@ -63,12 +63,22 @@ I think these are created with -z.
 
 ### Relocation Information
 
-This is fairly typical reloation information:
+This is fairly typical reloation information. However, rather than
+being from v7 and the pdp-11 side of sysiii, it's more from the vax
+size of sysiii, which has longer comments, which I've reproduced
+here. Also, ld.vax.c doesn't use structures, but instead reads bytes
+directly. Grepping the tree doesn't turn this up, but look for REXT
+in, eg, load2td. Don't know if this originated at Berkeley or not, but
+4.1BSD has it too. It's in reduced form here. But it wasn't in 32V, which
+used the v7 pdp11 a.out lightly modified.
 
 ```C
 struct relocation_info {
 	int32_t		r_address;	/* address which is relocated */
-	int16_t		r_symbolnum;	/* local symbol ordinal */
+	int16_t		r_symbolnum;
+                                /* if extern then symbol table */
+                                /* ordinal (0, 1, 2, ...) else */
+                                /* segment number (same as symbol types) */
 	int16_t		r_pcrel:1, 	/* was relocated pc relative already */
 			r_length:2,	/* 0=byte, 1=word, 2=long */
 			r_extern:1,	/* does not include value of sym referenced */
