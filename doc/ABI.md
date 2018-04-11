@@ -46,14 +46,10 @@ There's two kinds of binaries as well:
 
 Tagged as the 'old impure' format. For fully linked binaries, this is
 the classic 'tiny' model.  64k segment, cs = ds = es = ss. Text is
-loaded at offset 0, data follows immediately afterwards (though
-there's a requirement it start on a paragraph boundary, it seems). bss
-is after that, though it's of course not stored in the file. Stack grows
-down from the top of the segment. There's some hints that ss may be its own
-segment, though that's not been confirmed.
+loaded at offset 0, then the stack, then data, then bss.
 
-In memory, text is loaded at offset zero in the segment. Then if
-a_stack is set (-z to ld?), then that is added and sp is set to the
+So, in more detail, Text is loaded at offset zero in the segment. Then
+if a_stack is set (-z to ld?), that is added and sp is set to the
 result (so sp = a_text + a_stack). Then the command args are pushed
 onto the stack (this has not been confirmed), need to verify. data is
 next for a_data bytes then a_bss then end.
