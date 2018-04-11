@@ -48,7 +48,7 @@ Tagged as the 'old impure' format. For fully linked binaries, this is
 the classic 'tiny' model.  64k segment, cs = ds = es = ss. Text is
 loaded at offset 0, then the stack, then data, then bss.
 
-So, in more detail, Text is loaded at offset zero in the segment. Then
+Text is loaded at offset zero in the segment. Then
 if a_stack is set (-z to ld?), that is added and sp is set to the
 result (so sp = a_text + a_stack). Then the command args are pushed
 onto the stack (this has not been confirmed), need to verify. data is
