@@ -52,14 +52,26 @@ is after that, though it's of course not stored in the file. Stack grows
 down from the top of the segment. There's some hints that ss may be its own
 segment, though that's not been confirmed.
 
+In memory, text is loaded at offset zero in the segment. Then if
+a_stack is set (-z to ld?), then that is added and sp is set to the
+result (so sp = a_text + a_stack). Then the command args are pushed
+onto the stack (this has not been confirmed), need to verify. data is
+next for a_data bytes then a_bss then end.
+
+offset range | what
+------------ | ----
+0 to a_text - 1 | Text segment (a_text bytes after exec header)
+a_text to a_text + a_stack - 1 | Stack, if -z binary
+a_text + a_stack to a_text + a_stack + a_data - 1 | initialized data from sizeof(exec) + a_text for a_data bytes
+a_text + a_stack + a_data to a_text + a_stack + a_data + a_bss - 1 | bss data, bzero'd by the kernel
+a_text + a_stack + a_data + a_bss | _end, start of the 'brk()'
+
 #### NMAGIC
 
 The PDP-11 called this separate I&D. It appears, though it hasn't been
 confirmed, that this model is similar to the 'small' model that other
 compilers would later use. There's two segments (though maybe three, for
 the stack): cs for code, es and ds are the same and ss may be different.
-
-I think these are created with -z.
 
 ### Relocation Information
 
@@ -283,28 +295,13 @@ All programs start with:
     .byte   0xd9            | esc   $36f4
     .byte   0x2e
     .byte   0xf4            | These two byts are different for every
-    .byte   0x36            | program, not sure why
+    .byte   0x36            | program and are offset of the 8087 control
+                            | word in the program, I think relative to DS
+			    | So this loads the default control word of
+			    | 0xbfb
 ```
-Note that on a 8087, bytes 0xd9 0x2e decode to FLDCW to load the next two bytes into code
-word, but the mask of valid bits for the CW is $0f3f, so the above
-number is nonsense. It's also different for every progam. It's not yet
-clear what the extra bits mean, or what it's encoding. The 'base'
-sequence in crt0.o is
-```assembler
-    int     $f4
-    wait
-   .byte   0xd9            | esc   '+56
-   .byte   0x2e
-   .byte   0x38
-   .byte   0x00
-```
-Here $0038 does make some sense. It decodes as
-* Round to nearest even
-* 24-bits of precision
-* ignore the Precision, Underflow and Overflow exceptions.
-which seems like a reasonable default. It may be some kind of signal
-or hint to the floating point emulation library inside the Venix
-kernel to do things or not do things.
+Note that on a 8087, bytes 0xd9 0x2e decode to FLDCW to load control
+word from the passed in address.
 
 ### $Fx -- Others reserved for redirect
 
