@@ -100,7 +100,7 @@ cs: text | a_text
 ss/ds/es: stack | a_stack
 ss/ds/es: data | a_data
 ss/ds/es: bss | a_bss
-ss/ds/es: sbrk | 64k - all these
+ss/ds/es: sbrk | 64k - (a_stack + a_data + a_bss)
 
 ### Relocation Information
 
