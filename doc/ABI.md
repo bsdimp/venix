@@ -62,13 +62,13 @@ a_text + a_stack to a_text + a_stack + a_data - 1 | initialized data from sizeof
 a_text + a_stack + a_data to a_text + a_stack + a_data + a_bss - 1 | bss data, bzero'd by the kernel
 a_text + a_stack + a_data + a_bss | _end, start of the 'brk()'
 
-Segments
---------
-text
-stack
-data
-bss
-sbrk
+Segment | length
+------- | ------
+text | a_text
+stack | a_stack
+data | a_data
+bss | a_bss
+sbrk | 64k - all these
 
 #### NMAGIC
 
