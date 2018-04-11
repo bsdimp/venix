@@ -385,6 +385,7 @@ distext()
 
    printf("#)\tDisassembly of %s",IFILE);
 
+
    if (symptr < 0)
       printf(" (no symbols)\n\n");
    else
@@ -397,6 +398,13 @@ distext()
 	   printf("| NMAGIC format\n");
    if (HDR.a_stack)
 	   printf("| Stack size for -z binary: 0x%x paragraphs\n", HDR.a_stack);
+   printf("| %d bytes text\n", HDR.a_text);
+   printf("| %d bytes data\n", HDR.a_data);
+   printf("| %d bytes bss\n", HDR.a_bss);
+   printf("| %d bytes symbols\n", HDR.a_syms);
+   printf("| %d bytes text reloc bytes\n", HDR.a_trsize);
+   printf("| %d bytes data reloc bytes\n", HDR.a_drsize);
+   printf("| %#x entry\n", HDR.a_entry);
 #else
    if (HDR.a_flags & A_EXEC)
       printf("| File is executable\n\n");
@@ -503,10 +511,12 @@ disdata()
       end = HDR.a_data;
       }
    else
+      end = HDR.a_text + HDR.a_data;
 #else
 	   /* XXX True for z-type binaries? */
+      PC += HDR.a_stack;
+      end = HDR.a_text + HDR.a_stack + HDR.a_data;
 #endif
-      end = HDR.a_text + HDR.a_data;
 
    printf("\t.data\t\t\t| loc = %05.5lx, size = %05.5x\n\n",
     PC,HDR.a_data);
@@ -556,7 +566,7 @@ static void disbss()
       end = HDR.a_data + HDR.a_bss;
    else
 #endif
-      end = HDR.a_text + HDR.a_data + HDR.a_bss;
+      end = HDR.a_text + HDR.a_stack + HDR.a_data + HDR.a_bss;
 
    printf("\t.bss\t\t\t| loc = %05.5lx, size = %05.5x\n\n",
     PC,HDR.a_bss);
