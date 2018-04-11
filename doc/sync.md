@@ -153,10 +153,9 @@ start:
 	mov	bx,#1
 	int	$f1
 
-	.data
-_environ:	.word 0
 	.bss
-_errno:		.zerow
+_environ: .=+2
+_errno:	.=+2
 ```
 
 The assembler is pretty stright forward: setup the FPU (8087),
@@ -171,19 +170,19 @@ both NMAGIC and OMAGIC code.
 
 addr | stack
 ---- | -----
-stack top -> |
- | NUL terminated strings for argv and env
- | 0
- | argv[0]
- | ...
- | argv[n]
- | 0
- | argv
- | 0
- | env[0]
-... | 
-      | env[n]
-      | 0
+stack top -> | .
+. | NUL terminated strings for argv and env
+. | 0
+. | argv[0]
+. | ...
+. | argv[n]
+. | 0
+. | argv
+. | 0
+. | env[0]
+. | ...
+. | env[n]
+. | 0
 sp -> | argc
 
 ### main
