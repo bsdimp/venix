@@ -576,7 +576,7 @@ int main(int argc, char* argv[])
             case 0x6c: case 0x6d: case 0x6e: case 0x6f:
             case 0xc0: case 0xc1: case 0xc8: case 0xc9:  // invalid
             case 0xcc: case 0xf0: case 0xf1: case 0xf4:  // INT 3, LOCK, HLT
-            case 0x9b: case 0xce: case 0x0f:  // WAIT, INTO, POP CS
+            case 0xce: case 0x0f:  // INTO, POP CS
             case 0xd8: case 0xd9: case 0xda: case 0xdb:
             case 0xdc: case 0xdd: case 0xde: case 0xdf:  // escape
             case 0xe4: case 0xe5: case 0xe6: case 0xe7:
@@ -676,6 +676,8 @@ int main(int argc, char* argv[])
                 o('c');
                 farCall();
                 break;
+	    case 0x9b:  // WAIT
+		break;
             case 0x9c:  // PUSHF
                 o('U');
                 push((flags & 0x0fd7) | 0xf000);
