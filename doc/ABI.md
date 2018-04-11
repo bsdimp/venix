@@ -80,6 +80,28 @@ confirmed, that this model is similar to the 'small' model that other
 compilers would later use. There's two segments (though maybe three, for
 the stack): cs for code, es and ds are the same and ss may be different.
 
+
+Text is loaded at offset zero in the segment. Then a new segment is
+started for the stack (so sp = a_stack). Then the command args are
+pushed onto the stack (this has not been confirmed), need to
+verify. data is next for a_data bytes then a_bss then end.
+
+offset range | what
+------------ | ----
+0 to a_text - 1 | cs: Text segment (a_text bytes after exec header)
+0 to a_stack - 1 | ds/es/ss: Stack, if -z binary
+a_stack to a_stack + a_data - 1 | initialized data from sizeof(exec) + a_text for a_data bytes
+a_stack + a_data to a_stack + a_data + a_bss - 1 | bss data, bzero'd by the kernel
+a_stack + a_data + a_bss | _end, start of the 'brk()'
+
+Segment | length
+------- | ------
+cs: text | a_text
+ss/ds/es: stack | a_stack
+ss/ds/es: data | a_data
+ss/ds/es: bss | a_bss
+ss/ds/es: sbrk | 64k - all these
+
 ### Relocation Information
 
 This is fairly typical reloation information. However, rather than
