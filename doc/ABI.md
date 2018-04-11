@@ -62,6 +62,14 @@ a_text + a_stack to a_text + a_stack + a_data - 1 | initialized data from sizeof
 a_text + a_stack + a_data to a_text + a_stack + a_data + a_bss - 1 | bss data, bzero'd by the kernel
 a_text + a_stack + a_data + a_bss | _end, start of the 'brk()'
 
+Segments
+--------
+text
+stack
+data
+bss
+sbrk
+
 #### NMAGIC
 
 The PDP-11 called this separate I&D. It appears, though it hasn't been
