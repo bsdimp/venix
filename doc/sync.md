@@ -369,7 +369,7 @@ to run the compiler on to test hypothesises.
   * stack next
   * data
   * bss
-  * cs = ds = es = ss (though tentative)
+  * cs = ds = ss
 * We've learned that the entry field of struct exec is not an address to where to start execution of the program, so what is it?
 * We can see some of the calling conventions for this platform
   * All pointers are 2 bytes
@@ -378,3 +378,9 @@ to run the compiler on to test hypothesises.
   * caller pushes args in reverse order onto the stack
   * caller pops the args when done
 * We may have found a bug in the startup code  
+
+## Open Quesitons
+* What does es point to? We can assume ds, but have no evidence for that
+* What are the other args to system calls? How are values copied back?
+* what is a_entry if not an entry point?
+* System III source for sync, or ???
