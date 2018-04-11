@@ -73,6 +73,10 @@ sbrk | 64k - all these
 a_entry is set to 0x2000, but it's unclear why, since the code clearly
 has to start executing at 0.
 
+##### Example
+
+```assembler
+```
 #### NMAGIC
 
 The PDP-11 called this separate I&D. It appears, though it hasn't been
