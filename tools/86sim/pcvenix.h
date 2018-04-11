@@ -80,8 +80,15 @@ void load(int argc, char **argv)
 	 */
 	for (int i = 0; i < 4; i++)
 		registers[FirstS + i] = loadSegment;
-	registers[SP] = hdr.a_text + hdr.a_stack - 2;
-	ip = 0;
+	for (i = 0; i < FirstSeg; i++)
+		registers[i] = 0;
+
+	/*
+	 * Hack for the moment -- enough 0's on the stack work until we
+	 * need command line args.
+	 */
+	registers[SP] = hdr.a_text + hdr.a_stack - 32;
+	ip = 0;			// jump to CS:0
 }
 
 void int_cd(void)
