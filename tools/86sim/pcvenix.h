@@ -1,3 +1,5 @@
+#include <sys/time.h>
+
 class Venix : public MachineOS
 {
 public:
@@ -91,6 +93,49 @@ void load(int argc, char **argv)
 	ip = 0;			// jump to CS:0
 }
 
+void
+venix_time()
+{
+	uint32_t t;
+
+	t = time(NULL);
+	setAX(t & 0xffff);
+	setDX(t >> 16);
+}
+
+void
+venix_ftime(Word ax)
+{
+	int rv;
+	struct timeval tv;
+	uint32_t t;
+	uint16_t ms;
+
+	rv = gettimeofday(&tv, NULL);
+	if (rv) {
+		printf("Failed gettimeofday\n");
+		setCX(errno);
+		setAX(0xffff);
+		return;
+	}
+	t = (uint32_t)tv.tv_sec;
+	writeByte(t & 0xff, ax++, DSeg);
+	t >>= 8;
+	writeByte(t & 0xff, ax++, DSeg);
+	t >>= 8;
+	writeByte(t & 0xff, ax++, DSeg);
+	t >>= 8;
+	writeByte(t & 0xff, ax++, DSeg);
+	ms = (uint16_t)(tv.tv_usec / 1000);
+	writeWord(ms, ax, DSeg);
+	ax += 2;
+	writeWord(0, ax, DSeg);		// minutes west of UTC
+	ax += 2;
+	writeWord(1, ax, DSeg);		// DST
+	setAX(0);
+	return;
+}
+
 void int_cd(void)
 {
 	data = fetchByte();
@@ -108,9 +153,27 @@ void int_cd(void)
 			printf("exit(%d)\n", ax());
 			exit(ax());
 			break;
-		case 36:
+		case 4: /* write */
+			printf("write(%d, %#x, %d)\n", ax(), dx(), cx());
+			write(1, &ram[physicalAddress(dx(), DSeg, false)], cx());
+			setAX(cx());
+			break;
+		case 6: /* close */
+			setAX(0);	// XXX
+			break;
+		case 13: /* time */
+			venix_time();
+			break;
+		case 35: /* ftime */
+			venix_ftime(ax());
+			break;
+		case 36: /* sync */
 			printf("sync\n");
 			sync();
+			setCX(0);
+			break;
+		case 54: /* ioctl */
+			setAX(0);	// XXX
 			break;
 		default:
 			printf("Unimplemented system call %d\n", bx());
