@@ -94,8 +94,107 @@ void load(int argc, char **argv)
 	ip = 0;			// jump to CS:0
 }
 
+/* 1 _rexit */
 void
-venix_time()
+venix_rexit()
+{
+	printf("exit(%d)\n", ax());
+	exit(ax());
+}
+
+/* 2 _fork */
+void
+venix_fork()
+{
+
+	error("Unimplemented system call 2 _fork\n");
+}
+
+/* 3 _read */
+void
+venix_read()
+{
+
+	error("Unimplemented system call 3 _read\n");
+}
+
+/* 4 _write */
+void
+venix_write()
+{
+
+	printf("write(%d, %#x, %d)\n", ax(), dx(), cx());
+	write(1, &ram[physicalAddress(dx(), DSeg, false)], cx());
+	setAX(cx());
+}
+
+/* 5 _open */
+void
+venix_open()
+{
+
+	error("Unimplemented system call 5 _open\n");
+}
+
+/* 6 _close */
+void
+venix_close()
+{
+
+	error("Unimplemented system call 6 _close\n");
+}
+
+/* 7 _wait */
+void
+venix_wait()
+{
+
+	error("Unimplemented system call 7 _wait\n");
+}
+
+/* 8 _creat */
+void
+venix_creat()
+{
+
+	error("Unimplemented system call 8 _creat\n");
+}
+
+/* 9 _link */
+void
+venix_link()
+{
+
+	error("Unimplemented system call 9 _link\n");
+}
+
+/* 10 _unlink */
+void
+venix_unlink()
+{
+
+	error("Unimplemented system call 10 _unlink\n");
+}
+
+/* 11 _exec */
+void
+venix_exec()
+{
+
+	error("Unimplemented system call 11 _exec\n");
+}
+
+/* 12 _chdir */
+void
+venix_chdir()
+{
+
+	error("Unimplemented system call 12 _chdir\n");
+}
+
+/* 13 _gtime */
+void
+venix_gtime()
 {
 	uint32_t t;
 
@@ -104,24 +203,159 @@ venix_time()
 	setDX(t >> 16);
 }
 
-/* 1 exit */
+/* 14 _mknod */
 void
-venix_exit()
+venix_mknod()
 {
-	printf("exit(%d)\n", ax());
-	exit(ax());
+
+	error("Unimplemented system call 14 _mknod\n");
 }
 
-/* 4 write */
+/* 15 _chmod */
 void
-venix_write()
+venix_chmod()
 {
-	printf("write(%d, %#x, %d)\n", ax(), dx(), cx());
-	write(1, &ram[physicalAddress(dx(), DSeg, false)], cx());
-	setAX(cx());
+
+	error("Unimplemented system call 15 _chmod\n");
 }
 
-/* 35 ftime */
+/* 16 _chown */
+void
+venix_chown()
+{
+
+	error("Unimplemented system call 16 _chown\n");
+}
+
+/* 17 _sbreak */
+void
+venix_sbreak()
+{
+
+	error("Unimplemented system call 17 _sbreak\n");
+}
+
+/* 18 _stat */
+void
+venix_stat()
+{
+
+	error("Unimplemented system call 18 _stat\n");
+}
+
+/* 19 _seek */
+void
+venix_seek()
+{
+
+	error("Unimplemented system call 19 _seek\n");
+}
+
+/* 20 _getpid */
+void
+venix_getpid()
+{
+
+	error("Unimplemented system call 20 _getpid\n");
+}
+
+/* 21 _smount */
+void
+venix_smount()
+{
+
+	error("Unimplemented system call 21 _smount\n");
+}
+
+/* 22 _sumount */
+void
+venix_sumount()
+{
+
+	error("Unimplemented system call 22 _sumount\n");
+}
+
+/* 23 _setuid */
+void
+venix_setuid()
+{
+
+	error("Unimplemented system call 23 _setuid\n");
+}
+
+/* 24 _getuid */
+void
+venix_getuid()
+{
+
+	error("Unimplemented system call 24 _getuid\n");
+}
+
+/* 25 _stime */
+void
+venix_stime()
+{
+
+	error("Unimplemented system call 25 _stime\n");
+}
+
+/* 26 _ptrace */
+void
+venix_ptrace()
+{
+
+	error("Unimplemented system call 26 _ptrace\n");
+}
+
+/* 27 _alarm */
+void
+venix_alarm()
+{
+
+	error("Unimplemented system call 27 _alarm\n");
+}
+
+/* 28 _fstat */
+void
+venix_fstat()
+{
+
+	error("Unimplemented system call 28 _fstat\n");
+}
+
+/* 29 _pause */
+void
+venix_pause()
+{
+
+	error("Unimplemented system call 29 _pause\n");
+}
+
+/* 30 _utime */
+void
+venix_utime()
+{
+
+	error("Unimplemented system call 30 _utime\n");
+}
+
+/* 33 _saccess */
+void
+venix_saccess()
+{
+
+	error("Unimplemented system call 33 _saccess\n");
+}
+
+/* 34 _nice */
+void
+venix_nice()
+{
+
+	error("Unimplemented system call 34 _nice\n");
+}
+
+/* 35 _ftime */
 void
 venix_ftime()
 {
@@ -156,88 +390,242 @@ venix_ftime()
 	return;
 }
 
-/* 36 sync */
+/* 36 _sync */
 void
 venix_sync()
 {
+
 	sync();
 	setAX(0);
 }
 
-void nosys()
+/* 37 _kill */
+void
+venix_kill()
 {
-	printf("Unimplemented system call %d\n", call);
+
+	error("Unimplemented system call 37 _kill\n");
+}
+
+/* 41 _dup */
+void
+venix_dup()
+{
+
+	error("Unimplemented system call 41 _dup\n");
+}
+
+/* 42 _pipe */
+void
+venix_pipe()
+{
+
+	error("Unimplemented system call 42 _pipe\n");
+}
+
+/* 43 _times */
+void
+venix_times()
+{
+
+	error("Unimplemented system call 43 _times\n");
+}
+
+/* 44 _profil */
+void
+venix_profil()
+{
+
+	error("Unimplemented system call 44 _profil\n");
+}
+
+/* 45 _syssema */
+void
+venix_syssema()
+{
+
+	error("Unimplemented system call 45 _syssema\n");
+}
+
+/* 46 _setgid */
+void
+venix_setgid()
+{
+
+	error("Unimplemented system call 46 _setgid\n");
+}
+
+/* 47 _getgid */
+void
+venix_getgid()
+{
+
+	error("Unimplemented system call 47 _getgid\n");
+}
+
+/* 48 _ssig */
+void
+venix_ssig()
+{
+
+	error("Unimplemented system call 48 _ssig\n");
+}
+
+/* 49 _sysdata */
+void
+venix_sysdata()
+{
+
+	error("Unimplemented system call 49 _sysdata\n");
+}
+
+/* 50 _suspend */
+void
+venix_suspend()
+{
+
+	error("Unimplemented system call 50 _suspend\n");
+}
+
+/* 52 _sysphys */
+void
+venix_sysphys()
+{
+
+	error("Unimplemented system call 52 _sysphys\n");
+}
+
+/* 53 _syslock */
+void
+venix_syslock()
+{
+
+	error("Unimplemented system call 53 _syslock\n");
+}
+
+/* 54 _ioctl */
+void
+venix_ioctl()
+{
+
+	error("Unimplemented system call 54 _ioctl\n");
+}
+
+/* 59 _exece */
+void
+venix_exece()
+{
+
+	error("Unimplemented system call 59 _exece\n");
+}
+
+/* 60 _umask */
+void
+venix_umask()
+{
+
+	error("Unimplemented system call 60 _umask\n");
+}
+
+/* 61 _chroot */
+void
+venix_chroot()
+{
+
+	error("Unimplemented system call 61 _chroot\n");
+}
+
+/* 64 _locking */
+void
+venix_locking()
+{
+
+	error("Unimplemented system call 64 _locking\n");
+}
+
+void
+venix_nosys()
+{
+	printf("Venix unimplemented system call %d\n", call);
 	exit(0);
 }
 
 typedef void (Venix::*sysfn)(void);
 
-#define NSYS 64
+#define NSYS 72
 Venix::sysfn sysent[NSYS] = {
-	&Venix::nosys,			/* 0 */
-	&Venix::venix_exit,
-	&Venix::nosys,
-	&Venix::nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_rexit,
+	&Venix::venix_fork,
+	&Venix::venix_read,
 	&Venix::venix_write,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,			/* 10 */
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::venix_time,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,			/* 20 */
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,			/* 30 */
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
+	&Venix::venix_open,
+	&Venix::venix_close,
+	&Venix::venix_wait,
+	&Venix::venix_creat,
+	&Venix::venix_link,
+	&Venix::venix_unlink,
+	&Venix::venix_exec,
+	&Venix::venix_chdir,
+	&Venix::venix_gtime,
+	&Venix::venix_mknod,
+	&Venix::venix_chmod,
+	&Venix::venix_chown,
+	&Venix::venix_sbreak,
+	&Venix::venix_stat,
+	&Venix::venix_seek,
+	&Venix::venix_getpid,
+	&Venix::venix_smount,
+	&Venix::venix_sumount,
+	&Venix::venix_setuid,
+	&Venix::venix_getuid,
+	&Venix::venix_stime,
+	&Venix::venix_ptrace,
+	&Venix::venix_alarm,
+	&Venix::venix_fstat,
+	&Venix::venix_pause,
+	&Venix::venix_utime,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_saccess,
+	&Venix::venix_nice,
 	&Venix::venix_ftime,
 	&Venix::venix_sync,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,			/* 40 */
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,			/* 50 */
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,			/* 60 */
-	&Venix::nosys,
-	&Venix::nosys,
-	&Venix::nosys,			/* 63 */
+	&Venix::venix_kill,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_dup,
+	&Venix::venix_pipe,
+	&Venix::venix_times,
+	&Venix::venix_profil,
+	&Venix::venix_syssema,
+	&Venix::venix_setgid,
+	&Venix::venix_getgid,
+	&Venix::venix_ssig,
+	&Venix::venix_sysdata,
+	&Venix::venix_suspend,
+	&Venix::venix_nosys,
+	&Venix::venix_sysphys,
+	&Venix::venix_syslock,
+	&Venix::venix_ioctl,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_exece,
+	&Venix::venix_umask,
+	&Venix::venix_chroot,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_locking,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
+	&Venix::venix_nosys,
 };
 
 void int_cd(void)
@@ -256,6 +644,7 @@ void int_cd(void)
 		if (call == 0)
 			call = ax();
 		if (call < NSYS) {
+			printf("Calling system call %d\n", call);
 			(this->*sysent[call])();
 		} else {
 			printf("Unimplemented system call %d\n", call);
