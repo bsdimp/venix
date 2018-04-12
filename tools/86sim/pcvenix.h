@@ -80,7 +80,7 @@ void load(int argc, char **argv)
 	 */
 	for (int i = 0; i < 4; i++)
 		registers[FirstS + i] = loadSegment;
-	for (i = 0; i < FirstSeg; i++)
+	for (int i = 0; i < FirstS; i++)
 		registers[i] = 0;
 
 	/*
@@ -103,8 +103,20 @@ void int_cd(void)
 		printf("abort / emt\n");
 		exit(0);
 	case 0xf1:
-		printf("Unimplemented system call %d\n", bx());
-		exit(0);
+		switch (bx()) {
+		case 1:	/* exit */
+			printf("exit(%d)\n", ax());
+			exit(ax());
+			break;
+		case 36:
+			printf("sync\n");
+			sync();
+			break;
+		default:
+			printf("Unimplemented system call %d\n", bx());
+			exit(0);
+		}
+		break;
 	default:
 		printf("Unimplemented interrupt %#x\n", data);
 		exit(0);

@@ -570,6 +570,11 @@ int main(int argc, char* argv[])
             case 0x5c: case 0x5d: case 0x5e: case 0x5f:  // POP rw
                 setRW(pop());
                 break;
+            case 0xd8: case 0xd9: case 0xda: case 0xdb:
+            case 0xdc: case 0xdd: case 0xde: case 0xdf:  // escape
+                data = readEA();
+		printf("Ignorning FPU\n");
+		break;
             case 0x60: case 0x61: case 0x62: case 0x63:
             case 0x64: case 0x65: case 0x66: case 0x67:
             case 0x68: case 0x69: case 0x6a: case 0x6b:
@@ -577,8 +582,6 @@ int main(int argc, char* argv[])
             case 0xc0: case 0xc1: case 0xc8: case 0xc9:  // invalid
             case 0xcc: case 0xf0: case 0xf1: case 0xf4:  // INT 3, LOCK, HLT
             case 0xce: case 0x0f:  // INTO, POP CS
-            case 0xd8: case 0xd9: case 0xda: case 0xdb:
-            case 0xdc: case 0xdd: case 0xde: case 0xdf:  // escape
             case 0xe4: case 0xe5: case 0xe6: case 0xe7:
             case 0xec: case 0xed: case 0xee: case 0xef:  // IN, OUT
                 fprintf(stderr, "Invalid opcode %02x", opcode);
