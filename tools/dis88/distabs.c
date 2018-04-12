@@ -421,34 +421,33 @@ lookext(off,loc,buf)
    char *buf;
 
 {/* * * * * * * * * * START OF  lookext() * * * * * * * * * */
+	register int k;
+	char c[32];
 
-   register int k;
-   char c[32];
-
-   if ((loc != -1L) && (relptr >= 0))
-      for (k = 0; k <= relptr; ++k)
-         if (relo[k].r_vaddr == loc
-#ifdef S_BSS
-	   && (R_IDX(relo[k]) < S_BSS)
+	if ((loc != -1L) && (relptr >= 0)) {
+		for (k = 0; k <= relptr; ++k) {
+			if (relo[k].r_vaddr == loc &&
+#ifndef VENIX
+			    (R_IDX(relo[k]) < S_BSS)
 #else
-	   && relo[k].r_extern == 1
+			    relo[k].r_extern != 0
 #endif
-	   )
-            {
-	    strcpy(buf,getnam(R_IDX(relo[k])));
-            if (off)
-               {
-               if (off < 0)
-                  sprintf(c,"%ld",off);
-               else
-                  sprintf(c,"+%ld",off);
-               strcat(buf,c);
-               }
-            return (1);
-            }
-
-   return (0);
-
+				)
+			{
+				strcpy(buf,getnam(R_IDX(relo[k])));
+				if (off)
+				{
+					if (off < 0)
+						sprintf(c,"%ld",off);
+					else
+						sprintf(c,"+%ld",off);
+					strcat(buf,c);
+				}
+				return (1);
+			}
+		}
+	}
+	return (0);
 }/* * * * * * * * * *  END OF  lookext()  * * * * * * * * * */
 
  /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
