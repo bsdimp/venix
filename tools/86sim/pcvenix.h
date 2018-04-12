@@ -6,6 +6,7 @@ public:
 	Venix() : brk(0), length(0) {}
 	~Venix() {}
 private:
+	Word call;
 	uint32_t brk;
 	int length;
 	static const int OMAGIC = 0407;
@@ -103,13 +104,32 @@ venix_time()
 	setDX(t >> 16);
 }
 
+/* 1 exit */
 void
-venix_ftime(Word ax)
+venix_exit()
+{
+	printf("exit(%d)\n", ax());
+	exit(ax());
+}
+
+/* 4 write */
+void
+venix_write()
+{
+	printf("write(%d, %#x, %d)\n", ax(), dx(), cx());
+	write(1, &ram[physicalAddress(dx(), DSeg, false)], cx());
+	setAX(cx());
+}
+
+/* 35 ftime */
+void
+venix_ftime()
 {
 	int rv;
 	struct timeval tv;
 	uint32_t t;
 	uint16_t ms;
+	Word dst = ax();
 
 	rv = gettimeofday(&tv, NULL);
 	if (rv) {
@@ -119,22 +139,106 @@ venix_ftime(Word ax)
 		return;
 	}
 	t = (uint32_t)tv.tv_sec;
-	writeByte(t & 0xff, ax++, DSeg);
+	writeByte(t & 0xff, dst++, DSeg);
 	t >>= 8;
-	writeByte(t & 0xff, ax++, DSeg);
+	writeByte(t & 0xff, dst++, DSeg);
 	t >>= 8;
-	writeByte(t & 0xff, ax++, DSeg);
+	writeByte(t & 0xff, dst++, DSeg);
 	t >>= 8;
-	writeByte(t & 0xff, ax++, DSeg);
+	writeByte(t & 0xff, dst++, DSeg);
 	ms = (uint16_t)(tv.tv_usec / 1000);
-	writeWord(ms, ax, DSeg);
-	ax += 2;
-	writeWord(0, ax, DSeg);		// minutes west of UTC
-	ax += 2;
-	writeWord(1, ax, DSeg);		// DST
+	writeWord(ms, dst, DSeg);
+	dst += 2;
+	writeWord(0, dst, DSeg);		// minutes west of UTC
+	dst += 2;
+	writeWord(1, dst, DSeg);		// DST
 	setAX(0);
 	return;
 }
+
+/* 36 sync */
+void
+venix_sync()
+{
+	sync();
+	setAX(0);
+}
+
+void nosys()
+{
+	printf("Unimplemented system call %d\n", call);
+	exit(0);
+}
+
+typedef void (Venix::*sysfn)(void);
+
+#define NSYS 64
+Venix::sysfn sysent[NSYS] = {
+	&Venix::nosys,			/* 0 */
+	&Venix::venix_exit,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::venix_write,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,			/* 10 */
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::venix_time,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,			/* 20 */
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,			/* 30 */
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::venix_ftime,
+	&Venix::venix_sync,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,			/* 40 */
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,			/* 50 */
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,			/* 60 */
+	&Venix::nosys,
+	&Venix::nosys,
+	&Venix::nosys,			/* 63 */
+};
 
 void int_cd(void)
 {
@@ -148,35 +252,13 @@ void int_cd(void)
 		printf("abort / emt\n");
 		exit(0);
 	case 0xf1:
-		switch (bx()) {
-		case 1:	/* exit */
-			printf("exit(%d)\n", ax());
-			exit(ax());
-			break;
-		case 4: /* write */
-			printf("write(%d, %#x, %d)\n", ax(), dx(), cx());
-			write(1, &ram[physicalAddress(dx(), DSeg, false)], cx());
-			setAX(cx());
-			break;
-		case 6: /* close */
-			setAX(0);	// XXX
-			break;
-		case 13: /* time */
-			venix_time();
-			break;
-		case 35: /* ftime */
-			venix_ftime(ax());
-			break;
-		case 36: /* sync */
-			printf("sync\n");
-			sync();
-			setCX(0);
-			break;
-		case 54: /* ioctl */
-			setAX(0);	// XXX
-			break;
-		default:
-			printf("Unimplemented system call %d\n", bx());
+		call = bx();
+		if (call == 0)
+			call = ax();
+		if (call < NSYS) {
+			(this->*sysent[call])();
+		} else {
+			printf("Unimplemented system call %d\n", call);
 			exit(0);
 		}
 		break;
