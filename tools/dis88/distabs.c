@@ -316,14 +316,14 @@ struct opcode optab[] =             /* Table of opcode data */
    "\taad",          aahand,  2,    2,             /* 0xd5  */
    NULL,             dfhand,  0,    0,             /* 0xd6  */
    "\txlat",         sbhand,  1,    1,             /* 0xd7  */
-   ESC,              eshand,  2,    2,             /* 0xd8  */
-   ESC,              eshand,  2,    2,             /* 0xd9  */
-   ESC,              eshand,  2,    2,             /* 0xda  */
-   ESC,              eshand,  2,    2,             /* 0xdb  */
-   ESC,              eshand,  2,    2,             /* 0xdc  */
-   ESC,              eshand,  2,    2,             /* 0xdd  */
-   ESC,              eshand,  2,    2,             /* 0xde  */
-   ESC,              eshand,  2,    2,             /* 0xdf  */
+   ESC,              fphand,  2,    2,             /* 0xd8  */
+   ESC,              fphand,  2,    2,             /* 0xd9  */
+   ESC,              fphand,  2,    2,             /* 0xda  */
+   ESC,              fphand,  2,    2,             /* 0xdb  */
+   ESC,              fphand,  2,    2,             /* 0xdc  */
+   ESC,              fphand,  2,    2,             /* 0xdd  */
+   ESC,              fphand,  2,    2,             /* 0xde  */
+   ESC,              fphand,  2,    2,             /* 0xdf  */
    "\tloopne",       sjhand,  2,    2,             /* 0xe0  */
    "\tloope",        sjhand,  2,    2,             /* 0xe1  */
    "\tloop",         sjhand,  2,    2,             /* 0xe2  */
