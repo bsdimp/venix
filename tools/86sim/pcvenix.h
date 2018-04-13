@@ -384,11 +384,7 @@ venix_chdir()
 void
 venix_gtime()
 {
-	uint32_t t;
-
-	t = time(NULL);
-	setAX(t & 0xffff);
-	setDX(t >> 16);
+	set_retval_long(time(NULL));
 }
 
 /* 14 _mknod */
