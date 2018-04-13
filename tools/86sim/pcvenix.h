@@ -169,6 +169,11 @@ void venix_to_host_path(char *fn, char *host_fn, size_t len)
 	strlcpy(host_fn, fn, len);
 }
 
+Word callno() { return bx(); }
+Word arg1() { return ax(); }
+Word arg2() { return dx(); }
+Word arg3() { return cx(); }
+
 int copyinstr(Word uptr, void *kaddr, size_t len)
 {
 	char ch;
@@ -369,8 +374,8 @@ void load(int argc, char **argv)
 void
 venix_rexit()
 {
-	printf("exit(%d)\n", ax());
-	exit(ax());
+	printf("exit(%d)\n", arg1());
+	exit(arg1());
 }
 
 /* 2 _fork */
@@ -385,9 +390,9 @@ typedef ssize_t (rdwr_fn)(int, void *, size_t);
 
 void rdwr(rdwr_fn *fn, bool isread)
 {
-	int fd = ax();
-	Word ptr = dx();
-	Word len = cx();
+	int fd = arg1();
+	Word ptr = arg2();
+	Word len = arg3();;
 	ssize_t rv;
 	void *buffer;
 
@@ -434,8 +439,8 @@ venix_open()
 {
 	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
-	Word ufn = ax();
-	Word mode = dx();
+	Word ufn = arg1();
+	Word mode = arg2();
 	int fd, i;
 	int host_mode;
 
@@ -466,7 +471,7 @@ venix_open()
 void
 venix_close()
 {
-	int fd = ax();
+	int fd = arg1();
 
 	if (bad_fd(fd)) {
 		sys_error(EBADF);
@@ -492,8 +497,8 @@ venix_creat()
 {
 	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
-	Word ufn = ax();
-	Word mode = dx();
+	Word ufn = arg1();
+	Word mode = arg2();
 	int fd, i;
 
 	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
@@ -595,8 +600,8 @@ venix_stat()
 {
 	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
-	Word ufn = ax();
-	Word usb = dx();
+	Word ufn = arg1();
+	Word usb = arg2();
 	struct stat sb;
 	int rv;
 
@@ -690,8 +695,8 @@ venix_alarm()
 void
 venix_fstat()
 {
-	int fd = ax();
-	Word usb = dx();
+	int fd = arg1();
+	Word usb = arg2();
 	struct stat sb;
 	int rv;
 
@@ -746,21 +751,20 @@ venix_ftime()
 {
 	int rv;
 	struct timeval tv;
-	Word dst = ax();
+	Word dst = arg1();
 	struct venix_timeb tb;
 
 	rv = gettimeofday(&tv, NULL);
 	if (rv) {
 		printf("Failed gettimeofday\n");
-		setCX(errno);
-		setAX(0xffff);
+		sys_error(errno);
 		return;
 	}
 	tb.time = (uint32_t)tv.tv_sec;
 	tb.millitm = (uint16_t)(tv.tv_usec / 1000);
 	tb.timezone = 6 * 60;
 	tb.dstflag = 1;
-	copyout(&tb, ax(), sizeof(tb));
+	copyout(&tb, dst, sizeof(tb));
 	sys_retval_int(0);
 	return;
 }
@@ -771,7 +775,7 @@ venix_sync()
 {
 
 	sync();
-	setAX(0);
+	sys_retval_int(0);
 }
 
 /* 37 _kill */
@@ -882,9 +886,9 @@ venix_syslock()
 void
 venix_ioctl()
 {
-	int fd = ax();
-	int cmd = dx();
-	Word arg = cx();
+	int fd = arg1();
+	int cmd = arg2();
+	Word arg = arg3();
 	struct venix_sgttyb sg;
 
 	/* Should validate fd and arg */
@@ -899,7 +903,7 @@ venix_ioctl()
 		sys_retval_int(0);
 		break;
 	default:
-		printf("undefined ioctl fd %d cmd %#x arg %d\n", ax(), dx(), cx());
+		printf("undefined ioctl fd %d cmd %#x arg %d\n", fd, cmd, arg);
 		error("Unimplemented system call 54 _ioctl\n");
 		break;
 	}
@@ -1034,9 +1038,9 @@ void int_cd(void)
 		printf("abort / emt\n");
 		exit(0);
 	case 0xf1:
-		scall = bx();
+		scall = callno();
 		if (scall == 0)
-			scall = ax();
+			scall = arg1();
 		if (scall < NSYS) {
 			printf("Calling system call %d\n", scall);
 			(this->*sysent[scall])();
