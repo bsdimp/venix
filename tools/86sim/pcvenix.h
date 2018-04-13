@@ -79,6 +79,12 @@ int copyout(void *kptr, Word uptr, size_t len)
 	return 0;
 }
 
+void sys_error(int e)
+{
+	setCX(e);		// cx = errno
+	setAX(0xffff);		// and return -1
+}
+
 void load(int argc, char **argv)
 {
 	struct venix_exec hdr;
@@ -191,8 +197,15 @@ venix_open()
 void
 venix_close()
 {
+	int fd = ax();
 
-	error("Unimplemented system call 6 _close\n");
+	if (fd < 0 || fd >= VENIX_NOFILE || open_fd[fd] == -1) {
+		sys_error(EBADF);
+		return;
+	}
+	close(open_fd[fd]);
+	open_fd[fd] = -1;
+	setAX(0);
 }
 
 /* 7 _wait */
