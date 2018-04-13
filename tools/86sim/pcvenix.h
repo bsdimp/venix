@@ -262,8 +262,10 @@ void load(int argc, char **argv)
 		error("reading");
 
 	printf("Magic is 0%o\n", hdr.a_magic);
-	if (hdr.a_magic != OMAGIC)
-		error("Not OMAGIC");
+	if (hdr.a_magic != OMAGIC &&
+	    hdr.a_magic != NMAGIC)
+		error("Unsupported magic number");
+
 	/*
 	 * Layout in memory is text, stack, data, bss, but is
 	 * hdr, text, data in the disk file. Move things around
@@ -292,14 +294,21 @@ void load(int argc, char **argv)
 	}
 
 	/*
+	 * For NMAGIC binaries, the 'break' address doesn't include the text section,
+	 * so adjust that after we've marked all the memory in use.
+	 */
+	if (hdr.a_magic == NMAGIC)
+		brk -= hdr.a_text;
+	/*
 	 * Initialize all the segment registers to be the same. For
 	 * venix, we read the whole image into memory, move the data
 	 * segment, setup the stack and go.
 	 *
 	 * For NMAGIC, we need to adjust, but  for OMAGIC things are fine.
 	 */
-	for (int i = 0; i < 4; i++)
-		registers[FirstS + i] = loadSegment;
+	registers[CS] = loadSegment;
+	registers[DS] = registers[ES] = registers[SS] = (hdr.a_magic == OMAGIC) ?
+	    loadSegment : loadSegment + ((hdr.a_text + 15) >> 4);
 	for (int i = 0; i < FirstS; i++)
 		registers[i] = 0;
 
