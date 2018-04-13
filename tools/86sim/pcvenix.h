@@ -179,11 +179,12 @@ bool bad_fd(int fd)
 	return (fd < 0 || fd >= VENIX_NOFILE || open_fd[fd] == -1);
 }
 
-void *u2k(Word addr) { return (&ram[physicalAddress(dx(), DSeg, false)]); }
+void *u2k(Word addr) { return (&ram[physicalAddress(addr, DSeg, false)]); }
 
 void load(int argc, char **argv)
 {
 	struct venix_exec hdr;
+	Word sp;
 
 	filename = argv[1];
 	FILE* fp = fopen(filename, "rb");
@@ -240,10 +241,45 @@ void load(int argc, char **argv)
 		registers[i] = 0;
 
 	/*
-	 * Hack for the moment -- enough 0's on the stack work until we
-	 * need command line args.
+	 * Setup the stack by first 'pushing' the args onto it. First
+	 * the strings, then argv, then a couple of 0's for the env (Bad), then
+	 * a pointer to argv, then argc.
 	 */
-	registers[SP] = hdr.a_text + hdr.a_stack - 32;
+	sp = hdr.a_text + hdr.a_stack;
+	printf("Top of stack %#x\n", sp);
+	Word args[100];
+	for (int i = 1; i < argc; i++) {
+		int len;
+
+		len = strlen(argv[i]) + 1;
+		sp -= len;
+		if (sp & 1) sp--;
+		copyout(argv[i], sp, len);
+		args[i - 1] = sp;
+		printf("Copying '%s' to %#x\n", argv[i], sp);
+	}
+	args[argc - 1] = 0;
+	if (sp & 1) sp--;
+	sp -= argc * 2;
+	printf("argv is %#x\n", sp);
+	copyout(args, sp, argc * 2);
+	Word vargv = sp;
+	Word env = 0;				// Push 3 words for environ
+	sp -= 2;
+	copyout(&env, sp, 2);
+	sp -= 2;
+	copyout(&env, sp, 2);
+	sp -= 2;
+	copyout(&env, sp, 2);
+	sp -= 2;
+	copyout(&vargv, sp, 2);
+	printf("argv pushed to %#x\n", sp);
+	Word vargc = argc - 1;
+	sp -= 2;
+	printf("argc pushed to %#x\n", sp);
+	copyout(&vargc, sp, 2);
+
+	registers[SP] = sp;
 	ip = 0;			// jump to CS:0
 }
 
@@ -280,6 +316,7 @@ void rdwr(rdwr_fn *fn)
 		sys_error(EFAULT);
 		return;
 	}
+	printf("fd %d ptr %#x len %d\n", fd, ptr, len);
 	rv = fn(open_fd[fd], u2k(ptr), (size_t)len);
 	if (rv == -1) {
 		sys_error(errno);
@@ -869,7 +906,9 @@ void int_cd(void)
 	data = fetchByte();
 	switch (data) {
 	case 0xf4:
-		printf("FPU\n");
+		printf("FPU sp %#x\n", sp());
+		for (int i = -30; i <= 0; i++)
+			printf("%#x: %#x\n", sp() - i * 2, *(Word *)u2k(sp() - i * 2));
 		break;
 	case 0xf3:
 	case 0xf2:
