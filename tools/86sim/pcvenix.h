@@ -2,15 +2,45 @@
 
 class Venix : public MachineOS
 {
+	static const int VENIX_NOFILE = 20;	// Max files per process on Venix (from sys/param.h, so maybe tunable)
+	int open_fd[VENIX_NOFILE];
 public:
-	Venix() : brk(0), length(0) {}
-	~Venix() {}
+
+Venix() : brk(0), length(0), call(0) {
+	/*
+	 * Initialize our file descriptor table. On old-school Unix, like v7/Venix,
+	 * there's 20 fd's per process. This is theoretically changeable in sys/param.h
+	 * but it was rare that this was adjusted due to too many other matching constants
+	 * that needed changing. So for this emulator, we'll just do the 20, even though
+	 * we have this #define. Usually there will be a 1:1 match between our fd's and
+	 * the emulator's. Just to be safe, go ahead and have a mapping in case it doesn't
+	 * work out that way.
+	 */
+	open_fd[0] = 0;
+	open_fd[1] = 1;
+	open_fd[2] = 2;
+	for (int i = 3; i < VENIX_NOFILE; i++)
+		open_fd[i] = -1;
+}
+
+~Venix() {
+	for (int i = 3; i < VENIX_NOFILE; i++) {
+		if (open_fd[i] != -1) {
+			close(open_fd[i]);
+			open_fd[i] = -1;
+		}
+	}
+}
+
 private:
-	Word call;
 	uint32_t brk;
 	int length;
-	static const int OMAGIC = 0407;
-	static const int NMAGIC = 0411;
+	Word call;
+	static const int OMAGIC = 0407;		// Old impure format (TINY SS = CS = DS = ES)
+	static const int NMAGIC = 0411;		// I&D fprmat (CS and SS = DS == ES)
+
+	/* Basic types */
+	typedef int32_t venix_time_t;
 
 	/*
 	 * Header prepended to each a.out file.
@@ -27,6 +57,27 @@ private:
 		int32_t		a_drsize;	/* size of data relocation */
 	};
 
+	/*
+	 * ftime return structure
+	 */
+	struct venix_timeb {
+		venix_time_t	time;
+		uint16_t	millitm;
+		int16_t		timezone;
+		int16_t		dstflag;
+	} __packed;
+
+/*
+ * Copy data from the 'kernel' kptr to 'userland' uptr for len bytes.
+ */
+int copyout(void *kptr, Word uptr, size_t len)
+{
+	uint8_t *p = reinterpret_cast<uint8_t *>(kptr);
+
+	for (int i = 0; i < len; i++)
+		writeByte(p[i], uptr + i, DSeg);
+	return 0;
+}
 
 void load(int argc, char **argv)
 {
@@ -361,9 +412,8 @@ venix_ftime()
 {
 	int rv;
 	struct timeval tv;
-	uint32_t t;
-	uint16_t ms;
 	Word dst = ax();
+	struct venix_timeb tb;
 
 	rv = gettimeofday(&tv, NULL);
 	if (rv) {
@@ -372,20 +422,11 @@ venix_ftime()
 		setAX(0xffff);
 		return;
 	}
-	t = (uint32_t)tv.tv_sec;
-	writeByte(t & 0xff, dst++, DSeg);
-	t >>= 8;
-	writeByte(t & 0xff, dst++, DSeg);
-	t >>= 8;
-	writeByte(t & 0xff, dst++, DSeg);
-	t >>= 8;
-	writeByte(t & 0xff, dst++, DSeg);
-	ms = (uint16_t)(tv.tv_usec / 1000);
-	writeWord(ms, dst, DSeg);
-	dst += 2;
-	writeWord(0, dst, DSeg);		// minutes west of UTC
-	dst += 2;
-	writeWord(1, dst, DSeg);		// DST
+	tb.time = (uint32_t)tv.tv_sec;
+	tb.millitm = (uint16_t)(tv.tv_usec / 1000);
+	tb.timezone = 6 * 60;
+	tb.dstflag = 1;
+	copyout(&tb, ax(), sizeof(tb));
 	setAX(0);
 	return;
 }
