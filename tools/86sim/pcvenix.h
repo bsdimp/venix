@@ -4,6 +4,37 @@ class Venix : public MachineOS
 {
 	static const int MAXPATHLEN = 1025;
 
+	// tty ioctls from Venix
+	static const int VENIX_TIOCGETD  = (('t'<<8)|0);
+	static const int VENIX_TIOCSETD  = (('t'<<8)|1);
+	static const int VENIX_TIOCHPCL  = (('t'<<8)|2);
+	static const int VENIX_TIOCMODG  = (('t'<<8)|3);
+	static const int VENIX_TIOCMODS  = (('t'<<8)|4);
+	static const int VENIX_TIOCGETP  = (('t'<<8)|8);
+	static const int VENIX_TIOCSETP  = (('t'<<8)|9);
+	static const int VENIX_TIOCSETN  = (('t'<<8)|10);
+	static const int VENIX_TIOCEXCL  = (('t'<<8)|13);
+	static const int VENIX_TIOCNXCL  = (('t'<<8)|14);
+	static const int VENIX_TIOCFLUSH = (('t'<<8)|16);
+	static const int VENIX_TIOCSETC  = (('t'<<8)|17);
+	static const int VENIX_TIOCGETC  = (('t'<<8)|18);
+	static const int VENIX_B0        = 0;
+	static const int VENIX_B50       = 1;
+	static const int VENIX_B75       = 2;
+	static const int VENIX_B11       = 3;
+	static const int VENIX_B13       = 4;
+	static const int VENIX_B15       = 5;
+	static const int VENIX_B20       = 6;
+	static const int VENIX_B30       = 7;
+	static const int VENIX_B60       = 8;
+	static const int VENIX_B1200     = 9;
+	static const int VENIX_B1800     = 10;
+	static const int VENIX_B2400     = 11;
+	static const int VENIX_B4800     = 12;
+	static const int VENIX_B9600     = 13;
+	static const int VENIX_EXTA      = 14;
+	static const int VENIX_EXTB      = 15;
+
 	static const int VENIX_NOFILE = 20;	// Max files per process on Venix (from sys/param.h, so maybe tunable)
 	static const int VENIX_PATHSIZ = 256;
 	int open_fd[VENIX_NOFILE];
@@ -70,6 +101,18 @@ private:
 		int16_t		dstflag;
 	} __packed;
 	static_assert(sizeof(venix_timeb) == 10, "Bad venix_timeb size");
+
+	/*
+	 * tty ioctl
+	 */
+	struct	venix_sgttyb {
+		int8_t		sg_ispeed;
+		int8_t		sg_ospeed;
+		int8_t		sg_erase;
+		int8_t		sg_kill;
+		int16_t		sg_flags;
+	} __packed;
+	static_assert(sizeof(venix_sgttyb) == 6, "Bad venix_sgttyb size");
 
 int copyinstr(Word uptr, void *kaddr, size_t len)
 {
@@ -384,7 +427,7 @@ venix_chdir()
 void
 venix_gtime()
 {
-	set_retval_long(time(NULL));
+	sys_retval_long(time(NULL));
 }
 
 /* 14 _mknod */
@@ -681,8 +724,27 @@ venix_syslock()
 void
 venix_ioctl()
 {
+	int fd = ax();
+	int cmd = dx();
+	Word arg = cx();
+	struct venix_sgttyb sg;
 
-	error("Unimplemented system call 54 _ioctl\n");
+	/* Should validate fd and arg */
+	switch (cmd) {
+	case VENIX_TIOCGETP:
+		/* should really do the conversion */
+		sg.sg_ispeed = sg.sg_ospeed = VENIX_B9600;
+		sg.sg_erase = 0x7f;	// DEL
+		sg.sg_kill = 3;		// ^C
+		sg.sg_flags = 0;	// Flags, any interesting?
+		copyout(&sg, arg, sizeof(sg));
+		sys_retval_int(0);
+		break;
+	default:
+		printf("undefined ioctl fd %d cmd %#x arg %d\n", ax(), dx(), cx());
+		error("Unimplemented system call 54 _ioctl\n");
+		break;
+	}
 }
 
 /* 59 _exece */
