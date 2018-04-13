@@ -4,20 +4,26 @@ class Venix : public MachineOS
 {
 	static const int MAXPATHLEN = 1025;
 
+	// errno for Venix == Errno for FreeBSD <= 34
+	static const int VENIX_EDEADLOCK  = 40;
+
+
 	// tty ioctls from Venix
-	static const int VENIX_TIOCGETD  = (('t'<<8)|0);
-	static const int VENIX_TIOCSETD  = (('t'<<8)|1);
-	static const int VENIX_TIOCHPCL  = (('t'<<8)|2);
-	static const int VENIX_TIOCMODG  = (('t'<<8)|3);
-	static const int VENIX_TIOCMODS  = (('t'<<8)|4);
-	static const int VENIX_TIOCGETP  = (('t'<<8)|8);
-	static const int VENIX_TIOCSETP  = (('t'<<8)|9);
-	static const int VENIX_TIOCSETN  = (('t'<<8)|10);
-	static const int VENIX_TIOCEXCL  = (('t'<<8)|13);
-	static const int VENIX_TIOCNXCL  = (('t'<<8)|14);
-	static const int VENIX_TIOCFLUSH = (('t'<<8)|16);
-	static const int VENIX_TIOCSETC  = (('t'<<8)|17);
-	static const int VENIX_TIOCGETC  = (('t'<<8)|18);
+	static const int VENIX_TIOCGETD  = (('t'<<8)|0);	/** % get line disipline */
+	static const int VENIX_TIOCSETD  = (('t'<<8)|1);	/** % set line disipline */
+	static const int VENIX_TIOCHPCL  = (('t'<<8)|2);	/* hangup on close */
+	static const int VENIX_TIOCGETP  = (('t'<<8)|8);	/* get current parameter */
+	static const int VENIX_TIOCSETP  = (('t'<<8)|9);	/* set parameters */
+	static const int VENIX_TIOCSETN  = (('t'<<8)|10);	/* set parameters without flush */
+	static const int VENIX_TIOCEXCL  = (('t'<<8)|13);	/* set exclusive use */
+	static const int VENIX_TIOCNXCL  = (('t'<<8)|14);	/* clear exclusive use */
+	static const int VENIX_TIOCFLUSH = (('t'<<8)|16);	/* flush i/o */
+	static const int VENIX_TIOCSETC  = (('t'<<8)|17);	/** % set special characters */
+	static const int VENIX_TIOCGETC  = (('t'<<8)|18);	/** %get special characters */
+	static const int VENIX_TIOCQCNT	 = (('t'<<8)|30);	/* get char counts on i/o queues */
+	static const int VENIX_AIOCWAIT	 = (('a'<<8)|0);	/* wait/test outstanding requests */
+	/* FIO and DIO features not supported */
+
 	static const int VENIX_B0        = 0;
 	static const int VENIX_B50       = 1;
 	static const int VENIX_B75       = 2;
@@ -32,8 +38,17 @@ class Venix : public MachineOS
 	static const int VENIX_B2400     = 11;
 	static const int VENIX_B4800     = 12;
 	static const int VENIX_B9600     = 13;
-	static const int VENIX_EXTA      = 14;
-	static const int VENIX_EXTB      = 15;
+	static const int VENIX_EXTA      = 14; /* Not supported on Venix */
+	static const int VENIX_EXTB      = 15; /* Not supported on Venix */
+	static const int VENIX_TANDEM    = 0001;
+	static const int VENIX_CBREAK    = 0002;
+	static const int VENIX_LCASE     = 0004;
+	static const int VENIX_ECHO      = 0010;
+	static const int VENIX_CRMOD     = 0020;
+	static const int VENIX_RAW       = 0040;
+	static const int VENIX_ODDP      = 0100;
+	static const int VENIX_EVENP     = 0200;
+	static const int VENIX_ANYP      = 0300; /* All DELAY flags ignored, not reproduced here */
 
 	static const int VENIX_NOFILE = 20;	// Max files per process on Venix (from sys/param.h, so maybe tunable)
 	static const int VENIX_PATHSIZ = 256;
@@ -74,7 +89,11 @@ private:
 	static const int NMAGIC = 0411;		// I&D fprmat (CS and SS = DS == ES)
 
 	/* Basic types */
-	typedef int32_t venix_time_t;
+	typedef	int16_t		venix_daddr_t;	/* disk address */
+	typedef	int16_t		venix_ino_t;	/* i-node number */
+	typedef	int32_t		venix_time_t;	/* a time */
+	typedef	int16_t		venix_dev_t;	/* device code */
+	typedef	int32_t		venix_off_t;	/* offset */
 
 	/*
 	 * Header prepended to each a.out file.
@@ -113,6 +132,37 @@ private:
 		int16_t		sg_flags;
 	} __packed;
 	static_assert(sizeof(venix_sgttyb) == 6, "Bad venix_sgttyb size");
+
+	struct venix_stat
+	{
+		venix_dev_t	st_dev;
+		venix_ino_t	st_ino;
+		uint16_t	st_mode;
+		int16_t		st_nlink;
+		int16_t		st_uid;
+		int16_t		st_gid;
+		venix_dev_t	st_rdev;
+		venix_off_t	st_size;
+		venix_time_t	st_atime_v;
+		venix_time_t	st_mtime_v;
+		venix_time_t	st_ctime_v;
+	} __packed;
+	static_assert(sizeof(venix_stat) == 30, "bad venix_stat size");
+
+#if 0 /* Different than FreeBSD, oh joy, gotta translate, but just S_IFMT */
+#define	S_IFMT	0160000		/* type of file */
+#define		S_IFDIR	0140000	/* directory */
+#define		S_IFCHR	0120000	/* character special */
+#define		S_IFBLK	0160000	/* block special */
+#define		S_IFREG	0100000	/* regular file */
+#define	S_ILRG		010000	/* large file */
+#define	S_ISUID		004000	/* set user id on execution */
+#define	S_ISGID		002000	/* set group id on execution */
+#define	S_ISVTX		001000	/* save shared segment, even after use */
+#define	S_IREAD		000400	/* read permission, owner */
+#define	S_IWRITE	000200	/* write permission, owner */
+#define	S_IEXEC		000100	/* execute permission, owner */
+#endif
 
 void venix_to_host_path(char *fn, char *host_fn, size_t len)
 {
