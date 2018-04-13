@@ -2,11 +2,14 @@
 
 class Venix : public MachineOS
 {
+	static const int MAXPATHLEN = 1025;
+
 	static const int VENIX_NOFILE = 20;	// Max files per process on Venix (from sys/param.h, so maybe tunable)
+	static const int VENIX_PATHSIZ = 256;
 	int open_fd[VENIX_NOFILE];
 public:
 
-Venix() : brk(0), length(0), call(0) {
+Venix() : brk(0), length(0), scall(0) {
 	/*
 	 * Initialize our file descriptor table. On old-school Unix, like v7/Venix,
 	 * there's 20 fd's per process. This is theoretically changeable in sys/param.h
@@ -33,9 +36,9 @@ Venix() : brk(0), length(0), call(0) {
 }
 
 private:
-	uint32_t brk;
+	uint16_t brk;
 	int length;
-	Word call;
+	Word scall;
 	static const int OMAGIC = 0407;		// Old impure format (TINY SS = CS = DS = ES)
 	static const int NMAGIC = 0411;		// I&D fprmat (CS and SS = DS == ES)
 
@@ -66,6 +69,27 @@ private:
 		int16_t		timezone;
 		int16_t		dstflag;
 	} __packed;
+	static_assert(sizeof(venix_timeb) == 10, "Bad venix_timeb size");
+
+int copyinstr(Word uptr, void *kaddr, size_t len)
+{
+	char ch;
+	char *str = (char *)kaddr;
+
+	for (int i = 0; i < len; i++) {
+		ch = readByte(uptr + i, DSeg);
+		str[i] = ch;
+		if (ch == '\0')
+			break;
+	}
+
+	return (0);
+}
+
+void venix_to_host_path(char *fn, char *host_fn, size_t len)
+{
+	strlcpy(host_fn, fn, len);
+}
 
 /*
  * Copy data from the 'kernel' kptr to 'userland' uptr for len bytes.
@@ -79,11 +103,40 @@ int copyout(void *kptr, Word uptr, size_t len)
 	return 0;
 }
 
+int venix_o_to_host(int mode)
+{
+	return (mode);
+}
+
+void sys_retval_long(uint32_t r)
+{
+	setAX(r & 0xffff);
+	setDX(r >> 16);
+}
+
+void sys_retval_int(uint16_t r)
+{
+	setAX(r);
+}
+
+
 void sys_error(int e)
 {
 	setCX(e);		// cx = errno
-	setAX(0xffff);		// and return -1
+	sys_retval_int(0xffff); // return -1;
 }
+
+bool bad_addr(Word addr)
+{
+	return (addr >= brk);
+}
+
+bool bad_fd(int fd)
+{
+	return (fd < 0 || fd >= VENIX_NOFILE || open_fd[fd] == -1);
+}
+
+void *u2k(Word addr) { return (&ram[physicalAddress(dx(), DSeg, false)]); }
 
 void load(int argc, char **argv)
 {
@@ -167,30 +220,77 @@ venix_fork()
 	error("Unimplemented system call 2 _fork\n");
 }
 
+typedef ssize_t (rdwr_fn)(int, void *, size_t);
+
+void rdwr(rdwr_fn *fn)
+{
+	int fd = ax();
+	Word ptr = dx();
+	Word len = cx();
+	ssize_t rv;
+
+	if (bad_fd(fd)) {
+		sys_error(EBADF);
+		return;
+	}
+	if (bad_addr(ptr)) {
+		sys_error(EFAULT);
+		return;
+	}
+	rv = fn(open_fd[fd], u2k(ptr), (size_t)len);
+	if (rv == -1) {
+		sys_error(errno);
+		return;
+	}
+	sys_retval_int(rv);
+}
+
 /* 3 _read */
 void
 venix_read()
 {
-
-	error("Unimplemented system call 3 _read\n");
+	rdwr(::read);
 }
 
 /* 4 _write */
 void
 venix_write()
 {
-
-	printf("write(%d, %#x, %d)\n", ax(), dx(), cx());
-	write(1, &ram[physicalAddress(dx(), DSeg, false)], cx());
-	setAX(cx());
+	rdwr((rdwr_fn *)::write);
 }
 
 /* 5 _open */
 void
 venix_open()
 {
+	char fn[VENIX_PATHSIZ];
+	char host_fn[MAXPATHLEN];
+	Word ufn = ax();
+	Word mode = dx();
+	int fd, i;
+	int host_mode;
 
-	error("Unimplemented system call 5 _open\n");
+	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	for (i = 0; i < VENIX_NOFILE; i++)
+		if (open_fd[i] == -1)
+			break;
+
+	if (i == VENIX_NOFILE) {
+		sys_error(EMFILE);
+		return;
+	}
+	venix_to_host_path(fn, host_fn, sizeof(host_fn));
+	host_mode = venix_o_to_host(mode);
+	fd = open(host_fn, host_mode);
+	if (fd == -1) {
+		sys_error(errno);
+		return;
+	}
+	open_fd[i] = fd;
+	sys_retval_int(i);
 }
 
 /* 6 _close */
@@ -199,13 +299,13 @@ venix_close()
 {
 	int fd = ax();
 
-	if (fd < 0 || fd >= VENIX_NOFILE || open_fd[fd] == -1) {
+	if (bad_fd(fd)) {
 		sys_error(EBADF);
 		return;
 	}
 	close(open_fd[fd]);
 	open_fd[fd] = -1;
-	setAX(0);
+	sys_retval_int(0);
 }
 
 /* 7 _wait */
@@ -220,8 +320,32 @@ venix_wait()
 void
 venix_creat()
 {
+	char fn[VENIX_PATHSIZ];
+	char host_fn[MAXPATHLEN];
+	Word ufn = ax();
+	Word mode = dx();
+	int fd, i;
 
-	error("Unimplemented system call 8 _creat\n");
+	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	for (i = 0; i < VENIX_NOFILE; i++)
+		if (open_fd[i] == -1)
+			break;
+
+	if (i == VENIX_NOFILE) {
+		sys_error(EMFILE);
+		return;
+	}
+	venix_to_host_path(fn, host_fn, sizeof(host_fn));
+	fd = creat(host_fn, mode);
+	if (fd == -1) {
+		sys_error(errno);
+		return;
+	}
+	open_fd[i] = fd;
+	sys_retval_int(i);
 }
 
 /* 9 _link */
@@ -600,7 +724,7 @@ venix_locking()
 void
 venix_nosys()
 {
-	printf("Venix unimplemented system call %d\n", call);
+	printf("Venix unimplemented system call %d\n", scall);
 	exit(0);
 }
 
@@ -694,14 +818,14 @@ void int_cd(void)
 		printf("abort / emt\n");
 		exit(0);
 	case 0xf1:
-		call = bx();
-		if (call == 0)
-			call = ax();
-		if (call < NSYS) {
-			printf("Calling system call %d\n", call);
-			(this->*sysent[call])();
+		scall = bx();
+		if (scall == 0)
+			scall = ax();
+		if (scall < NSYS) {
+			printf("Calling system call %d\n", scall);
+			(this->*sysent[scall])();
 		} else {
-			printf("Unimplemented system call %d\n", call);
+			printf("Unimplemented system call %d\n", scall);
 			exit(0);
 		}
 		break;
