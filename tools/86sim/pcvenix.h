@@ -260,20 +260,11 @@ void load(int argc, char **argv)
 	}
 	args[argc - 1] = 0;
 	if (sp & 1) sp--;
+	Word env = 0;				// Push 1 words for environ
+	sp -= 2;
+	copyout(&env, sp, 2);
 	sp -= argc * 2;
-	printf("argv is %#x\n", sp);
 	copyout(args, sp, argc * 2);
-	Word vargv = sp;
-	Word env = 0;				// Push 3 words for environ
-	sp -= 2;
-	copyout(&env, sp, 2);
-	sp -= 2;
-	copyout(&env, sp, 2);
-	sp -= 2;
-	copyout(&env, sp, 2);
-	sp -= 2;
-	copyout(&vargv, sp, 2);
-	printf("argv pushed to %#x\n", sp);
 	Word vargc = argc - 1;
 	sp -= 2;
 	printf("argc pushed to %#x\n", sp);
