@@ -216,12 +216,14 @@ int venix_o_to_host(int mode)
 
 void sys_retval_long(uint32_t r)
 {
+	setCX(0);			// No errno
 	setAX(r & 0xffff);
 	setDX(r >> 16);
 }
 
 void sys_retval_int(uint16_t r)
 {
+	setCX(0);			// No errno
 	setAX(r);
 }
 
@@ -243,6 +245,25 @@ bool bad_fd(int fd)
 }
 
 void *u2k(Word addr) { return (&ram[physicalAddress(addr, DSeg, false)]); }
+
+void host_to_venix_sb(struct stat *sb, Word usb)
+{
+	struct venix_stat vsb;
+
+	vsb.st_dev = sb->st_dev;
+	vsb.st_ino = sb->st_ino;
+	vsb.st_mode = sb->st_mode;	// need to translate?
+	vsb.st_nlink = sb->st_nlink;
+	vsb.st_uid = sb->st_uid;
+	vsb.st_gid = sb->st_gid;
+	vsb.st_rdev = sb->st_rdev;
+	vsb.st_size = sb->st_size;
+	vsb.st_atime_v = sb->st_atime;
+	vsb.st_mtime_v = sb->st_mtime;
+	vsb.st_ctime_v = sb->st_ctime;
+	copyout(&vsb, usb, sizeof(vsb));
+	sys_retval_int(0);
+}
 
 void load(int argc, char **argv)
 {
@@ -311,6 +332,7 @@ void load(int argc, char **argv)
 	    loadSegment : loadSegment + ((hdr.a_text + 15) >> 4);
 	for (int i = 0; i < FirstS; i++)
 		registers[i] = 0;
+	printf("Launching at %#x:0 with ds %#x\n", registers[CS], registers[DS]);
 
 	/*
 	 * Setup the stack by first 'pushing' the args onto it. First
@@ -450,6 +472,7 @@ venix_close()
 		sys_error(EBADF);
 		return;
 	}
+	printf("close %d\n", fd);
 	close(open_fd[fd]);
 	open_fd[fd] = -1;
 	sys_retval_int(0);
@@ -570,8 +593,25 @@ venix_sbreak()
 void
 venix_stat()
 {
+	char fn[VENIX_PATHSIZ];
+	char host_fn[MAXPATHLEN];
+	Word ufn = ax();
+	Word usb = dx();
+	struct stat sb;
+	int rv;
 
-	error("Unimplemented system call 18 _stat\n");
+	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	venix_to_host_path(fn, host_fn, sizeof(host_fn));
+	printf("stat %s\n", host_fn);
+	rv = stat(host_fn, &sb);
+	if (rv == -1) {
+		sys_error(errno);
+		return;
+	}
+	host_to_venix_sb(&sb, usb);
 }
 
 /* 19 _seek */
@@ -650,8 +690,22 @@ venix_alarm()
 void
 venix_fstat()
 {
+	int fd = ax();
+	Word usb = dx();
+	struct stat sb;
+	int rv;
 
-	error("Unimplemented system call 28 _fstat\n");
+	if (bad_fd(fd)) {
+		sys_error(EBADF);
+		return;
+	}
+	printf("fstat %d\n", fd);
+	rv = fstat(open_fd[fd], &sb);
+	if (rv == -1) {
+		sys_error(errno);
+		return;
+	}
+	host_to_venix_sb(&sb, usb);
 }
 
 /* 29 _pause */
@@ -707,7 +761,7 @@ venix_ftime()
 	tb.timezone = 6 * 60;
 	tb.dstflag = 1;
 	copyout(&tb, ax(), sizeof(tb));
-	setAX(0);
+	sys_retval_int(0);
 	return;
 }
 
