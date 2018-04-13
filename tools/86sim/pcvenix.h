@@ -114,6 +114,11 @@ private:
 	} __packed;
 	static_assert(sizeof(venix_sgttyb) == 6, "Bad venix_sgttyb size");
 
+void venix_to_host_path(char *fn, char *host_fn, size_t len)
+{
+	strlcpy(host_fn, fn, len);
+}
+
 int copyinstr(Word uptr, void *kaddr, size_t len)
 {
 	char ch;
@@ -129,9 +134,17 @@ int copyinstr(Word uptr, void *kaddr, size_t len)
 	return (0);
 }
 
-void venix_to_host_path(char *fn, char *host_fn, size_t len)
+int copyin(Word uptr, void *kaddr, size_t len)
 {
-	strlcpy(host_fn, fn, len);
+	char ch;
+	char *str = (char *)kaddr;
+
+	for (int i = 0; i < len; i++) {
+		ch = readByte(uptr + i, DSeg);
+		str[i] = ch;
+	}
+
+	return (0);
 }
 
 /*
@@ -246,7 +259,6 @@ void load(int argc, char **argv)
 	 * a pointer to argv, then argc.
 	 */
 	sp = hdr.a_text + hdr.a_stack;
-	printf("Top of stack %#x\n", sp);
 	Word args[100];
 	for (int i = 1; i < argc; i++) {
 		int len;
@@ -256,7 +268,6 @@ void load(int argc, char **argv)
 		if (sp & 1) sp--;
 		copyout(argv[i], sp, len);
 		args[i - 1] = sp;
-		printf("Copying '%s' to %#x\n", argv[i], sp);
 	}
 	args[argc - 1] = 0;
 	if (sp & 1) sp--;
@@ -267,7 +278,6 @@ void load(int argc, char **argv)
 	copyout(args, sp, argc * 2);
 	Word vargc = argc - 1;
 	sp -= 2;
-	printf("argc pushed to %#x\n", sp);
 	copyout(&vargc, sp, 2);
 
 	registers[SP] = sp;
@@ -292,12 +302,13 @@ venix_fork()
 
 typedef ssize_t (rdwr_fn)(int, void *, size_t);
 
-void rdwr(rdwr_fn *fn)
+void rdwr(rdwr_fn *fn, bool isread)
 {
 	int fd = ax();
 	Word ptr = dx();
 	Word len = cx();
 	ssize_t rv;
+	void *buffer;
 
 	if (bad_fd(fd)) {
 		sys_error(EBADF);
@@ -307,27 +318,33 @@ void rdwr(rdwr_fn *fn)
 		sys_error(EFAULT);
 		return;
 	}
-	printf("fd %d ptr %#x len %d\n", fd, ptr, len);
-	rv = fn(open_fd[fd], u2k(ptr), (size_t)len);
+	buffer = malloc(len);
+	if (!isread)
+		copyin(ptr, buffer, len);
+	rv = fn(open_fd[fd], buffer, (size_t)len);
 	if (rv == -1) {
 		sys_error(errno);
+		free(buffer);
 		return;
 	}
+	if (isread)
+		copyout(buffer, ptr, len);
 	sys_retval_int(rv);
+	free(buffer);
 }
 
 /* 3 _read */
 void
 venix_read()
 {
-	rdwr(::read);
+	rdwr(::read, true);
 }
 
 /* 4 _write */
 void
 venix_write()
 {
-	rdwr((rdwr_fn *)::write);
+	rdwr((rdwr_fn *)::write, false);
 }
 
 /* 5 _open */
@@ -897,9 +914,7 @@ void int_cd(void)
 	data = fetchByte();
 	switch (data) {
 	case 0xf4:
-		printf("FPU sp %#x\n", sp());
-		for (int i = -30; i <= 0; i++)
-			printf("%#x: %#x\n", sp() - i * 2, *(Word *)u2k(sp() - i * 2));
+		/* Ignore FPU emulation */
 		break;
 	case 0xf3:
 	case 0xf2:
