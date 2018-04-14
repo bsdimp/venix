@@ -29,6 +29,11 @@
 #ifndef _MACHINE_DB_MACHDEP_H_
 #define	_MACHINE_DB_MACHDEP_H_
 
+#include <stdbool.h>
+#define TRUE 1
+#define FALSE 0
+typedef bool boolean_t;
+
 #include <machine/frame.h>
 #include <machine/trap.h>
 

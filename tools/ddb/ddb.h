@@ -43,10 +43,9 @@
 SYSCTL_DECL(_debug_ddb);
 #endif
 
-#include <machine/db_machdep.h>		/* type definitions */
+#include "db_machdep.h"
 
 #include <sys/queue.h>			/* LIST_* */
-#include <sys/kernel.h>			/* SYSINIT */
 
 #ifndef DB_MAXARGS
 #define	DB_MAXARGS	10
