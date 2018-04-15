@@ -33,7 +33,7 @@ bool
 db_printreloc(db_expr_t offset, db_strategy_t strategy, db_expr_t loc)
 {
 //	return X_db_printrel(offset, strategy, loc);
-	printf("\n looking up loc %d offset %d strat %d\n", loc, offset, strategy);
+//	printf("\n looking up loc %d offset %d strat %d\n", loc, offset, strategy);
 	return true;
 }
 
