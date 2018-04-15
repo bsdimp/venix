@@ -437,22 +437,22 @@ db_printsym(db_expr_t off, db_strategy_t strategy)
 	c_db_sym_t	cursym;
 
 	if (off < 0 && off >= -db_maxoff) {
-		db_printf("%+#lr", (long)off);
+		db_printf("%+#lx", (long)off);
 		return;
 	}
 	cursym = db_search_symbol(off, strategy, &d);
 	db_symbol_values(cursym, &name, NULL);
 	if (name == NULL || d >= (db_addr_t)db_maxoff) {
-		db_printf("%#lr", (unsigned long)off);
+		db_printf("%#lx", (unsigned long)off);
 		return;
 	}
 #ifdef DDB_NUMSYM
-	db_printf("%#lr = %s", (unsigned long)off, name);
+	db_printf("%#lx = %s", (unsigned long)off, name);
 #else
 	db_printf("%s", name);
 #endif
 	if (d)
-		db_printf("+%+#lr", (long)d);
+		db_printf("+%+#lx", (long)d);
 	if (strategy == DB_STGY_PROC) {
 		if (db_line_at_pc(cursym, &filename, &linenum, off))
 			db_printf(" [%s:%d]", filename, linenum);
