@@ -36,6 +36,7 @@ __FBSDID("$FreeBSD$");
 #include <ddb/ddb.h>
 #include <ddb/db_access.h>
 #include <ddb/db_sym.h>
+#include <ddb/db_reloc.h>
 
 /*
  * Size attributes
@@ -885,6 +886,7 @@ struct i_addr {
 	const char *	index;
 	int		ss;
 	bool		defss;	/* set if %ss is the default segment */
+	vm_offset_t	addr_loc; /* offset of where we found this address */
 };
 
 static const char * const db_index_reg_16[8] = {
@@ -958,6 +960,7 @@ db_read_address(loc, short_addr, regmodrm, addrp)
 	addrp->index = NULL;
 	addrp->ss = 0;
 	addrp->defss = FALSE;
+	addrp->addr_loc = loc;
 
 	if (short_addr) {
 	    if (rm == 2 || rm == 3 || (rm == 6 && mod != 0))
@@ -1043,7 +1046,14 @@ db_print_address(seg, size, addrp)
 	    db_printf("%%ss:");
 	}
 
-	db_printsym((db_addr_t)addrp->disp, DB_STGY_ANY);
+	/*
+	 * If we have relocations, and we often do when we're running to disassemble
+	 * .o files, try using that to find the symbol to print. This  is a nop
+	 * for the run-time version of the debugger, since things are fully linked
+	 * at that point.
+	 */
+	if (db_printreloc((db_addr_t)addrp->disp, DB_STGY_ANY, addrp->addr_loc) != 0)
+		db_printsym((db_addr_t)addrp->disp, DB_STGY_ANY);
 	if (addrp->base != NULL || addrp->index != NULL) {
 	    db_printf("(");
 	    if (addrp->base)
