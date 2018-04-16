@@ -36,11 +36,16 @@ __FBSDID("$FreeBSD$");
 #include "opt_kstack_pages.h"
 
 #include <sys/param.h>
+#ifdef _KERNEL
 #include <sys/pcpu.h>
 #include <sys/smp.h>
 #include <sys/systm.h>
 
 #include <net/vnet.h>
+#else
+#include <string.h>
+#include <stdio.h>
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_sym.h>
@@ -65,6 +70,7 @@ static char		*db_qualify(c_db_sym_t sym, char *symtabname);
 static bool		db_symbol_is_ambiguous(c_db_sym_t sym);
 static bool		db_line_at_pc(c_db_sym_t, char **, int *, db_expr_t);
 
+#ifdef _KERNEL
 static int db_cpu = -1;
 
 #ifdef VIMAGE
@@ -169,6 +175,7 @@ db_var_curvnet(struct db_variable *vp, db_expr_t *valuep, int op)
 	}
 }
 #endif
+#endif
 
 /*
  * Add symbol table, with given name, to list of symbol tables.
@@ -228,6 +235,7 @@ db_value_of_name(const char *name, db_expr_t *valuep)
 	return (true);
 }
 
+#ifdef _KERNEL
 bool
 db_value_of_name_pcpu(const char *name, db_expr_t *valuep)
 {
@@ -277,6 +285,7 @@ db_value_of_name_vnet(const char *name, db_expr_t *valuep)
 	return (false);
 #endif
 }
+#endif
 
 /*
  * Lookup a symbol.
@@ -370,14 +379,14 @@ c_db_sym_t
 db_search_symbol(db_addr_t val, db_strategy_t strategy, db_expr_t *offp)
 {
 	unsigned int	diff;
-	size_t		newdiff;
+	db_expr_t	newdiff;
 	int		i;
 	c_db_sym_t	ret = C_DB_SYM_NULL, sym;
 
 	newdiff = diff = val;
 	for (i = 0; i < db_nsymtab; i++) {
 	    sym = X_db_search_symbol(&db_symtabs[i], val, strategy, &newdiff);
-	    if ((uintmax_t)newdiff < (uintmax_t)diff) {
+	    if ((uintmax_t)newdiff <= (uintmax_t)diff) {
 		db_last_symtab = &db_symtabs[i];
 		diff = newdiff;
 		ret = sym;
@@ -437,7 +446,7 @@ db_printsym(db_expr_t off, db_strategy_t strategy)
 	c_db_sym_t	cursym;
 
 	if (off < 0 && off >= -db_maxoff) {
-		db_printf("%+#lx", (long)off);
+		db_printf("%#lx", (long)off);
 		return;
 	}
 	cursym = db_search_symbol(off, strategy, &d);
@@ -452,7 +461,7 @@ db_printsym(db_expr_t off, db_strategy_t strategy)
 	db_printf("%s", name);
 #endif
 	if (d)
-		db_printf("+%+#lx", (long)d);
+		db_printf("+%#lx", (long)d);
 	if (strategy == DB_STGY_PROC) {
 		if (db_line_at_pc(cursym, &filename, &linenum, off))
 			db_printf(" [%s:%d]", filename, linenum);
