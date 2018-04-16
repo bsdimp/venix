@@ -265,6 +265,8 @@ X_db_printreloc(db_reloctab_t *relotab, db_expr_t offset, db_strategy_t strategy
 	     (char*)relo < relotab->end; relo++) {
 		if (relo->r_extern != 0 && relo->r_address == loc) {
 			printf("%s", strtab + symtb[relo->r_symbolnum].ns_un.ns_strx);
+			if (offset != 0)
+				printf("+%#x", offset);
 			return true;
 		}
 	}
