@@ -134,14 +134,6 @@ db_write_bytes(vm_offset_t addr, size_t size, char *data)
 	return 0;
 }
 
-#if 0
-void
-db_printsym(db_expr_t off, db_strategy_t strategy)
-{
-	db_printf("%#lx", (long)off);
-}
-#endif
-
 void
 panic(const char *fmt, ...)
 {
