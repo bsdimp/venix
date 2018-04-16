@@ -1029,6 +1029,14 @@ db_read_address(loc, short_addr, regmodrm, addrp)
 }
 
 static void
+db_print_reloc_or_sym(db_addr_t disp, db_strategy_t s, db_addr_t loc)
+{
+	if (!db_printreloc(disp, s, loc))
+		db_printsym(disp, s);
+}
+
+
+static void
 db_print_address(seg, size, addrp)
 	const char *	seg;
 	int		size;
@@ -1052,8 +1060,7 @@ db_print_address(seg, size, addrp)
 	 * for the run-time version of the debugger, since things are fully linked
 	 * at that point.
 	 */
-	if (!db_printreloc((db_addr_t)addrp->disp, DB_STGY_ANY, addrp->addr_loc))
-		db_printsym((db_addr_t)addrp->disp, DB_STGY_ANY);
+	db_print_reloc_or_sym((db_addr_t)addrp->disp, DB_STGY_ANY, addrp->addr_loc);
 	if (addrp->base != NULL || addrp->index != NULL) {
 	    db_printf("(");
 	    if (addrp->base)
@@ -1483,7 +1490,7 @@ db_disasm(db_addr_t loc, bool altfmt)
 		    if (seg)
 			db_printf("%s:%#x",seg, displ);
 		    else
-			db_printsym((db_addr_t)displ, DB_STGY_ANY);
+			db_print_reloc_or_sym((db_addr_t)displ, DB_STGY_ANY, loc - len);
 		    break;
 
 		case Db:
@@ -1491,7 +1498,7 @@ db_disasm(db_addr_t loc, bool altfmt)
 		    displ += loc;
 		    if (size == WORD)
 			displ &= 0xFFFF;
-		    db_printsym((db_addr_t)displ, DB_STGY_XTRN);
+		    db_print_reloc_or_sym((db_addr_t)displ, DB_STGY_XTRN, loc - 1);
 		    break;
 
 		case Dl:
@@ -1500,7 +1507,7 @@ db_disasm(db_addr_t loc, bool altfmt)
 		    displ += loc;
 		    if (size == WORD)
 			displ &= 0xFFFF;
-		    db_printsym((db_addr_t)displ, DB_STGY_XTRN);
+		    db_print_reloc_or_sym((db_addr_t)displ, DB_STGY_XTRN, loc - len);
 		    break;
 
 		case o1:
