@@ -434,7 +434,7 @@ db_symbol_values(c_db_sym_t sym, const char **namep, db_expr_t *valuep)
  * not accept symbols whose value is "small" (and use plain hex).
  */
 
-db_expr_t	db_maxoff = 0x10000;
+db_expr_t	db_maxoff = 0x100;
 
 void
 db_printsym(db_expr_t off, db_strategy_t strategy)
@@ -455,13 +455,17 @@ db_printsym(db_expr_t off, db_strategy_t strategy)
 		db_printf("%#lx", (unsigned long)off);
 		return;
 	}
+	if (off > db_maxoff || (d == 0)) {
 #ifdef DDB_NUMSYM
-	db_printf("%#lx = %s", (unsigned long)off, name);
+		db_printf("%#lx = %s", (unsigned long)off, name);
 #else
-	db_printf("%s", name);
+		db_printf("%s", name);
 #endif
-	if (d)
-		db_printf("+%#lx", (long)d);
+		if (d)
+			db_printf("+%#lx", (long)d);
+	} else {
+		db_printf("%#lx", (long)off);
+	}
 	if (strategy == DB_STGY_PROC) {
 		if (db_line_at_pc(cursym, &filename, &linenum, off))
 			db_printf(" [%s:%d]", filename, linenum);
