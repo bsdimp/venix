@@ -1052,7 +1052,7 @@ db_print_address(seg, size, addrp)
 	 * for the run-time version of the debugger, since things are fully linked
 	 * at that point.
 	 */
-	if (db_printreloc((db_addr_t)addrp->disp, DB_STGY_ANY, addrp->addr_loc) != 0)
+	if (!db_printreloc((db_addr_t)addrp->disp, DB_STGY_ANY, addrp->addr_loc))
 		db_printsym((db_addr_t)addrp->disp, DB_STGY_ANY);
 	if (addrp->base != NULL || addrp->index != NULL) {
 	    db_printf("(");

@@ -12,8 +12,12 @@
 #include <ddb/ddb.h>
 #include <ddb/db_output.h>
 #include <ddb/db_sym.h>
+#include <ddb/db_reloc.h>
 
 #include "../dis88/venix_a_out.h"
+
+char *strtab;
+struct symtb *symtb;
 
 static void
 usage(void)
@@ -32,6 +36,7 @@ main(int argc, char **argv)
 	struct stat sb;
 	void *file;
 	vm_offset_t ptr;
+	char *start, *end;
 
 	if (argc < 2)
 		usage();
@@ -50,15 +55,40 @@ main(int argc, char **argv)
 	if (N_BADMAG(*aout))
 		errx(1, "Bad magic number 0%o\n", aout->a_magic);
 
+	if (aout->a_syms != 0) {
+		start = (char *)file + N_SYMOFF(*aout);
+		symtb = (struct symtb *)start;
+		end = start + aout->a_syms;
+		strtab = (char *)file + N_STROFF(*aout);
+		db_add_symbol_table(start, end, "main symbols", strtab);
+		if (aout->a_trsize + aout->a_drsize != 0) {
+			start = (char *)file + N_TXTOFF(*aout) + aout->a_text + aout->a_data;
+			end  = start + aout->a_trsize;
+			db_add_reloc_table(start, end, "text reloc", NULL);
+			start = end;
+			end = start + aout->a_drsize;
+			db_add_reloc_table(start, end, "data reloc", NULL);
+		}
+	}
+
+	printf("\t.code16\n");
 	ptr = 0;
 	while (ptr < aout->a_text) {
-		uint8_t ret, ch;
+		uint8_t		ret, ch;
+		c_db_sym_t	cursym;
+		const char	*name;
+		db_expr_t	d;
 
-		printf("%#x:\t", ptr);
+		cursym = db_search_symbol(ptr, DB_STGY_ANY, &d);
+		db_symbol_values(cursym, &name, NULL);
+		if (d == 0 && name != NULL)
+			db_printf("%s:\n", name);
+		db_printf("\t");
 		db_read_bytes(ptr, 1, (char *)&ret);
 		ptr = db_disasm(ptr, false);
 		db_read_bytes(ptr, 1, (char *)&ch);
-		if (ptr == 0x35 || ((ptr & 1) && (ret == 0xc3 && ch == 0))) {
+		if ((aout->a_stack != 0 && ptr == 0x35) ||
+		    ((ptr & 1) && (ret == 0xc3 && ch == 0))) {
 			printf("%#x:\t.byte\t0\n", ptr);
 			ptr++;
 		}
@@ -99,14 +129,29 @@ db_read_bytes(vm_offset_t addr, size_t size, char *data)
 int
 db_write_bytes(vm_offset_t addr, size_t size, char *data)
 {
+	fprintf(stderr, "db_write_bytes\n");
+	exit(1);
 	return 0;
 }
 
+#if 0
 void
 db_printsym(db_expr_t off, db_strategy_t strategy)
 {
 	db_printf("%#lx", (long)off);
 }
+#endif
+
+void
+panic(const char *fmt, ...)
+{
+	va_list	listp;
+	va_start(listp, fmt);
+	vfprintf(stderr, fmt, listp);
+	va_end(listp);
+	exit(1);
+}
+
 
 /*
  * Printing
@@ -122,4 +167,106 @@ db_printf(const char *fmt, ...)
 	va_end(listp);
 
 	return (retval);
+}
+
+bool
+X_db_line_at_pc(db_symtab_t *symtab, c_db_sym_t sym, char **file, int *line,
+    db_expr_t off)
+{
+	return (false);
+}
+
+bool
+X_db_sym_numargs(db_symtab_t *symtab, c_db_sym_t sym, int *nargp, char **argnames)
+{
+	return false;
+}
+
+c_db_sym_t
+X_db_lookup(db_symtab_t *symtab, const char *symbol)
+{
+#if 0
+	c_linker_sym_t lsym;
+	Elf_Sym *sym;
+
+	if (symtab->private == NULL) {
+		return ((c_db_sym_t)((!linker_ddb_lookup(symbol, &lsym))
+			? lsym : NULL));
+	} else {
+		sym = (Elf_Sym *)symtab->start;
+		while ((char *)sym < symtab->end) {
+			if (sym->st_name != 0 &&
+			    !strcmp(symtab->private + sym->st_name, symbol))
+				return ((c_db_sym_t)sym);
+			sym++;
+		}
+	}
+#endif
+	panic("Not yet lookup");
+	return (NULL);
+}
+
+c_db_sym_t
+X_db_search_symbol(db_symtab_t *symtab, db_addr_t off, db_strategy_t strat,
+    db_expr_t *diffp)
+{
+	struct symtb *sym, *match;
+	unsigned long diff;
+	int type;
+
+	diff = ~0UL;
+	match = NULL;
+	for (sym = (struct symtb *)symtab->start; (char*)sym < symtab->end; sym++) {
+		type = sym->ns_type & N_TYPE;
+		if (type != N_TEXT && type != N_DATA && type != N_BSS)
+			continue;
+		if (off < sym->ns_value)
+			continue;
+		if ((off - sym->ns_value) > diff)
+			continue;
+		if ((off - sym->ns_value) < diff) {
+			diff = off - sym->ns_value;
+			match = sym;
+		}
+		if (diff == 0)
+			break;
+	}
+
+	*diffp = (match == NULL) ? off : diff;
+	return ((c_db_sym_t)match);
+}
+
+void
+X_db_symbol_values(db_symtab_t *symtab, c_db_sym_t sym, const char **namep,
+    db_expr_t *valp)
+{
+	struct symtb *asym = (struct symtb *)sym;
+
+	if (valp)
+		*valp = asym->ns_value;
+	*namep = symtab->private + asym->ns_un.ns_strx;
+}
+
+void
+db_error(const char *s)
+{
+	if (s)
+		db_printf("%s", s);
+	fflush(stdout);
+	/* kdb_reenter_silent() */
+}
+
+bool
+X_db_printreloc(db_reloctab_t *relotab, db_expr_t offset, db_strategy_t strategy, db_expr_t loc)
+{
+	struct relocation_info *relo;
+
+	for (relo = (struct relocation_info *)relotab->start;
+	     (char*)relo < relotab->end; relo++) {
+		if (relo->r_extern != 0 && relo->r_address == loc) {
+			printf("%s", strtab + symtb[relo->r_symbolnum].ns_un.ns_strx);
+			return true;
+		}
+	}
+	return false;
 }

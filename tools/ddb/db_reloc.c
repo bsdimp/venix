@@ -18,8 +18,7 @@ db_add_reloc_table(char *start, char *end, char *name, char *extra)
 {
 	if (db_nreloctab >= MAXNORELOCTABS) {
 		printf ("No slots left for %s relocation table", name);
-//		panic ("db_sym.c: db_add_reloc_table");
-		exit(1);
+		panic ("db_sym.c: db_add_reloc_table");
 	}
 
 	db_reloctabs[db_nreloctab].start = start;
@@ -32,8 +31,12 @@ db_add_reloc_table(char *start, char *end, char *name, char *extra)
 bool
 db_printreloc(db_expr_t offset, db_strategy_t strategy, db_expr_t loc)
 {
-//	return X_db_printrel(offset, strategy, loc);
-//	printf("\n looking up loc %d offset %d strat %d\n", loc, offset, strategy);
-	return true;
+	int i;
+
+	for (i = 0; i < db_nreloctab; i++)
+		if (X_db_printreloc(&db_reloctabs[i], offset, strategy, loc))
+			return true;
+
+	return false;
 }
 

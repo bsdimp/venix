@@ -90,4 +90,8 @@ do {						\
 
 int	db_segsize(struct trapframe *tfp);
 
+#ifndef _KERNEL
+void panic(const char* fmt, ...);
+#endif
+
 #endif /* !_MACHINE_DB_MACHDEP_H_ */
