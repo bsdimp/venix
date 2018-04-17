@@ -40,6 +40,7 @@ __FBSDID("$FreeBSD$");
 #include "opt_ddb.h"
 
 #include <sys/param.h>
+#ifdef _KERNEL
 #include <sys/systm.h>
 #include <sys/cons.h>
 #include <sys/kdb.h>
@@ -47,6 +48,13 @@ __FBSDID("$FreeBSD$");
 #include <sys/sysctl.h>
 
 #include <machine/stdarg.h>
+#else
+#include <stdio.h>
+#include <stdarg.h>
+#define cnputc(c)	putchar(c)
+#define cngetc()	getchar()
+#define kdb_active 0
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_output.h>
@@ -80,8 +88,10 @@ volatile int	db_pager_quit;			/* user requested quit */
 static int	db_newlines;			/* # lines this page */
 static int	db_maxlines;			/* max lines/page when paging */
 static int	ddb_use_printf = 0;
+#ifdef _KERNEL
 SYSCTL_INT(_debug, OID_AUTO, ddb_use_printf, CTLFLAG_RW, &ddb_use_printf, 0,
     "use printf for all ddb output");
+#endif
 
 static void	db_putc(int c);
 static void	db_puts(const char *str);
@@ -317,6 +327,7 @@ db_print_position(void)
 /*
  * Printing
  */
+#ifdef _KERNEL
 int
 db_printf(const char *fmt, ...)
 {
@@ -384,6 +395,7 @@ db_iprintf(const char *fmt,...)
 		db_puts(dca.da_pbufr);
 #endif
 }
+#endif
 
 /*
  * End line if too long.

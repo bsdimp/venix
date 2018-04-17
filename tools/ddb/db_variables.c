@@ -34,7 +34,11 @@
 __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
+#ifdef _KERNEL
 #include <sys/systm.h>
+#else
+#include <string.h>
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_lex.h>
@@ -48,11 +52,13 @@ static struct db_variable db_vars[] = {
 	{ "maxwidth",	&db_max_width, FCN_NULL },
 	{ "tabstops",	&db_tab_stop_width, FCN_NULL },
 	{ "lines",	&db_lines_per_page, FCN_NULL },
+#ifdef _KERNEL
 	{ "curcpu",	NULL, db_var_curcpu },
 	{ "db_cpu",	NULL, db_var_db_cpu },
 #ifdef VIMAGE
 	{ "curvnet",	NULL, db_var_curvnet },
 	{ "db_vnet",	NULL, db_var_db_vnet },
+#endif
 #endif
 };
 static struct db_variable *db_evars = db_vars + nitems(db_vars);

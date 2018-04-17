@@ -34,6 +34,7 @@
 __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
+#ifdef _KERNEL
 #include <sys/kernel.h>
 #include <sys/lock.h>
 #include <sys/proc.h>
@@ -41,6 +42,7 @@ __FBSDID("$FreeBSD$");
 #include <vm/vm.h>
 #include <vm/pmap.h>
 #include <vm/vm_map.h>
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_watch.h>

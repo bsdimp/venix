@@ -39,8 +39,10 @@ __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
 
+#ifdef _KERNEL
 #include <vm/vm.h>
 #include <vm/vm_kern.h>
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_break.h>

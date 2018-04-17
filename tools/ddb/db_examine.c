@@ -34,7 +34,11 @@
 __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
+#ifdef _KERNEL
 #include <sys/systm.h>
+#else
+#include <string.h>
+#endif
 
 #include <ddb/ddb.h>
 
@@ -113,18 +117,20 @@ db_examine(db_addr_t addr, char *fmt, int count)
 			    case 'r':	/* signed, current radix */
 				value = db_get_value(addr, size, true);
 				addr += size;
-				db_printf("%+-*lr", width, (long)value);
+				db_printf("%*lx", width, (long)value);
 				break;
 			    case 'x':	/* unsigned hex */
 				value = db_get_value(addr, size, false);
 				addr += size;
 				db_printf("%-*lx", width, (long)value);
 				break;
+#ifdef _KERNEL
 			    case 'z':	/* signed hex */
 				value = db_get_value(addr, size, true);
 				addr += size;
 				db_printf("%-*ly", width, (long)value);
 				break;
+#endif
 			    case 'd':	/* signed decimal */
 				value = db_get_value(addr, size, true);
 				addr += size;
@@ -203,14 +209,16 @@ db_print_cmd(db_expr_t addr, bool have_addr, db_expr_t count, char *modif)
 		db_printsym((db_addr_t)addr, DB_STGY_ANY);
 		break;
 	    case 'r':
-		db_printf("%+11lr", (long)addr);
+		db_printf("%11lx", (long)addr);
 		break;
 	    case 'x':
 		db_printf("%8lx", (unsigned long)addr);
 		break;
+#ifdef _KERNEL
 	    case 'z':
 		db_printf("%8ly", (long)addr);
 		break;
+#endif
 	    case 'd':
 		db_printf("%11ld", (long)addr);
 		break;

@@ -39,6 +39,7 @@ __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
 #include <sys/kdb.h>
+#ifdef _KERNEL
 #include <sys/proc.h>
 #include <sys/systm.h>
 
@@ -46,6 +47,9 @@ __FBSDID("$FreeBSD$");
 #include <machine/pcb.h>
 
 #include <vm/vm.h>
+#else
+#include <stdio.h>
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_break.h>

@@ -187,8 +187,8 @@ extern db_expr_t db_max_width;
 extern db_expr_t db_tab_stop_width;
 extern db_expr_t db_lines_per_page;
 
-struct thread;
-struct vm_map;
+// struct thread;
+// struct vm_map;
 
 void		db_check_interrupt(void);
 void		db_clear_watchpoints(void);
@@ -198,16 +198,16 @@ void		db_error(const char *s);
 int		db_expression(db_expr_t *valuep);
 int		db_get_variable(db_expr_t *valuep);
 void		db_iprintf(const char *,...) __printflike(1, 2);
-struct proc	*db_lookup_proc(db_expr_t addr);
-struct thread	*db_lookup_thread(db_expr_t addr, bool check_pid);
-struct vm_map	*db_map_addr(vm_offset_t);
-bool		db_map_current(struct vm_map *);
-bool		db_map_equal(struct vm_map *, struct vm_map *);
+// struct proc	*db_lookup_proc(db_expr_t addr);
+// struct thread	*db_lookup_thread(db_expr_t addr, bool check_pid);
+vm_map_t	db_map_addr(vm_offset_t);
+bool		db_map_current(vm_map_t);
+bool		db_map_equal(vm_map_t, vm_map_t);
 int		db_md_set_watchpoint(db_expr_t addr, db_expr_t size);
 int		db_md_clr_watchpoint(db_expr_t addr, db_expr_t size);
 void		db_md_list_watchpoints(void);
 void		db_print_loc_and_inst(db_addr_t loc);
-void		db_print_thread(void);
+//void		db_print_thread(void);
 int		db_printf(const char *fmt, ...) __printflike(1, 2);
 int		db_read_bytes(vm_offset_t addr, size_t size, char *data);
 				/* machine-dependent */
@@ -220,7 +220,7 @@ bool		db_stop_at_pc(int type, int code, bool *is_breakpoint,
 		    bool *is_watchpoint);
 #define		db_strcpy	strcpy
 void		db_trace_self(void);
-int		db_trace_thread(struct thread *, int);
+//int		db_trace_thread(struct thread *, int);
 bool		db_value_of_name(const char *name, db_expr_t *valuep);
 bool		db_value_of_name_pcpu(const char *name, db_expr_t *valuep);
 bool		db_value_of_name_vnet(const char *name, db_expr_t *valuep);
@@ -241,14 +241,20 @@ db_cmdfcn_t	db_hwatchpoint_cmd;
 db_cmdfcn_t	db_listbreak_cmd;
 db_cmdfcn_t	db_scripts_cmd;
 db_cmdfcn_t	db_print_cmd;
+#ifdef _KERNEL
 db_cmdfcn_t	db_ps;
 db_cmdfcn_t	db_run_cmd;
 db_cmdfcn_t	db_script_cmd;
+#endif
 db_cmdfcn_t	db_search_cmd;
 db_cmdfcn_t	db_set_cmd;
+#ifdef _KERNEL
 db_cmdfcn_t	db_set_thread;
+#endif
 db_cmdfcn_t	db_show_regs;
+#ifdef _KERNEL
 db_cmdfcn_t	db_show_threads;
+#endif
 db_cmdfcn_t	db_single_step_cmd;
 db_cmdfcn_t	db_textdump_cmd;
 db_cmdfcn_t	db_trace_until_call_cmd;

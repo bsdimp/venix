@@ -75,7 +75,7 @@ db_write_cmd(db_expr_t address, bool have_addr, db_expr_t count,
 	while (db_expression(&new_value)) {
 	    old_value = db_get_value(addr, size, false);
 	    db_printsym(addr, DB_STGY_ANY);
-	    db_printf("\t\t%#8lr\t=\t%#8lr\n", (long)old_value,(long)new_value);
+	    db_printf("\t\t%#8lx\t=\t%#8lx\n", (long)old_value,(long)new_value);
 	    db_put_value(addr, size, new_value);
 	    addr += size;
 

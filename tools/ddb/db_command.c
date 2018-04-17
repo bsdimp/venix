@@ -38,6 +38,7 @@ __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
 #include <sys/linker_set.h>
+#ifdef _KERNEL
 #include <sys/lock.h>
 #include <sys/kdb.h>
 #include <sys/mutex.h>
@@ -49,14 +50,22 @@ __FBSDID("$FreeBSD$");
 #include <sys/conf.h>
 #include <sys/watchdog.h>
 #include <sys/kernel.h>
+#else
+#include <stdio.h>
+#include <string.h>
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_command.h>
 #include <ddb/db_lex.h>
 #include <ddb/db_output.h>
 
+#ifdef _KERNEL
 #include <machine/cpu.h>
 #include <machine/setjmp.h>
+#else
+#include <setjmp.h>
+#endif
 
 /*
  * Exported global variables
@@ -67,21 +76,28 @@ db_addr_t	db_last_addr;
 db_addr_t	db_prev;
 db_addr_t	db_next;
 
+#ifdef _KERNEL
 static db_cmdfcn_t	db_dump;
+#endif
 static db_cmdfcn_t	db_fncall;
+#ifdef _KERNEL
 static db_cmdfcn_t	db_gdb;
 static db_cmdfcn_t	db_halt;
 static db_cmdfcn_t	db_kill;
 static db_cmdfcn_t	db_reset;
+#endif
 static db_cmdfcn_t	db_stack_trace;
+#ifdef _KERNEL
 static db_cmdfcn_t	db_stack_trace_active;
 static db_cmdfcn_t	db_stack_trace_all;
 static db_cmdfcn_t	db_watchdog;
+#endif
 
 /*
  * 'show' commands
  */
 
+#ifdef _KERNEL
 static struct command db_show_active_cmds[] = {
 	{ "trace",	db_stack_trace_active,	0,	NULL },
 };
@@ -93,13 +109,18 @@ static struct command db_show_all_cmds[] = {
 };
 struct command_table db_show_all_table =
     LIST_HEAD_INITIALIZER(db_show_all_table);
+#endif
 
 static struct command db_show_cmds[] = {
+#ifdef _KERNEL
 	{ "active",	0,			0,	&db_show_active_table },
 	{ "all",	0,			0,	&db_show_all_table },
+#endif
 	{ "registers",	db_show_regs,		0,	NULL },
 	{ "breaks",	db_listbreak_cmd, 	0,	NULL },
+#ifdef _KERNEL
 	{ "threads",	db_show_threads,	0,	NULL },
+#endif
 };
 struct command_table db_show_table = LIST_HEAD_INITIALIZER(db_show_table);
 
@@ -114,7 +135,9 @@ static struct command db_cmds[] = {
 	{ "w",		db_write_cmd,		CS_MORE|CS_SET_DOT, NULL },
 	{ "delete",	db_delete_cmd,		0,	NULL },
 	{ "d",		db_delete_cmd,		0,	NULL },
+#ifdef _KERNEL
 	{ "dump",	db_dump,		0,	NULL },
+#endif
 	{ "break",	db_breakpoint_cmd,	0,	NULL },
 	{ "b",		db_breakpoint_cmd,	0,	NULL },
 	{ "dwatch",	db_deletewatch_cmd,	0,	NULL },
@@ -130,14 +153,17 @@ static struct command db_cmds[] = {
 	{ "match",	db_trace_until_matching_cmd,0,	NULL },
 	{ "trace",	db_stack_trace,		CS_OWN,	NULL },
 	{ "t",		db_stack_trace,		CS_OWN,	NULL },
+#ifdef _KERNEL
 	/* XXX alias for active trace */
 	{ "acttrace",	db_stack_trace_active,	0,	NULL },
 	/* XXX alias for all trace */
 	{ "alltrace",	db_stack_trace_all,	0,	NULL },
+#endif
 	{ "where",	db_stack_trace,		CS_OWN,	NULL },
 	{ "bt",		db_stack_trace,		CS_OWN,	NULL },
 	{ "call",	db_fncall,		CS_OWN,	NULL },
 	{ "show",	0,			0,	&db_show_table },
+#ifdef _KERNEL
 	{ "ps",		db_ps,			0,	NULL },
 	{ "gdb",	db_gdb,			0,	NULL },
 	{ "halt",	db_halt,		0,	NULL },
@@ -153,6 +179,7 @@ static struct command db_cmds[] = {
 	{ "capture",	db_capture_cmd,		CS_OWN,	NULL },
 	{ "textdump",	db_textdump_cmd,	CS_OWN, NULL },
 	{ "findstack",	db_findstack_cmd,	0,	NULL },
+#endif
 };
 struct command_table db_cmd_table = LIST_HEAD_INITIALIZER(db_cmd_table);
 
@@ -207,11 +234,13 @@ db_command_init(void)
 		db_command_register(&db_cmd_table, &db_cmds[i]);
 	for (i = 0; i < N(db_show_cmds); i++)
 		db_command_register(&db_show_table, &db_show_cmds[i]);
+#ifdef _KERNEL
 	for (i = 0; i < N(db_show_active_cmds); i++)
 		db_command_register(&db_show_active_table,
 		    &db_show_active_cmds[i]);
 	for (i = 0; i < N(db_show_all_cmds); i++)
 		db_command_register(&db_show_all_table, &db_show_all_cmds[i]);
+#endif
 #undef N
 }
 
@@ -561,6 +590,7 @@ db_error(const char *s)
 	kdb_reenter_silent();
 }
 
+#ifdef _KERNEL
 static void
 db_dump(db_expr_t dummy, bool dummy2, db_expr_t dummy3, char *dummy4)
 {
@@ -587,12 +617,14 @@ db_dump(db_expr_t dummy, bool dummy2, db_expr_t dummy3, char *dummy4)
 		}
 	}
 }
+#endif
 
 /*
  * Call random function:
  * !expr(arg,arg,arg)
  */
 
+#ifdef _KERNEL
 /* The generic implementation supports a maximum of 10 arguments. */
 typedef db_expr_t __db_f(db_expr_t, db_expr_t, db_expr_t, db_expr_t,
     db_expr_t, db_expr_t, db_expr_t, db_expr_t, db_expr_t, db_expr_t);
@@ -610,6 +642,7 @@ db_fncall_generic(db_expr_t addr, db_expr_t *rv, int nargs, db_expr_t args[])
 	    args[6], args[7], args[8], args[9]);
 	return (1);
 }
+#endif
 
 static void
 db_fncall(db_expr_t dummy1, bool dummy2, db_expr_t dummy3, char *dummy4)
@@ -655,9 +688,10 @@ db_fncall(db_expr_t dummy1, bool dummy2, db_expr_t dummy3, char *dummy4)
 	db_disable_pager();
 
 	if (DB_CALL(fn_addr, &retval, nargs, args))
-		db_printf("= %#lr\n", (long)retval);
+		db_printf("= %#lx\n", (long)retval);
 }
 
+#ifdef _KERNEL
 static void
 db_halt(db_expr_t dummy, bool dummy2, db_expr_t dummy3, char *dummy4)
 {
@@ -713,7 +747,9 @@ out:
 	db_radix = old_radix;
 #undef DB_ERROR
 }
+#endif
 
+#ifdef _KERNEL
 /*
  * Reboot.  In case there is an additional argument, take it as delay in
  * seconds.  Default to 15s if we cannot parse it and make sure we will
@@ -792,10 +828,12 @@ db_gdb(db_expr_t dummy1, bool dummy2, db_expr_t dummy3, char *dummy4)
 	db_cmd_loop_done = 1;
 	db_printf("(ctrl-c will return control to ddb)\n");
 }
+#endif
 
 static void
 db_stack_trace(db_expr_t tid, bool hastid, db_expr_t count, char *modif)
 {
+#ifdef _KERNEL
 	struct thread *td;
 	db_expr_t radix;
 	pid_t pid;
@@ -837,8 +875,12 @@ db_stack_trace(db_expr_t tid, bool hastid, db_expr_t count, char *modif)
 		pid = -1;
 	db_printf("Tracing pid %d tid %ld td %p\n", pid, (long)td->td_tid, td);
 	db_trace_thread(td, count);
+#else
+	panic("stack trace not done");
+#endif
 }
 
+#ifdef _KERNEL
 static void
 _db_stack_trace_all(bool active_only)
 {
@@ -889,6 +931,7 @@ db_stack_trace_all(db_expr_t dummy, bool dummy2, db_expr_t dummy3,
 
 	_db_stack_trace_all(false);
 }
+#endif
 
 /*
  * Take the parsed expression value from the command line that was parsed

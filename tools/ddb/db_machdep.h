@@ -32,13 +32,23 @@
 #include <stdbool.h>
 #define TRUE 1
 #define FALSE 0
-typedef bool boolean_t;
 
-#include <machine/frame.h>
+#include "edb.h"
+
+#include <setjmp.h>
+#include <i386_frame.h>
+#include <i386_psl.h>
 #include <machine/trap.h>
 
 typedef	vm_offset_t	db_addr_t;	/* address - unsigned */
 typedef	int		db_expr_t;	/* expression - signed */
+typedef void		*vm_map_t;	/* A lie, but which one? */
+
+extern vm_map_t *kernel_map;
+
+#define SYSINIT(name, order, suborder, fnp, arg)
+#define SYSUNINIT(name, order, suborder, fnp, arg)
+#define pmap_protect(a,b,c,d)
 
 #define	PC_REGS()	((db_addr_t)(kdb_frame->tf_eflags & PSL_VM ?	\
 			    (kdb_frame->tf_eip & 0xffff) +		\
@@ -52,17 +62,17 @@ typedef	int		db_expr_t;	/* expression - signed */
 #define BKPT_SKIP				\
 do {						\
 	kdb_frame->tf_eip += 1;			\
-	kdb_thrctx->pcb_eip += 1;		\
+/*	kdb_thrctx->pcb_eip += 1;	*/	\
 } while(0)
 
 #define	FIXUP_PC_AFTER_BREAK			\
 do {						\
 	kdb_frame->tf_eip -= 1;			\
-	kdb_thrctx->pcb_eip -= 1;		\
+/*	kdb_thrctx->pcb_eip -= 1; */	\
 } while(0);
 
-#define	db_clear_single_step	kdb_cpu_clear_singlestep
-#define	db_set_single_step	kdb_cpu_set_singlestep
+#define	db_clear_single_step	edb_cpu_clear_singlestep
+#define	db_set_single_step	edb_cpu_set_singlestep
 
 /*
  * The debug exception type is copied from %dr6 to 'code' and used to
@@ -93,5 +103,19 @@ int	db_segsize(struct trapframe *tfp);
 #ifndef _KERNEL
 void panic(const char* fmt, ...);
 #endif
+
+// Hacky, rename kdb interface
+
+#define kdb_backtrace edb_backtrace
+#define kdb_jmpbuf edb_jmpbuf
+#define kdb_reenter edb_reenter
+#define kdb_reenter_silent edb_reenter_silent
+
+void edb_backtrace(void);
+void *edb_jmpbuf(jmp_buf new);
+void edb_reenter(void);
+void edb_reenter_silent(void);
+
+#define DB_CALL edb_fncall
 
 #endif /* !_MACHINE_DB_MACHDEP_H_ */

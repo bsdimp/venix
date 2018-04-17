@@ -1,5 +1,6 @@
 #include <err.h>
 #include <fcntl.h>
+#include <setjmp.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -89,18 +90,13 @@ main(int argc, char **argv)
 		db_read_bytes(ptr, 1, (char *)&ch);
 		if ((aout->a_stack != 0 && ptr == 0x35) ||
 		    ((ptr & 1) && (ret == 0xc3 && ch == 0))) {
-			printf("%#x:\t.byte\t0\n", ptr);
+			printf("LL%#lx:\t.byte\t0\n", ptr);
 			ptr++;
 		}
 	}
 }
 
 struct trapframe *kdb_frame;
-
-void
-kdb_reenter()
-{
-}
 
 int
 db_segsize(struct trapframe *tfp)
@@ -239,15 +235,6 @@ X_db_symbol_values(db_symtab_t *symtab, c_db_sym_t sym, const char **namep,
 	*namep = symtab->private + asym->ns_un.ns_strx;
 }
 
-void
-db_error(const char *s)
-{
-	if (s)
-		db_printf("%s", s);
-	fflush(stdout);
-	/* kdb_reenter_silent() */
-}
-
 bool
 X_db_printreloc(db_reloctab_t *relotab, db_expr_t offset, db_strategy_t strategy, db_expr_t loc)
 {
@@ -263,4 +250,49 @@ X_db_printreloc(db_reloctab_t *relotab, db_expr_t offset, db_strategy_t strategy
 		}
 	}
 	return false;
+}
+
+static void *kdb_jmpbufp = NULL;
+
+/*
+ * Handle contexts.
+ */
+void *
+edb_jmpbuf(jmp_buf new)
+{
+	void *old;
+
+	old = kdb_jmpbufp;
+	kdb_jmpbufp = new;
+	return (old);
+}
+
+void
+edb_reenter(void)
+{
+
+	if (kdb_jmpbufp == NULL)
+		return;
+
+	printf("KDB: reentering\n");
+	kdb_backtrace();
+	longjmp(kdb_jmpbufp, 1);
+	/* NOTREACHED */
+}
+
+void
+edb_reenter_silent(void)
+{
+
+	if (kdb_jmpbufp == NULL)
+		return;
+
+	longjmp(kdb_jmpbufp, 1);
+	/* NOTREACHED */
+}
+
+void
+edb_backtrace(void)
+{
+	panic("need to implement edb_backtrace");
 }

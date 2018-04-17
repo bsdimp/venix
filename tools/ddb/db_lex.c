@@ -37,7 +37,11 @@
 __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
+#ifdef _KERNEL
 #include <sys/libkern.h>
+#else
+#include <string.h>
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_lex.h>

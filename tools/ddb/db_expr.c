@@ -57,8 +57,13 @@ db_term(db_expr_t *valuep)
 	t = db_read_token();
 	if (t == tIDENT) {
 	    if (!db_value_of_name(db_tok_string, valuep) &&
+#ifdef _KERNEL
 		!db_value_of_name_pcpu(db_tok_string, valuep) &&
-		!db_value_of_name_vnet(db_tok_string, valuep)) {
+		!db_value_of_name_vnet(db_tok_string, valuep)
+#else
+		1
+#endif
+		    ) {
 		db_printf("Symbol '%s' not found\n", db_tok_string);
 		db_error(NULL);
 		/*NOTREACHED*/
