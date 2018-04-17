@@ -77,12 +77,16 @@ db_find_variable(struct db_variable **varp)
 				return (1);
 			}
 		}
+#ifdef _KERNEL
 		for (vp = db_regs; vp < db_eregs; vp++) {
 			if (!strcmp(db_tok_string, vp->name)) {
 				*varp = vp;
 				return (1);
 			}
 		}
+#else
+		panic("write db_regs\n");
+#endif
 	}
 	db_error("Unknown variable\n");
 	return (0);

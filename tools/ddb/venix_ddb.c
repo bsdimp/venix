@@ -1,4 +1,5 @@
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <setjmp.h>
 #include <stdarg.h>
@@ -19,6 +20,7 @@
 
 char *strtab;
 struct symtb *symtb;
+vm_map_t *kernel_map = (vm_map_t *)"The droids";
 
 static void
 usage(void)
@@ -296,3 +298,31 @@ edb_backtrace(void)
 {
 	panic("need to implement edb_backtrace");
 }
+
+int
+db_md_set_watchpoint(db_expr_t addr, db_expr_t size)
+{
+	panic("md set watchpoint");
+	return EINVAL;
+}
+
+int
+db_md_clr_watchpoint(db_expr_t addr, db_expr_t size)
+{
+	panic("md clr watchpoint");
+	return EINVAL;
+}
+
+void
+db_md_list_watchpoints(void)
+{
+	panic("md list watchpoint");
+}
+
+int
+DB_CALL(db_expr_t call, db_expr_t *rv, int count, db_expr_t args[])
+{
+	panic("function call into child");
+	return 0;
+}
+

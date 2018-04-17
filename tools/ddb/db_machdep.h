@@ -118,4 +118,12 @@ void edb_reenter_silent(void);
 
 #define DB_CALL edb_fncall
 
+#define cnputc(c)	putchar(c)
+#define cngetc()	getchar()
+
+extern struct trapframe *kdb_frame;
+
+static inline void db_capture_write(char *buffer, u_int buflen) { }
+static inline void db_capture_writech(char ch) { }
+
 #endif /* !_MACHINE_DB_MACHDEP_H_ */

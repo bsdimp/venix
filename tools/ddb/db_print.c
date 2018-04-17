@@ -39,10 +39,12 @@
 __FBSDID("$FreeBSD$");
 
 #include <sys/param.h>
+#ifdef _KERNEL
 #include <sys/kdb.h>
 #include <sys/proc.h>
 
 #include <machine/pcb.h>
+#endif
 
 #include <ddb/ddb.h>
 #include <ddb/db_variables.h>
@@ -51,6 +53,7 @@ __FBSDID("$FreeBSD$");
 void
 db_show_regs(db_expr_t _1, bool _2, db_expr_t _3, char *_4)
 {
+#ifdef _KERNEL
 	struct db_variable *regp;
 	db_expr_t value, offset;
 	const char *name;
@@ -70,4 +73,5 @@ db_show_regs(db_expr_t _1, bool _2, db_expr_t _3, char *_4)
 		db_printf("\n");
 	}
 	db_print_loc_and_inst(PC_REGS());
+#endif
 }

@@ -51,8 +51,6 @@ __FBSDID("$FreeBSD$");
 #else
 #include <stdio.h>
 #include <stdarg.h>
-#define cnputc(c)	putchar(c)
-#define cngetc()	getchar()
 #define kdb_active 0
 #endif
 
