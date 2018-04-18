@@ -31,19 +31,55 @@ TBD, alas
 
 ### Obtain MAME/MESS
 
-You're on your own for this.
+You're on your own for this. There's a chance we'll be patching the
+Rainbow's BIOS slightly so we may need pull from git + patch + build
+instructions here.
 
 ### Create the hard drive image
 
-mame needs some help. Ram images don't contain disk geometry, so mame
-uses a special format to track that stuff.
+Mame stores its hard drive image in 'chd' format. This is a simple
+wrapper around the raw file with data for the drivers inside of mame
+to find the data properly. It has to know the disk geometry to do the
+right CHS to LBA calcuations.
 
-chdman createhd -o test.chd -chd 615,4,17
+This is well documented in MAME, but there's some Caveats for the
+Rainbow. First, the Rainbow controller only supports 16 sectors per
+track. So all disks have that geometry. Next, due to limitations in
+the boot software, sectors have to be 512 bytes (though the on-disk
+format for describing the partition structure and boot structure is
+still limited by the 256 byte sectors the DECmate II had, so if you go
+looking at the boot code, you'll see that odd dicotomy).
 
-creates a ST-225. However, that's good for an XT install, it's bad for
-a Rainbow install since the Rainbow controller is limtied to 16 heads.
-Here's a table of official DEC disks, though we know from Larry
-Campbell's bragging on usenet that almost any drive will work with his
-BSW extensions. The vanilla version supports only the RD-51, a 10MB
-drive.
+Drive | Size | Sec/Track | Track/Cyl | Cyl | Rebranded Drive / Notes
+----- | ---- | --------- | --------- |---- | ----------------------
+RD50 | 5M | 16 (17) | 4 | 153 | FH 5.25" Seagate ST506
+RD51 | 10M | 16 (17) | 4 | 306 | FH 5.25" Seagate ST412
+RD52 | 31M | 16 (18) | 7 | 480 | FH 5.25" Quantum 540 / ATASI 3046
+RD53 | 71M (67M) | 16 (18) | 8 | 1024 | Microp 1325 (or 1335) w/ jumper at J7
+RD31 | 20M | 16 (17) | 4 | 615 | ST225
+RD32 | 40M | 16 (17) | 6 | 820 | ST251(-1)
 
+Limitations: Controller has only room for 16 heads in registers, can
+do only 1024 cylinders, and only 8 heads. And there's issue with the
+impedance of the data lines if you have more than 6 heads in the
+original HD cables. Venix (and MS-DOS) have 16-bit disk address
+numbers, so can only handle logical partitions up to 32MiB/33MB. Also,
+vanilla Venix supports only the RD51. BSW Venix supports what the
+controller will support and also supports up to two drives.
+
+There's three controllers that were available. DEC had the PC100RD51
+and Suitable Solutions had a clone whose model number escapes me. CHS
+systems had another clone that allowed two drives instead of one. All
+the controllers had these limitations. Since the ROMs in the Rainbow
+knew how to talk to the same WD2xxx chip that was in the PC100RD51,
+they were all limited by its limitations.
+
+So, for this walk through, we'll install onto a RD32/ST251 drive.
+```
+chdman createhd -o venix-rd32.chd -chd 820,6,16
+```
+Since we're installing the BSW version, this will be fine. If you want
+to install the vanilla version, just make an RD51:
+```
+chdman createhd -o venix-rd51.chd -chd 306,4,16
+```
