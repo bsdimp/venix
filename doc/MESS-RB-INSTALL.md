@@ -28,3 +28,22 @@ fixes to libc and the compiler.
 ## The Long, Plodding (but complete) Version
 
 TBD, alas
+
+### Obtain MAME/MESS
+
+You're on your own for this.
+
+### Create the hard drive image
+
+mame needs some help. Ram images don't contain disk geometry, so mame
+uses a special format to track that stuff.
+
+chdman createhd -o test.chd -chd 615,4,17
+
+creates a ST-225. However, that's good for an XT install, it's bad for
+a Rainbow install since the Rainbow controller is limtied to 16 heads.
+Here's a table of official DEC disks, though we know from Larry
+Campbell's bragging on usenet that almost any drive will work with his
+BSW extensions. The vanilla version supports only the RD-51, a 10MB
+drive.
+
