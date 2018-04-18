@@ -50,14 +50,14 @@ format for describing the partition structure and boot structure is
 still limited by the 256 byte sectors the DECmate II had, so if you go
 looking at the boot code, you'll see that odd dicotomy).
 
-Drive | Size | Sec/Track | Track/Cyl | Cyl | Rebranded Drive / Notes
------ | ---- | --------- | --------- |---- | ----------------------
-RD50 | 5M | 16 (17) | 4 | 153 | FH 5.25" Seagate ST506
-RD51 | 10M | 16 (17) | 4 | 306 | FH 5.25" Seagate ST412
-RD52 | 31M | 16 (18) | 7 | 480 | FH 5.25" Quantum 540 / ATASI 3046
-RD53 | 71M (67M) | 16 (18) | 8 | 1024 | Microp 1325 (or 1335) w/ jumper at J7
-RD31 | 20M | 16 (17) | 4 | 615 | ST225
-RD32 | 40M | 16 (17) | 6 | 820 | ST251(-1)
+Drive | Size | Sec/Track | Track/Cyl | Cyl | Form | Rebranded Drive / Notes
+----- | ---- | --------- | --------- |---- | ---- | ----------------------
+RD50 | 5M | 16 (17) | 4 | 153 | FH 5.25" | Seagate ST506
+RD51 | 10M | 16 (17) | 4 | 306 | FH 5.25" | Seagate ST412
+RD52 | 31M | 16 (18) | 7 | 480 | FH 5.25" | Quantum 540 / ATASI 3046
+RD53 | 67M (71MB) | 16 (18) | 8 | 1024 | FH 5.25" | Microp 1325 (or 1335) w/ jumper at J7
+RD31 | 20M | 16 (17) | 4 | 615 | HH 5.25" | Seagate ST225
+RD32 | 40M | 16 (17) | 6 | 820 | HH 5.25" | Seagate ST251(-1)
 
 Limitations: Controller has only room for 16 heads in registers, can
 do only 1024 cylinders, and only 8 heads. And there's issue with the
