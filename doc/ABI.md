@@ -390,8 +390,8 @@ section in the kernel reference.
 
 ### $F3 -- Abort
 
-Seems unused, but low.s lists it as 'abort' which trap.o translates to
-tsignal like emt.
+Executed in response to an abort(3) call. low.s lists this as such,
+and the abort(3) man page documents it as such.
 
 ### $F4 -- Floating Point
 
