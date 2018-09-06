@@ -34,6 +34,8 @@ the symbol table, the remainder of the file is the classic string table.
 All sizes are in bytes, as far as we know (the code in a.out.h certainly
 implies that).
 
+See exec(2) man page for details on stack layout.
+
 ### Binary Types
 
 There's two kinds of binaries as well:
@@ -282,10 +284,15 @@ call no | bx
 
   long args take up two slots, least significant first (little endian machine).
 
-errno is returned from the kernel in cx.
-It's unknown how long values are returned, but it's believed to be the
-same as the rest of the ABI: least significant word in ax, most
-significant in dx (which also mirrors the system calls).
+errno is returned from the kernel in cx.  It's unknown how long values
+are returned, but it's believed to be the same as the rest of the ABI:
+least significant word in ax, most significant in dx (which also
+mirrors the system calls). ints are returned in ax. dx is used when there's
+a pair like pipe(2).
+
+The individual man pages in the VENIX programmer's guide is, alas,
+ambiguous on many things, and the disassembly that's been done guides
+these tables.
 
 The intro(2) man page says only
 ```
@@ -307,6 +314,11 @@ chmod(char *name, int mode) | 15 | name | mode | -- | -- | --
 chown(char *name, int uid, int gid) | 16 | name | uid | gid | -- | --
 close(int fd) | 6 | fd | -- | -- | -- | --
 creat(char *name, int mode) | 8 | name | mode | -- | fd | --
+dup(int fd) | 41 | fd | -- | -- | new fd | --
+dup2(int fd, int newfd) | 41 | fd + 0100 | newfd | -- | new fd | --
+exec(char *name, char **argv) | 11 | name | argv | -- | -- | --
+exece(char *name, char **argv, char **envp) | 59 | name | argv | envp | -- | --
+_exit(int fd) | 1 | fd | -- | -- | no return | --
 
 ### $F2 -- EMT
 
