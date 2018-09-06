@@ -296,15 +296,9 @@ presence of an error is most easily tested by the instruction JCXZ
 ("jmp CX zero").
 ```
 
-#### Access
-
-access(char *name, int mode);
-
-Register | Purpose
--------- | -------
-BX | 33
-AX | name
-DX | mode
+Call | BX | AX | DX | CX
+---- | -- | -- | -- | --
+access(char *name, int mode) | 33 | name | mode | --
 
 ### $F2 -- EMT
 
