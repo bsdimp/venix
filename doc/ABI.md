@@ -284,11 +284,12 @@ call no | bx
 
   long args take up two slots, least significant first (little endian machine).
 
-errno is returned from the kernel in cx.  It's unknown how long values
-are returned, but it's believed to be the same as the rest of the ABI:
-least significant word in ax, most significant in dx (which also
-mirrors the system calls). ints are returned in ax. dx is used when there's
-a pair like pipe(2).
+errno is returned from the kernel in cx.  Long values are returned the
+same as the rest of the ABI: most significant word in ax, least
+significant in dx (which also mirrors the system calls). ints are
+returned in ax. dx is used when there's a pair like pipe(2). The
+manual differs a bit from normal practice, however, on x86 so should
+be investigated.
 
 The individual man pages in the VENIX programmer's guide is, alas,
 ambiguous on many things, and the disassembly that's been done guides
