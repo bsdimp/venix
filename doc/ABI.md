@@ -303,23 +303,33 @@ presence of an error is most easily tested by the instruction JCXZ
 ("jmp CX zero").
 ```
 
-Call | BX | AX | DX | CX | Out AX | Out DX
----- | -- | -- | -- | -- | ------ | ------
-access(char *name, int mode) | 33 | name | mode | -- | -- | --
-alarm(int time) | 27 | time | -- | -- | Previous amount or zero | --
-brk(int addr) | 17 | addr | -- | -- | new break? | --
-chdir(char *name) | 12 | name | -- | -- | -- | --
-chroot(char *name) | 61 | name | -- | -- | -- | --
-chmod(char *name, int mode) | 15 | name | mode | -- | -- | --
-chown(char *name, int uid, int gid) | 16 | name | uid | gid | -- | --
-close(int fd) | 6 | fd | -- | -- | -- | --
-creat(char *name, int mode) | 8 | name | mode | -- | fd | --
-dup(int fd) | 41 | fd | -- | -- | new fd | --
-dup2(int fd, int newfd) | 41 | fd + 0100 | newfd | -- | new fd | --
-exec(char *name, char **argv) | 11 | name | argv | -- | -- | --
-exece(char *name, char **argv, char **envp) | 59 | name | argv | envp | -- | --
-_exit(int fd) | 1 | fd | -- | -- | no return | --
-
+Call | BX | AX | DX | CX | Out AX | Out DX | notes
+---- | -- | -- | -- | -- | ------ | ------ | -----
+access(char *name, int mode) | 33 | name | mode | -- | -- | -- | 
+alarm(int time) | 27 | time | -- | -- | Previous amount or zero | -- | 
+brk(int addr) | 17 | addr | -- | -- | new break? | -- | 
+chdir(char *name) | 12 | name | -- | -- | -- | -- | 
+chroot(char *name) | 61 | name | -- | -- | -- | -- | 
+chmod(char *name, int mode) | 15 | name | mode | -- | -- | -- | 
+chown(char *name, int uid, int gid) | 16 | name | uid | gid | -- | -- | 
+close(int fd) | 6 | fd | -- | -- | -- | -- | 
+creat(char *name, int mode) | 8 | name | mode | -- | fd | -- | 
+dup(int fd) | 41 | fd | -- | -- | new fd | -- | 
+dup2(int fd, int newfd) | 41 | fd + 0100 | newfd | -- | new fd | -- | 
+exec(char *name, char **argv) | 11 | name | argv | -- | -- | -- | 
+exece(char *name, char **argv, char **envp) | 59 | name | argv | envp | -- | -- | 
+_exit(int fd) | 1 | fd | -- | -- | no return | -- | 
+fork() | 2 | -- | -- | 0 or child-PID | -- | 
+getgid() | 47 | -- | -- | rgid | rgid | 
+getpid() | 20 | -- | -- | pid | -- | 
+getuid() | 24 | -- | -- | ruid | euid | 
+gtty(int fd, struct sgttyb *argp) | 32 | fd | argp | -- | -- | -- | 
+ioctl(int fd, int req, void *argp | 54 | fd | req | argp | -- | -- | 
+kill(int pid, int sig) | 37 | pid | sig | -- | -- | -- | 
+link(char *name1, char *name2) | 9 | name1 | name2 | -- | -- | -- | 
+lock(int flag) | 53 | flag | -- | -- | -- | -- | 
+long lseek(int fd, long offset | int whence) | 19 | fd | msw(offset) | lsw(offset) | msw(offset) | lsw(offset) | si = whence
+stty(int fd, struct sgttyb *argp) | 31 | fd | argp | -- | -- | -- | 
 ### $F2 -- EMT
 
 This is 'emt' in the low.s. The comment says its a hold over from
