@@ -328,7 +328,7 @@ ioctl(int fd, int req, void *argp | 54 | fd | req | argp | -- | -- |
 kill(int pid, int sig) | 37 | pid | sig | -- | -- | -- | 
 link(char *name1, char *name2) | 9 | name1 | name2 | -- | -- | -- | 
 lock(int flag) | 53 | flag | -- | -- | -- | -- | 
-long lseek(int fd, long offset | int whence) | 19 | fd | msw(offset) | lsw(offset) | msw(offset) | lsw(offset) | si = whence
+long lseek(int fd, long offset, int whence) | 19 | fd | msw(offset) | lsw(offset) | msw(offset) | lsw(offset) | si = whence
 stty(int fd, struct sgttyb *argp) | 31 | fd | argp | -- | -- | -- | 
 ### $F2 -- EMT
 
