@@ -315,11 +315,13 @@ chown(char *name, int uid, int gid) | 16 | name | uid | gid | -- | -- |
 close(int fd) | 6 | fd | -- | -- | -- | -- | 
 creat(char *name, int mode) | 8 | name | mode | -- | fd | -- | 
 dup(int fd) | 41 | fd | -- | -- | new fd | -- | 
-dup2(int fd, int newfd) | 41 | fd + 0100 | newfd | -- | new fd | -- | 
+dup2(int fd, int newfd) | 41 | fd + 0100 | newfd | -- | fd | -- | 
 exec(char *name, char **argv) | 11 | name | argv | -- | -- | -- | 
 exece(char *name, char **argv, char **envp) | 59 | name | argv | envp | -- | -- | 
 _exit(int fd) | 1 | fd | -- | -- | no return | -- | 
 fork() | 2 | -- | -- | 0 or child-PID | -- | 
+fstat(int fd, struct stat *sb) | 28 | fd | sb | -- | -- | -- |
+ftime(struct timeb *tb) | 13 | tb | -- | -- | -- | -- | Obsolete call
 getgid() | 47 | -- | -- | rgid | rgid | 
 getpid() | 20 | -- | -- | pid | -- | 
 getuid() | 24 | -- | -- | ruid | euid | 
@@ -329,14 +331,45 @@ kill(int pid, int sig) | 37 | pid | sig | -- | -- | -- |
 link(char *name1, char *name2) | 9 | name1 | name2 | -- | -- | -- | 
 lock(int flag) | 53 | flag | -- | -- | -- | -- | 
 long lseek(int fd, long offset, int whence) | 19 | fd | msw(offset) | lsw(offset) | msw(offset) | lsw(offset) | si = whence
-mknod(char *name, int mode, int addr) | 14 | name | mode | addr | -- | --
-mount(char *special, char *name, int rwflag | 21 | special | name | rwflag | -- | --
+mknod(char *name, int mode, int addr) | 14 | name | mode | addr | -- | -- |
+mount(char *special, char *name, int rwflag | 21 | special | name | rwflag | -- | -- |
+nice(int prio) | 34 | priority | -- | -- | -- | -- |
+open(char *name, int mode) | 32 | name | mode | -- | fd | -- |
+pause() | 29 | -- | -- | -- | -- | -- |
+phys(seg, size, physaddr) | 52 | seg | size | physaddr | -- | -- | seg/size ignored
+pipe() | 42 | -- | -- | -- | read fd | -- | outbx = write fd ? 
+profil(char *buf, int bufsiz, int offset, int scale) | 44 | buf | ufsiz | offset | -- | -- | si = scale
+ptrace(int req, int pid, int *addr, int data) | 26 | data | pid | addr | value | -- | si = request
+read(int fd, char *buffer, int nbytes) | 3 | fd | buffer | nbytes | bytes read | -- |
+sdata(char *arg, int reg, int offset) | 49 | file | reg (unused) | offset | -- | -- |
+sema(int func, int sem, int prio) | 45 | func | sem | prio | -- | -- |
+setgid(int gid) | 46 | gid | -- | -- | -- | -- |
+setuid(int uid) | 23 | uid | -- | -- | -- | -- |
+signal(int sig, int label) | 48 | sig | label | -- | old-label | -- | IRET returns from interrupt!
+stat(char *name, struct stat *sb) | 18 | name | sb | -- | -- | -- |
+stime(long *time) | 25 | msb(time) | lsb(time) | -- | -- | -- |
 stty(int fd, struct sgttyb *argp) | 31 | fd | argp | -- | -- | -- | 
+suspend(int pid, int flag) | 50 | pid | flag | -- | -- | -- |
+sync() | 36 | -- | -- | -- | -- | -- |
+time(long *t) | 13 | -- | -- | -- | msw(time) | lsw(time) | Obsolete call
+times(struct tbuffer *tb) | 43 | tb | -- | -- | -- | -- |
+umask(int mask) | 60 | mask | -- | -- | oldval? | -- |
 umount(char *special) | 22 | special | -- | -- | -- | -- |
-
+unlink(char *name) | 10 | name | -- | -- | -- | -- |
+utime(char *file, time_t timep[2]) | 30 | file | timep | -- | -- | -- | 
+wait(int pid, int *status) | 7 | pid | status | -- | -- | -- | 
+write(int fd, char *buffer, int nbytes) | 4 | fd | buffer | nbytes | bytes written | -- |
 
 #### Notes
 lseek seems backwards for msw/lsw of offset, confirm with new disassembled code
+
+The fildes args abbreviated fd after later practice
+
+Pipe looks weird. Need to confirm that writefd is in the odd-ball bx register, as the man page claims, or really in DX, as would be more typical
+
+time and stime same thing as lseek
+
+umask says it returns the old value, but doesn't list it in the assembler section
 
 
 ### $F2 -- EMT
