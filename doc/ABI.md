@@ -296,9 +296,10 @@ presence of an error is most easily tested by the instruction JCXZ
 ("jmp CX zero").
 ```
 
-Call | BX | AX | DX | CX
+Call | BX | AX | DX | CX | Out AX | Out DX
 ---- | -- | -- | -- | --
-access(char *name, int mode) | 33 | name | mode | --
+access(char *name, int mode) | 33 | name | mode | -- | -- | --
+alarm(int time) | 27 | time | -- | -- | Previous amount or zero | --
 
 ### $F2 -- EMT
 
