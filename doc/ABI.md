@@ -300,9 +300,13 @@ Call | BX | AX | DX | CX | Out AX | Out DX
 ---- | -- | -- | -- | -- | ------ | ------
 access(char *name, int mode) | 33 | name | mode | -- | -- | --
 alarm(int time) | 27 | time | -- | -- | Previous amount or zero | --
-brk(int addr) | 17 | addr | -- | -- | 0 or -1 | --
+brk(int addr) | 17 | addr | -- | -- | new break? | --
 chdir(char *name) | 12 | name | -- | -- | -- | --
 chroot(char *name) | 61 | name | -- | -- | -- | --
+chmod(char *name, int mode) | 15 | name | mode | -- | -- | --
+chown(char *name, int uid, int gid) | 16 | name | uid | gid | -- | --
+close(int fd) | 6 | fd | -- | -- | -- | --
+creat(char *name, int mode) | 8 | name | mode | -- | fd | --
 
 ### $F2 -- EMT
 
