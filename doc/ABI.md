@@ -329,7 +329,16 @@ kill(int pid, int sig) | 37 | pid | sig | -- | -- | -- |
 link(char *name1, char *name2) | 9 | name1 | name2 | -- | -- | -- | 
 lock(int flag) | 53 | flag | -- | -- | -- | -- | 
 long lseek(int fd, long offset, int whence) | 19 | fd | msw(offset) | lsw(offset) | msw(offset) | lsw(offset) | si = whence
+mknod(char *name, int mode, int addr) | 14 | name | mode | addr | -- | --
+mount(char *special, char *name, int rwflag | 21 | special | name | rwflag | -- | --
 stty(int fd, struct sgttyb *argp) | 31 | fd | argp | -- | -- | -- | 
+umount(char *special) | 22 | special | -- | -- | -- | -- |
+
+
+#### Notes
+lseek seems backwards for msw/lsw of offset, confirm with new disassembled code
+
+
 ### $F2 -- EMT
 
 This is 'emt' in the low.s. The comment says its a hold over from
