@@ -205,6 +205,7 @@ the same as in pdp-11 v7 unix, but there's some differences.
 The register assignment seems to vary based on syscall for
 reasons unknown as yet.
 Not all the corresponding .o's have been disassembled / reconstructed yet.
+Fortunately, the venix manual including 8086 information is available on bitkeepers.
 
 Call number | Venix function | PDP-11 function
 ----------- | -------------- | ---------------
@@ -294,6 +295,16 @@ erroneous call is always indicated by an error number in CX. The
 presence of an error is most easily tested by the instruction JCXZ
 ("jmp CX zero").
 ```
+
+#### Access
+
+access(char *name, int mode);
+
+Register | Purpose
+-------- | -------
+BX | 33
+AX | name
+DX | mode
 
 ### $F2 -- EMT
 
