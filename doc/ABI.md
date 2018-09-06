@@ -322,9 +322,9 @@ _exit(int fd) | 1 | fd | -- | -- | no return | -- |
 fork() | 2 | -- | -- | 0 or child-PID | -- | 
 fstat(int fd, struct stat *sb) | 28 | fd | sb | -- | -- | -- |
 ftime(struct timeb *tb) | 13 | tb | -- | -- | -- | -- | Obsolete call
-getgid() | 47 | -- | -- | rgid | rgid | 
-getpid() | 20 | -- | -- | pid | -- | 
-getuid() | 24 | -- | -- | ruid | euid | 
+getgid() | 47 | -- | -- | -- | rgid | rgid | 
+getpid() | 20 | -- | -- | -- | pid | -- | 
+getuid() | 24 | -- | -- | -- | ruid | euid | 
 gtty(int fd, struct sgttyb *argp) | 32 | fd | argp | -- | -- | -- | 
 ioctl(int fd, int req, void *argp | 54 | fd | req | argp | -- | -- | 
 kill(int pid, int sig) | 37 | pid | sig | -- | -- | -- | 
