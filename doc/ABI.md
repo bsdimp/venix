@@ -300,7 +300,9 @@ Call | BX | AX | DX | CX | Out AX | Out DX
 ---- | -- | -- | -- | -- | ------ | ------
 access(char *name, int mode) | 33 | name | mode | -- | -- | --
 alarm(int time) | 27 | time | -- | -- | Previous amount or zero | --
-brk(int addr) | 17 | addr | -- | -- | new break? | --
+brk(int addr) | 17 | addr | -- | -- | 0 or -1 | --
+chdir(char *name) | 12 | name | -- | -- | -- | --
+chroot(char *name) | 61 | name | -- | -- | -- | --
 
 ### $F2 -- EMT
 
