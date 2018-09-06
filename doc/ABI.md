@@ -319,7 +319,7 @@ dup2(int fd, int newfd) | 41 | fd + 0100 | newfd | -- | fd | -- |
 exec(char *name, char **argv) | 11 | name | argv | -- | -- | -- | 
 exece(char *name, char **argv, char **envp) | 59 | name | argv | envp | -- | -- | 
 _exit(int fd) | 1 | fd | -- | -- | no return | -- | 
-fork() | 2 | -- | -- | 0 or child-PID | -- | 
+fork() | 2 | -- | -- | -- | 0 or child-PID | -- | 
 fstat(int fd, struct stat *sb) | 28 | fd | sb | -- | -- | -- |
 ftime(struct timeb *tb) | 13 | tb | -- | -- | -- | -- | Obsolete call
 getgid() | 47 | -- | -- | -- | rgid | rgid | 
