@@ -300,6 +300,7 @@ Call | BX | AX | DX | CX | Out AX | Out DX
 ---- | -- | -- | -- | -- | ------ | ------
 access(char *name, int mode) | 33 | name | mode | -- | -- | --
 alarm(int time) | 27 | time | -- | -- | Previous amount or zero | --
+brk(int addr) | 17 | addr | -- | -- | new break? | --
 
 ### $F2 -- EMT
 
