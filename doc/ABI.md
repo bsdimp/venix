@@ -282,10 +282,18 @@ call no | bx
   long args take up two slots, least significant first (little endian machine).
 
 errno is returned from the kernel in cx.
-
 It's unknown how long values are returned, but it's believed to be the
 same as the rest of the ABI: least significant word in ax, most
 significant in dx (which also mirrors the system calls).
+
+The intro(2) man page says only
+```
+8086: Return values appear in registers AX, DX and CX; it is unwise to
+count on these registers being preserved when no value is expected. An
+erroneous call is always indicated by an error number in CX. The
+presence of an error is most easily tested by the instruction JCXZ
+("jmp CX zero").
+```
 
 ### $F2 -- EMT
 
