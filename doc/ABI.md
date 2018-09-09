@@ -56,6 +56,17 @@ result (so sp = a_text + a_stack). Then the command args are pushed
 onto the stack (this has not been confirmed), need to verify. data is
 next for a_data bytes then a_bss then end.
 
+The ld(1) man page says of -z#
+```
+When the output file is executed, the stack will be placed below the
+data space. If no # is specified, then the stack will be 8kb (8192) in
+size; otherwise, the stack will be the # specified. This allows a more
+compact data segment, as normally a full 64kb is used. (RAINBOW/VENIX
+only).
+```
+So there's implications here, I think that we need to be careful of
+for objects we find that have a '0' listed for the stack size.
+
 offset range | what
 ------------ | ----
 0 to a_text - 1 | Text segment (a_text bytes after exec header)
@@ -388,6 +399,20 @@ where various sanity checks are done on sp. Some programs just have
 this in main, while others have it more extensively. See the EMT
 section in the kernel reference.
 
+This may come from the -z flag to cc(1):
+```
+Generate code that checks for stack overflow upon subroutine
+entry. This option is also passed on to the loader, unless the -c
+flag (suppress loader) option is given and object modules only are
+produced. In the latter case, the user must be sure to specify a -z
+when the loader is run on the object modules; a -z specified for
+compilation only is ineffective. See ld(l) for the -z flag effects on
+the loader. (RAINBOW/VENIX only.)
+```
+
+The -z flag for the loader is quoted in the OMAGIC section of this doc
+for other possible subtle (or not so subtle) effects.
+
 ### $F3 -- Abort
 
 Executed in response to an abort(3) call. low.s lists this as such,
@@ -421,6 +446,15 @@ All programs start with:
 ```
 Note that on a 8087, bytes 0xd9 0x2e decode to FLDCW to load control
 word from the passed in address.
+
+See also this note from the cc(1) man page for -f:
+```
+For systems with 8087 floating point chips, generate code which uses
+8087 floating point instruction. If this option is not specified, a
+floating-point simulator is used and 8087 instructions are not
+generated. Do not use this option if an 8087 chip is not
+present. (RAINBOW / VENIX only.)
+```
 
 ### $Fx -- Others reserved for redirect
 
@@ -476,7 +510,7 @@ even boundary when stitching files together, so often times you will see
     .byte 0
 _newfunc:
 ```
-which messes with the disassembly.
+which requires care when disassembling.
 
 The setjmp jmp_buf is just 6 ints long.
 
@@ -489,6 +523,7 @@ offset | use
 8 | value of fp_ctx[0]?
 10 | value of fp_ctx[1]?
 
+Here's the reconstrcted code:
 ```Assembler
 _setjmp:
 	push	bp
@@ -511,7 +546,7 @@ _setjmp:
 	ret
 ```
 
-But longjmp is more complicated
+But longjmp is more complicated, in the following reconstructed code:
 ```Assembler
 _longjmp:				| longjmp(jmp_buf env, int val)
 	push	bp
