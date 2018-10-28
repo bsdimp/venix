@@ -1,0 +1,51 @@
+as -o low.o ../conf/low.s
+as ../sys/panic.s
+mv ../sys/panic.o panic.o
+ar rv syslib.a panic.o
+r - panic.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../sys/prf2.c
+mv ../sys/prf2.o prf2.o
+ar rv syslib.a prf2.o
+r - prf2.o
+ranlib syslib.a
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/ca.c
+mv ../dev/ca.o ca.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/console.c
+mv ../dev/console.o console.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/floppy.c
+mv ../dev/floppy.o floppy.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/ioport.c
+mv ../dev/ioport.o ioport.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/mem.c
+mv ../dev/mem.o mem.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/msg.c
+mv ../dev/msg.o msg.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/npipe.c
+../dev/npipe.c: 20: O_NDELAY redefined
+mv ../dev/npipe.o npipe.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/mouse.c
+"../dev/mouse.c", line 158: syntax error
+"../dev/mouse.c", line 161: syntax error
+*** Error code 1
+
+Stop.
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/mouse.c
+mv ../dev/mouse.o mouse.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/pa.c
+mv ../dev/pa.o pa.o
+cd ../dev/xt;make  ../xt.c
+rm -f ../xt.c
+for i in old/xt.h old/xtstrategy.c old/xtstart.c  old/xtread.c old/xtwrite.c old/xtioctl.c com/xtcmd.c com/xtintr.c;  do  cat $i >> ../xt.c;  echo >> ../xt.c;  done
+: is not an identifier
+*** Error code 1
+
+Stop.
+*** Error code 1
+
+Stop.
+cc -O -I.. -DSCCS -DDEBUG -DATASI -c ../dev/at.c
+mv ../dev/at.o at.o
+cc -O -I.. -DSCCS -DDEBUG -DATASI -DACA -DPA -DFLP -DIOPORT -DNPIPE -DMOUSE -DWIN -DS_FLP -c ../conf/conf.c
+mv ../conf/conf.o conf.f.o
+ld -i -x -o venix.nf low.o conf.f.o syslib.a ca.o  console.o  floppy.o  ioport.o  mem.o  msg.o  npipe.o  mouse.o  pa.o  at.o
+chmod 444 venix.nf

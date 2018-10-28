@@ -1,0 +1,137 @@
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c doparm.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c dopart.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c drvutil.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c prfutil.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c scrutil.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Fri Mar  7 03:00:58 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c prfutil.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Fri Mar  7 03:08:05 PST 1986
+Fri Mar  7 03:20:38 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c doparm.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c dopart.c
+"dopart.c", line 30: warning: struct/union or struct/union pointer required
+"dopart.c", line 31: warning: struct/union or struct/union pointer required
+"dopart.c", line 32: warning: struct/union or struct/union pointer required
+"dopart.c", line 33: warning: struct/union or struct/union pointer required
+"dopart.c", line 34: warning: struct/union or struct/union pointer required
+"dopart.c", line 35: warning: struct/union or struct/union pointer required
+"dopart.c", line 36: warning: struct/union or struct/union pointer required
+"dopart.c", line 37: warning: struct/union or struct/union pointer required
+"dopart.c", line 38: warning: struct/union or struct/union pointer required
+"dopart.c", line 39: warning: struct/union or struct/union pointer required
+"dopart.c", line 71: warning: struct/union or struct/union pointer required
+"dopart.c", line 72: warning: struct/union or struct/union pointer required
+"dopart.c", line 73: warning: struct/union or struct/union pointer required
+"dopart.c", line 74: warning: struct/union or struct/union pointer required
+"dopart.c", line 75: warning: struct/union or struct/union pointer required
+"dopart.c", line 76: warning: struct/union or struct/union pointer required
+"dopart.c", line 77: warning: struct/union or struct/union pointer required
+"dopart.c", line 78: warning: struct/union or struct/union pointer required
+"dopart.c", line 79: warning: struct/union or struct/union pointer required
+"dopart.c", line 80: warning: struct/union or struct/union pointer required
+"dopart.c", line 105: warning: struct/union or struct/union pointer required
+"dopart.c", line 106: warning: struct/union or struct/union pointer required
+"dopart.c", line 107: warning: struct/union or struct/union pointer required
+"dopart.c", line 108: warning: struct/union or struct/union pointer required
+"dopart.c", line 109: warning: struct/union or struct/union pointer required
+"dopart.c", line 110: warning: struct/union or struct/union pointer required
+"dopart.c", line 111: warning: struct/union or struct/union pointer required
+"dopart.c", line 112: warning: struct/union or struct/union pointer required
+"dopart.c", line 113: warning: struct/union or struct/union pointer required
+"dopart.c", line 114: warning: struct/union or struct/union pointer required
+"dopart.c", line 121: warning: struct/union or struct/union pointer required
+"dopart.c", line 122: warning: struct/union or struct/union pointer required
+"dopart.c", line 123: warning: struct/union or struct/union pointer required
+"dopart.c", line 124: warning: struct/union or struct/union pointer required
+"dopart.c", line 125: warning: struct/union or struct/union pointer required
+"dopart.c", line 126: warning: struct/union or struct/union pointer required
+"dopart.c", line 127: warning: struct/union or struct/union pointer required
+"dopart.c", line 128: warning: struct/union or struct/union pointer required
+"dopart.c", line 129: warning: struct/union or struct/union pointer required
+"dopart.c", line 130: warning: struct/union or struct/union pointer required
+"dopart.c", line 155: warning: struct/union or struct/union pointer required
+"dopart.c", line 156: warning: struct/union or struct/union pointer required
+"dopart.c", line 157: warning: struct/union or struct/union pointer required
+"dopart.c", line 158: warning: struct/union or struct/union pointer required
+"dopart.c", line 159: warning: struct/union or struct/union pointer required
+"dopart.c", line 160: warning: struct/union or struct/union pointer required
+"dopart.c", line 161: warning: struct/union or struct/union pointer required
+"dopart.c", line 162: warning: struct/union or struct/union pointer required
+"dopart.c", line 163: warning: struct/union or struct/union pointer required
+"dopart.c", line 164: warning: struct/union or struct/union pointer required
+"dopart.c", line 171: warning: struct/union or struct/union pointer required
+"dopart.c", line 172: warning: struct/union or struct/union pointer required
+"dopart.c", line 173: warning: struct/union or struct/union pointer required
+"dopart.c", line 174: warning: struct/union or struct/union pointer required
+"dopart.c", line 175: warning: struct/union or struct/union pointer required
+"dopart.c", line 176: warning: struct/union or struct/union pointer required
+"dopart.c", line 177: warning: struct/union or struct/union pointer required
+"dopart.c", line 178: warning: struct/union or struct/union pointer required
+"dopart.c", line 179: warning: struct/union or struct/union pointer required
+"dopart.c", line 180: warning: struct/union or struct/union pointer required
+"dopart.c", line 198: warning: struct/union or struct/union pointer required
+"dopart.c", line 199: warning: struct/union or struct/union pointer required
+"dopart.c", line 200: warning: struct/union or struct/union pointer required
+"dopart.c", line 201: warning: struct/union or struct/union pointer required
+"dopart.c", line 202: warning: struct/union or struct/union pointer required
+"dopart.c", line 203: warning: struct/union or struct/union pointer required
+"dopart.c", line 204: warning: struct/union or struct/union pointer required
+"dopart.c", line 205: warning: struct/union or struct/union pointer required
+"dopart.c", line 206: warning: struct/union or struct/union pointer required
+"dopart.c", line 207: warning: struct/union or struct/union pointer required
+"dopart.c", line 215: warning: struct/union or struct/union pointer required
+"dopart.c", line 217: warning: struct/union or struct/union pointer required
+"dopart.c", line 218: warning: struct/union or struct/union pointer required
+"dopart.c", line 219: warning: struct/union or struct/union pointer required
+"dopart.c", line 220: warning: struct/union or struct/union pointer required
+"dopart.c", line 222: warning: struct/union or struct/union pointer required
+"dopart.c", line 224: warning: struct/union or struct/union pointer required
+"dopart.c", line 225: warning: struct/union or struct/union pointer required
+"dopart.c", line 226: warning: struct/union or struct/union pointer required
+"dopart.c", line 227: warning: struct/union or struct/union pointer required
+"dopart.c", line 228: warning: struct/union or struct/union pointer required
+"dopart.c", line 229: warning: struct/union or struct/union pointer required
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Fri Mar  7 03:31:04 PST 1986
+Fri Mar  7 03:34:36 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c dopart.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Fri Mar  7 03:40:13 PST 1986
+Fri Mar  7 03:45:33 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Fri Mar  7 03:48:56 PST 1986
+Sun Mar  9 23:56:51 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Mon Mar 10 00:00:33 PST 1986
+Mon Mar 10 00:30:52 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Mon Mar 10 00:32:58 PST 1986
+Thu Mar 20 00:17:25 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c dopart.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Thu Mar 20 00:26:10 PST 1986
+Thu Mar 20 00:40:42 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Thu Mar 20 00:42:30 PST 1986
+Thu Mar 20 01:20:13 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c drvutil.c
+"drvutil.c", line 75: errno undefined
+*** Error code 1
+
+Stop.
+Thu Mar 20 01:20:51 PST 1986
+Thu Mar 20 01:21:40 PST 1986
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c drvutil.c
+cc -O -DSCCS -I. -I.. -I../.. -I../../sys -c main.c
+cc -o fdisk doparm.o dopart.o drvutil.o main.o prfutil.o scrutil.o       
+Thu Mar 20 01:27:08 PST 1986

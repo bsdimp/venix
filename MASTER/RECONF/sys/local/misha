@@ -1,0 +1,102 @@
+
+PARTITION # 1
+	boot indicator :	128	0x80
+	start head     :	0	0x0
+	start sector   :	2	0x2
+	start cylinder :	0	0x0
+	system type    :	64	0x40
+	end head       :	3	0x3
+	end sector     :	17	0x11
+	end cylinder   :	54	0x36
+	sector offset  :	1	0x1
+	sector size    :	3739	0xe9b
+
+PARTITION # 2
+	boot indicator :	0	0x0
+	start head     :	0	0x0
+	start sector   :	1	0x1
+	start cylinder :	55	0x37
+	system type    :	65	0x41
+	end head       :	3	0x3
+	end sector     :	17	0x11
+	end cylinder   :	59	0x3b
+	sector offset  :	3740	0xe9c
+	sector size    :	340	0x154
+
+PARTITION # 3
+	boot indicator :	0	0x0
+	start head     :	0	0x0
+	start sector   :	1	0x1
+	start cylinder :	60	0x3c
+	system type    :	66	0x42
+	end head       :	3	0x3
+	end sector     :	17	0x11
+	end cylinder   :	259	0x103
+	sector offset  :	4080	0xff0
+	sector size    :	16660	0x4114
+
+PARTITION # 4
+	boot indicator :	0	0x0
+	start head     :	0	0x0
+	start sector   :	0	0x0
+	start cylinder :	0	0x0
+	system type    :	1	0x1
+	end head       :	0	0x0
+	end sector     :	0	0x0
+	end cylinder   :	0	0x0
+	sector offset  :	0	0x0
+	sector size    :	0	0x0
+
+	block signature:	-21931	0xaa55
+
+Reading: fixboot.dat
+
+PARTITION # 1
+	boot indicator :	128	0x80
+	start head     :	0	0x0
+	start sector   :	2	0x2
+	start cylinder :	0	0x0
+	system type    :	64	0x40
+	end head       :	6	0x6
+	end sector     :	17	0x11
+	end cylinder   :	60	0x3c
+	sector offset  :	1	0x1
+	sector size    :	7258	0x1c5a
+
+PARTITION # 2
+	boot indicator :	0	0x0
+	start head     :	0	0x0
+	start sector   :	1	0x1
+	start cylinder :	61	0x3d
+	system type    :	65	0x41
+	end head       :	6	0x6
+	end sector     :	17	0x11
+	end cylinder   :	75	0x4b
+	sector offset  :	7259	0x1c5b
+	sector size    :	1785	0x6f9
+
+PARTITION # 3
+	boot indicator :	0	0x0
+	start head     :	0	0x0
+	start sector   :	1	0x1
+	start cylinder :	76	0x4c
+	system type    :	66	0x42
+	end head       :	6	0x6
+	end sector     :	17	0x11
+	end cylinder   :	220	0xdc
+	sector offset  :	9044	0x2354
+	sector size    :	17255	0x4367
+
+PARTITION # 4
+	boot indicator :	0	0x0
+	start head     :	0	0x0
+	start sector   :	1	0x1
+	start cylinder :	221	0xdd
+	system type    :	4	0x4
+	end head       :	6	0x6
+	end sector     :	17	0x11
+	end cylinder   :	320	0x140
+	sector offset  :	26299	0x66bb
+	sector size    :	11900	0x2e7c
+
+	block signature:	-21931	0xaa55

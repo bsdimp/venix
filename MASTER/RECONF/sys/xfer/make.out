@@ -1,0 +1,1 @@
+cc -O -I../ -I../sys -o ddisk ddisk.c
