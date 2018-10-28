@@ -1,0 +1,16 @@
+cc -O -I./ -I../ -I../../ -I../../sys -c kernmods.c
+cc -O -I./ -I../ -I../../ -I../../sys -c main.c
+cc -O -I./ -I../ -I../../ -I../../sys -c parameters.c
+cc -O -I./ -I../ -I../../ -I../../sys -c partitions.c
+cc -O -I./ -I../ -I../../ -I../../sys -c sysarea.c
+cc -O -I./ -I../ -I../../ -I../../sys -c usrarea.c
+cc -O -I./ -I../ -I../../ -I../../sys -c utils.c
+cc -o init kernmods.o main.o parameters.o partitions.o  sysarea.o usrarea.o utils.o
+Thu Mar 20 00:56:41 PST 1986
+cc -O -I./ -I../ -I../../ -I../../sys -c partitions.c
+cc -o init kernmods.o main.o parameters.o partitions.o  sysarea.o usrarea.o utils.o
+Thu Mar 20 01:01:58 PST 1986
+Thu Mar 20 01:22:14 PST 1986
+cc -O -I./ -I../ -I../../ -I../../sys -c parameters.c
+cc -o init kernmods.o main.o parameters.o partitions.o  sysarea.o usrarea.o utils.o
+Thu Mar 20 01:29:31 PST 1986

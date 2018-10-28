@@ -1,0 +1,310 @@
+mch.o:
+000001ef T _aretu
+000001b4 T _bcopy
+00000188 T _clearse
+00000140 T _copyiin
+00000145 T _copyin
+00000167 T _copyiout
+0000016d T _copyout
+0000019b T _copyseg
+000002b3 T _dpadd
+000002c4 T _dpcmp
+000000f4 T _fubyte
+000000ee T _fuibyte
+00000102 T _fuiword
+00000108 T _fuword
+00000230 T _incupc
+00000296 T _lshift
+00000214 T _outu
+000001f8 T _retu
+000001cd T _savfp
+000001e8 T _savu
+00000266 T _setiva
+00000228 T _sstack
+0000011a T _subyte
+00000114 T _suibyte
+0000012a T _suiword
+00000130 T _suword
+00000007 T dsoff
+000000ba T ip_call
+000000da T ip_ret
+00000000 T trap
+main.o:
+00000000 T _main
+0000018d T _sureg
+trap.o:
+00000043 T _abort
+00000059 T _emt
+00000000 T _nmi
+0000019c T _nosys
+000001aa T _nullsys
+000000b2 T _setustk
+000000d5 T _sys
+0000017f T _trap1
+0000006f T _tsignal
+00000028 T _ttrap
+00000014 T _uintr
+sig.o:
+00000285 T _core
+00000085 T _fsig
+00000387 T _grow
+000000bc T _issig
+00000460 T _procxmt
+00000185 T _psig
+00000029 T _psignal
+00000393 T _ptrace
+00000000 T _signal
+00000130 T _stop
+iget.o:
+00000000 T _iget
+00000126 T _iput
+00000240 T _itrunc
+0000017a T _iupdat
+00000356 T _maknode
+00000002 C _nblkdev
+000003a7 T _wdir
+prf.o:
+000000e5 T _Panic
+00000000 T _Printf
+000000a3 T _Printn
+00000151 T _deverro
+00000002 C _nblkdev
+000000ff T _prdev
+slp.o:
+00000669 T _expand
+000004ad T _newproc
+00000146 T _sched
+00000102 T _setpri
+000000a8 T _setrun
+00000000 T _sleep
+000002b0 T _swapin
+000003d2 T _swtch
+00000085 T _wakeup
+0000037a T _xswapin
+subr.o:
+00000000 T _bmap
+000002a0 T _cpass
+00000002 C _nblkdev
+000002f5 T _nodev
+00000303 T _nulldev
+00000249 T _passc
+rdwri.o:
+000002a6 T _iomove
+00000002 C _nblkdev
+00000000 T _readi
+00000164 T _writei
+clock.o:
+00000000 T _clock
+0000023d T _timecan
+000001b5 T _timeout
+fio.o:
+00000163 T _access
+0000002c T _closef
+0000028f T _falloc
+00000000 T _getf
+00000002 C _nblkdev
+000000fe T _openi
+000001fc T _owner
+00000243 T _suser
+0000025f T _ufalloc
+malloc.o:
+00000000 T _malloc
+0000006c T _mfree
+alloc.o:
+0000007a T _alloc
+00000231 T _badbloc
+00000176 T _free
+00000418 T _getfs
+00000261 T _ialloc
+000003dc T _ifree
+00000000 T _iinit
+00000002 C _nblkdev
+00000473 T _update
+nami.o:
+00000000 T _namei
+000002bd T _schar
+000002d1 T _uchar
+pipe.o:
+00000000 T _pipe
+000001e6 T _plock
+0000020f T _prele
+000000ba T _readp
+00000134 T _writep
+sysent.o:
+sys3.o:
+000001d6 T _dup
+00000079 T _fstat
+00000000 T _ftime
+0000043e T _getmdev
+00000002 C _nblkdev
+00000248 T _smount
+000000ba T _stat
+000000f4 T _stat1
+000003a6 T _sumount
+sys1.o:
+00000000 T _exec
+00000015 T _exece
+0000051a T _exit
+0000073e T _fork
+0000053b T _qexit
+00000501 T _rexit
+00000835 T _sbreak
+00000667 T _wait
+sys2.o:
+0000043b T _alarm
+00000229 T _close
+00000111 T _creat
+0000048d T _falarm
+00000314 T _link
+000003c1 T _mknod
+000000dd T _open
+00000185 T _open1
+000004a3 T _pause
+00000022 T _rdwr
+00000000 T _read
+00000503 T _saccess
+0000025f T _seek
+0000041b T _umask
+000004b8 T _utime
+00000011 T _write
+sys4.o:
+00000245 T _cdirec
+00000213 T _chdir
+000002a2 T _chmod
+000002ed T _chown
+0000022c T _chroot
+000000dd T _getgid
+000000ff T _getpid
+00000087 T _getuid
+00000000 T _gtime
+000003aa T _kill
+00000451 T _killchk
+00000129 T _nice
+000004c4 T _profil
+000000a9 T _setgid
+0000004a T _setuid
+0000032e T _ssig
+0000001c T _stime
+00000418 T _suspend
+00000115 T _sync
+00000590 T _sysdata
+00000501 T _syslock
+0000053b T _sysphys
+000006c6 T _syssema
+00000496 T _times
+00000190 T _unlink
+text.o:
+000001b5 T _xalloc
+000003b1 T _xccdec
+000000e1 T _xfree
+00000430 T _xlock
+00000114 T _xmfree
+00000000 T _xswap
+0000045a T _xunlock
+00000159 T _xxmfree
+bio.o:
+00000777 T _aiowait
+00000636 T _aphysio
+00000176 T _bawrite
+00000145 T _bdwrite
+000005f4 T _bflush
+00000458 T _binit
+00000000 T _bread
+00000042 T _breada
+0000018b T _brelse
+000000f7 T _bwrite
+00000433 T _clrbuf
+000007ff T _disksor
+0000024a T _getblk
+0000075f T _geterro
+00000207 T _incore
+00000399 T _iodone
+00000343 T _iowait
+00000002 C _nblkdev
+0000036d T _notavai
+000007d1 T _swaio
+00000502 T _swap
+tty.o:
+000001c8 T _cinit
+000006d3 T _echo
+00000671 T _flushtt
+000004b9 T _getc
+00000000 T _ioctl
+00000002 C _nblkdev
+00000545 T _putc
+00000082 T _ttioctl
+0000016f T _ttopen
+000008f1 T _ttread
+0000080e T _ttwrite
+00000a6e T _ttybloc
+0000020a T _ttyinpu
+00000b36 T _ttyioct
+00000a9f T _ttyopen
+00000727 T _ttyoutp
+00000ae0 T _ttyread
+00000b0b T _ttywrit
+000005e8 T _unputc
+000006a1 T _wflusht
+f8087.o:
+00000964 T _decode
+00000cd5 T _ferror
+00000000 T _fpsim
+00000c7b T _idecode
+00000a5b T _load
+00000b80 T _loadd
+00000cb7 T _oops
+00000cf6 T _round
+00000ad9 T _store
+00000be7 T _stored
+fpsim.o:
+000001e8 T __neg
+00000218 T _bump
+000002fa T _div_ac
+00000000 T _f_add
+000001a6 T _f_div
+00000174 T _f_mult
+000000df T _f_sub
+0000050f T _floadon
+0000052c T _fsetcw
+0000038d T _ftoi
+00000432 T _ftol
+000003f4 T _itof
+000004b5 T _ltof
+0000023f T _mult_ac
+00000105 T _normali
+fpmch.o:
+00000000 T _add_ac
+00000056 T _fcopy
+000000c4 T _floadze
+0000008a T _frcopy
+0000002b T _sub_ac
+rlock.o:
+000004cd T _deadloc
+000005aa T _lockadd
+00000540 T _lockall
+0000042b T _locked
+000003c5 T _lockedz
+00000583 T _lockfre
+00000000 T _locking
+0000050d T _unlock
+panic.o:
+00000000 T _panic
+prf2.o:
+00000270 T _cpanic
+0000025a T _ppanic
+00000018 T _prf
+00000000 T _printf
+000001f3 T _printn
+arith.o:
+000000a9 T aldiv
+00000000 T almul
+000000fa T alrem
+00000029 T auldiv
+00000000 T aulmul
+00000131 T aulrem
+000000ac T ldiv
+00000003 T lmul
+000000fd T lrem
+0000002c T uldiv
+00000003 T ulmul
+00000134 T ulrem

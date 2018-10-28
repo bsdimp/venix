@@ -1,0 +1,18 @@
+/lib/cpp -DATASI < fsboot.s > x.s
+as x.s
+mv x.o fsboot.o
+rm -f x.s
+/lib/cpp -DATASI < ibmterm.s > x.s
+as x.s
+mv x.o ibmterm.o
+rm -f x.s
+/lib/cpp -DATASI < ibmxt.s > x.s
+as x.s
+mv x.o ibmxt.o
+rm -f x.s
+ld -s fsboot.o ibmterm.o ibmxt.o
+cp magic.w xtboot
+dd bs=32 skip=1 if=a.out of=xtboot
+14+1 records in
+14+1 records out
+rm -f a.out

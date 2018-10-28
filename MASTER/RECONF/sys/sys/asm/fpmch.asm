@@ -1,0 +1,143 @@
+_add_ac:	push	bp
+_add_ac+1:	mov	bp,sp
+_add_ac+3:	push	si
+_add_ac+4:	push	di
+_add_ac+5:	mov	di,#4(bp)
+_add_ac+9:	mov	si,#6(bp)
+_add_ac+d:	mov	ax,*4(si)
+_add_ac+10:	add	*4(di),ax
+_add_ac+13:	mov	ax,*6(si)
+_add_ac+16:	adc	*6(di),ax
+_add_ac+19:	mov	ax,*8(si)
+_add_ac+1c:	adc	*8(di),ax
+_add_ac+1f:	mov	ax,*10(si)
+_add_ac+22:	adc	*10(di),ax
+_add_ac+25:	sbb	ax,ax
+_add_ac+27:	pop	di
+_add_ac+28:	pop	si
+_add_ac+29:	pop	bp
+_add_ac+2a:	ret
+
+_sub_ac:
+_sub_ac:	push	bp
+_sub_ac+1:	mov	bp,sp
+_sub_ac+3:	push	si
+_sub_ac+4:	push	di
+_sub_ac+5:	mov	di,#4(bp)
+_sub_ac+9:	mov	si,#6(bp)
+_sub_ac+d:	mov	ax,*4(si)
+_sub_ac+10:	sub	*4(di),ax
+_sub_ac+13:	mov	ax,*6(si)
+_sub_ac+16:	sbb	*6(di),ax
+_sub_ac+19:	mov	ax,*8(si)
+_sub_ac+1c:	sbb	*8(di),ax
+_sub_ac+1f:	mov	ax,*10(si)
+_sub_ac+22:	sbb	*10(di),ax
+_sub_ac+25:	sbb	ax,ax
+_sub_ac+27:	pop	di
+_sub_ac+28:	pop	si
+_sub_ac+29:	pop	bp
+_sub_ac+2a:	ret
+_fcopy:
+_fcopy:		push	bp
+_fcopy+1:	mov	bp,sp
+_fcopy+3:	push	si
+_fcopy+4:	push	di
+_fcopy+5:	mov	di,#4(bp)
+_fcopy+9:	mov	si,#6(bp)
+_fcopy+d:	mov	ax,*2(di)
+_fcopy+10:	and	ax,#7fff
+_fcopy+13:	mov	*8(si),ax
+_fcopy+16:	cmp	(di),*0
+_fcopy+19:	je	_fcopy+20
+_fcopy+1b:	or	*8(si),#8000
+_fcopy+20:	lea	di,*4(di)
+_fcopy+23:	mov	cx,#4
+_fcopy+26:	mov	ax,(di)
+_fcopy+28:	mov	(si),ax
+_fcopy+2a:	inc	si
+_fcopy+2b:	inc	si
+_fcopy+2c:	inc	di
+_fcopy+2d:	inc	di
+_fcopy+2e:	loop	_fcopy+26
+_fcopy+30:	pop	di
+_fcopy+31:	pop	si
+_fcopy+32:	pop	bp
+_fcopy+33:	ret
+_frcopy:
+_frcopy:	push	bp
+_frcopy+1:	mov	bp,sp
+_frcopy+3:	push	si
+_frcopy+4:	push	di
+_frcopy+5:	mov	si,#4(bp)
+_frcopy+9:	mov	di,#6(bp)
+_frcopy+d:	cmp	*8(si),*0
+_frcopy+11:	jnl	_frcopy+19
+_frcopy+13:	mov	(di),#ffff
+_frcopy+17:	j	_frcopy+1d
+_frcopy+19:	mov	(di),#0
+_frcopy+1d:	mov	ax,*8(si)
+_frcopy+20:	and	ax,#7fff
+_frcopy+23:	mov	*2(di),ax
+_frcopy+26:	lea	di,*4(di)
+_frcopy+29:	mov	cx,#4
+_frcopy+2c:	mov	ax,(si)
+_frcopy+2e:	mov	(di),ax
+_frcopy+30:	inc	si
+_frcopy+31:	inc	si
+_frcopy+32:	inc	di
+_frcopy+33:	inc	di
+_frcopy+34:	loop	_frcopy+2c
+_frcopy+36:	pop	di
+_frcopy+37:	pop	si
+_frcopy+38:	pop	bp
+_frcopy+39:	ret
+_floadze:
+_floadze:	push	bp
+_floadze+1:	mov	bp,sp
+_floadze+3:	push	di
+_floadze+4:	mov	di,*4(bp)
+_floadze+7:	mov	cx,#6
+_floadze+a:	mov	(di),#0
+_floadze+e:	inc	di
+_floadze+f:	inc	di
+_floadze+10:	loop	_floadze+a
+_floadze+12:	pop	di
+_floadze+13:	pop	bp
+_floadze+14:	ret
+_floadze+15:	addb	*-117(di),dl
+_floadze+18:	inb	al,dx
+_floadze+19:	push	di
+_floadze+1a:	mov	di,#4(bp)
+_floadze+1e:	shl	*4(di)
+_floadze+21:	rcl	*6(di)
+_floadze+24:	rcl	*8(di)
+_floadze+27:	rcl	*10(di)
+_floadze+2a:	sbb	ax,ax
+_floadze+2c:	pop	di
+_floadze+2d:	pop	bp
+_floadze+2e:	ret
+_floadze+2f:	push	bp
+_floadze+30:	mov	bp,sp
+_floadze+32:	push	di
+_floadze+33:	mov	di,#4(bp)
+_floadze+37:	sar	*10(di)
+_floadze+3a:	rcr	*8(di)
+_floadze+3d:	rcr	*6(di)
+_floadze+40:	rcr	*4(di)
+_floadze+43:	sbb	ax,ax
+_floadze+45:	pop	di
+_floadze+46:	pop	bp
+_floadze+47:	ret
+_floadze+48:	push	bp
+_floadze+49:	mov	bp,sp
+_floadze+4b:	push	di
+_floadze+4c:	mov	di,#4(bp)
+_floadze+50:	shr	*10(di)
+_floadze+53:	rcr	*8(di)
+_floadze+56:	rcr	*6(di)
+_floadze+59:	rcr	*4(di)
+_floadze+5c:	sbb	ax,ax
+_floadze+5e:	pop	di
+_floadze+5f:	pop	bp
+_floadze+60:	ret

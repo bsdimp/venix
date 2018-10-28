@@ -1,0 +1,112 @@
+#
+# character devices
+#     name   type maj min
+#
+mknod tty       c 0   0
+mknod mem       c 1   0
+mknod kmem      c 1   1
+mknod null      c 1   2
+
+mknod console   c 2   0
+mknod scrn2     c 2   1
+mknod scrn3     c 2   2
+mknod scrn4     c 2   3
+
+mknod com1      c 3   0
+mknod com1.m    c 3  64
+mknod com1.d    c 3 128
+mknod com1.dm   c 3 192
+
+mknod com2      c 3   1
+mknod com2.m    c 3  65
+mknod com2.d    c 3 129
+mknod com2.dm   c 3 193
+
+mknod rf0       c 4   0
+mknod rf1       c 4   1
+
+mknod rw0.sys   c 5   0
+mknod rw0.tmp   c 5   1
+mknod rw0.usr   c 5   2
+mknod rw0.dos   c 5   3
+mknod rw0.phy   c 5   7
+
+mknod rw1.sys   c 5   8
+mknod rw1.tmp   c 5   9
+mknod rw1.usr   c 5  10
+mknod rw1.dos   c 5  11
+mknod rw1.phy   c 5  15
+
+mknod rw2.sys   c 5  16
+mknod rw2.tmp   c 5  17
+mknod rw2.usr   c 5  18
+mknod rw2.dos   c 5  19
+mknod rw2.phy   c 5  23
+
+mknod rw3.sys   c 5  24
+mknod rw3.tmp   c 5  25
+mknod rw3.usr   c 5  26
+mknod rw3.dos   c 5  27
+mknod rw3.phy   c 5  31
+
+mknod lp        c 6   0
+mknod lp2       c 6   1
+
+mknod ioport    c 7   0
+
+mknod np0       c 8   0
+mknod np1       c 8   1
+mknod np2       c 8   2
+mknod np3       c 8   3
+mknod np4       c 8   4
+mknod np5       c 8   5
+mknod np6       c 8   6
+mknod np7       c 8   7
+
+mknod ms0       c 9   0
+mknod ms1       c 9   1
+#
+# block devices
+#     name   type maj min
+#
+mknod f0        b 0   0
+mknod f0.40.s.8 b 0   0
+mknod f0.fmt    b 0   4
+mknod f0.40.s.9 b 0   8
+mknod f0.40.d.8 b 0  16
+mknod f0.9      b 0  24
+mknod f0.40.d.9 b 0  24
+mknod f0.9.fmt  b 0  28
+
+mknod f1        b 0   1
+mknod f1.40.s.8 b 0   1
+mknod f1.fmt    b 0   5
+mknod f1.40.s.9 b 0   9
+mknod f1.40.d.8 b 0  17
+mknod f1.9      b 0  25
+mknod f1.40.d.9 b 0  25
+mknod f1.9.fmt  b 0  29
+
+mknod w0.sys    b 1   0
+mknod w0.tmp    b 1   1
+mknod w0.usr    b 1   2
+mknod w0.dos    b 1   3
+mknod w0.phy    b 1   7
+
+mknod w1.sys    b 1   8
+mknod w1.tmp    b 1   9
+mknod w1.usr    b 1  10
+mknod w1.dos    b 1  11
+mknod w1.phy    b 1  15
+
+mknod w2.sys    b 1  16
+mknod w2.tmp    b 1  17
+mknod w2.usr    b 1  18
+mknod w2.dos    b 1  19
+mknod w2.phy    b 1  23
+
+mknod w3.sys    b 1  24
+mknod w3.tmp    b 1  25
+mknod w3.usr    b 1  26
+mknod w3.dos    b 1  27
+mknod w3.phy    b 1  31

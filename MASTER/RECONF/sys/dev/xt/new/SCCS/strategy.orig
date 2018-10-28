@@ -1,0 +1,90 @@
+atstrategy(abp)
+struct  buf *abp;
+{
+register struct buf *bp;
+register int unit, drive;
+static   char atfirst = 0;	/* driver already called */
+int      s, atintr();
+
+	drive = minor(abp->b_dev) / NUNIT;
+	unit = minor(abp->b_dev) % NUNIT;
+	if (atfirst == 0)
+	{
+		atfirst++;
+		/*
+		 * Set up the interrupt vector.
+		 */
+		setiva(0x34, atintr, atvec);
+
+		/*
+		 * Calculate number of heads.  First try max,
+		 * if error then decrease by 1, try again.
+		 */
+		atnoerr++;
+		while (ad_parm[0].ad_nhead > 0)
+		{
+			bp = (struct buf *)bread(abp->b_dev | 7,
+				ad_parm[0].ad_sechd *
+				(ad_parm[0].ad_nhead - 1));
+			brelse(bp);
+			if (bp->b_flags & B_ERROR)
+			{
+				extern lbolt;
+
+				ad_parm[0].ad_nhead--;
+				ad_parm[0].ad_blkscyl = ad_parm[0].ad_nhead *
+					ad_parm[0].ad_sechd;
+				u.u_error = 0;
+				sleep(&lbolt,PWAIT);	/* delay */
+			}
+			else
+				break;
+		}
+		printf("HD: strat: drive 0 has %u heads\n",
+			ad_parm[0].ad_nhead);
+		atnoerr = 0;
+
+		/*
+		 * Get a buffer for raw i/o which stradles a 64kb boundry.
+		 */
+		at_bp = (struct buf *)getblk(NODEV);
+	}
+	bp = abp;
+	if ((tabinmem(drive) == 0) && (unit < ad_parm[drive].ad_npart))
+	{
+		atnoerr++;
+		printf("HD: strat: first access: drive=%u unit=%u\n",
+			drive,unit);
+		atreread(bp->b_dev,drive);
+		atnoerr = 0;
+	}
+	/*
+	 * Verify minor device and request block range.
+	 */
+	if ((unit >= NUNIT) || (drive >= at_ndrv) ||
+		((bp->b_blkno + ((255 - bp->b_wcount) >> 8)) >
+		at_sizes[drive][unit].nblock))
+	{
+		printf("HD: strat: something is wrong\n");
+		printf("    unit  = %u  >=  NUNIT   = %u\n",unit,NUNIT);
+		printf("    drive = %u  >=  at_ndrv = %u\n",drive,at_ndrv);
+		printf("    blkno = %u  >=  nblock  = %u\n",
+			(bp->b_blkno + ((255 - bp->b_wcount) >> 8)),
+			at_sizes[drive][unit].nblock);
+		bp->b_flags |= B_ERROR;
+		iodone(bp);
+		return;
+	}
+	/*
+	 * Calculate approximate cylinder for sorting,
+	 * queue the request, and
+	 * start the transfer if none in progress.
+	 */
+	bp->b_cylin = (bp->b_blkno + at_sizes[drive][unit].oblock) /
+		ad_parm[drive].ad_blkscyl;
+	spl5();
+	disksort(&attab, bp);
+	if (attab.d_active == 0)
+		atstart();
+	spl0();
+}

@@ -1,0 +1,31 @@
+To create a XFER diskette ...
+
+	1) Make a copy of the distributed XFER diskette by using
+	   the "dd" utility onto another diskette (if you only
+	   have 1 floppy drive, then you will need to transfer
+	   via a temporary file on the winchester).
+
+	2) If the target machine has a different BIOS from an IBM
+	   compatable, then remake the floppy and winnie bootstraps
+	   in ../uboot.  Copy the "fboot" file to "/dev/f0"; this
+	   will put the new bootstrap on top of the just copied XFER
+	   diskette.
+
+	3) Mount the XFER diskette in "/f0" and copy over the following
+	   files if modified:
+		install		-->	/f0/etc/init
+		ddisk		-->	/f0/bin/ddisk
+		../uboot/xtboot	-->	/f0/uboot/xtboot
+		../conf/venix.f	-->	/f0/venix
+
+	4) Unmount and test (and repeat until it works).
+
+	The "install" program should only need to be modified if
+	partitioning or winchester sizes change, or if the menu
+	selections are inappropiate for the target machine.
+
+	"venix.f" will probably always have been modified, as when
+	changing device drivers or parameters.  Note that "install"
+	changes the root device from "floppy" to "winchester" when
+	it copies the "venix" image on the floppy to the winchester.
+
