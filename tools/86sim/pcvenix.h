@@ -149,20 +149,18 @@ private:
 	} __packed;
 	static_assert(sizeof(venix_stat) == 30, "bad venix_stat size");
 
-#if 0 /* Different than FreeBSD, oh joy, gotta translate, but just S_IFMT */
-#define	S_IFMT	0160000		/* type of file */
-#define		S_IFDIR	0140000	/* directory */
-#define		S_IFCHR	0120000	/* character special */
-#define		S_IFBLK	0160000	/* block special */
-#define		S_IFREG	0100000	/* regular file */
-#define	S_ILRG		010000	/* large file */
-#define	S_ISUID		004000	/* set user id on execution */
-#define	S_ISGID		002000	/* set group id on execution */
-#define	S_ISVTX		001000	/* save shared segment, even after use */
-#define	S_IREAD		000400	/* read permission, owner */
-#define	S_IWRITE	000200	/* write permission, owner */
-#define	S_IEXEC		000100	/* execute permission, owner */
-#endif
+#define	VENIX_S_IFMT	0160000		/* type of file */
+#define		VENIX_S_IFDIR	0140000	/* directory */
+#define		VENIX_S_IFCHR	0120000	/* character special */
+#define		VENIX_S_IFBLK	0160000	/* block special */
+#define		VENIX_S_IFREG	0100000	/* regular file */
+#define	VENIX_S_ILRG	010000	/* large file */
+#define	VENIX_S_ISUID	004000	/* set user id on execution */
+#define	VENIX_S_ISGID	002000	/* set group id on execution */
+#define	VENIX_S_ISVTX	001000	/* save shared segment, even after use */
+#define	VENIX_S_IREAD	000400	/* read permission, owner */
+#define	VENIX_S_IWRITE	000200	/* write permission, owner */
+#define	VENIX_S_IEXEC	000100	/* execute permission, owner */
 
 void venix_to_host_path(char *fn, char *host_fn, size_t len)
 {
@@ -214,6 +212,34 @@ int copyout(void *kptr, Word uptr, size_t len)
 	return 0;
 }
 
+mode_t venix_mode_to_host(uint16_t vmode)
+{
+	return vmode;
+}
+
+uint16_t venix_host_to_mode(mode_t hmode)
+{
+	uint16_t vmode;
+
+	vmode = hmode & 07777;
+	/* No clue what S_ILRG is "large addressing algorithm" ??? */
+	switch (hmode & S_IFMT) {
+	case S_IFDIR:
+		vmode |= VENIX_S_IFDIR;
+		break;
+	case S_IFCHR:
+		vmode |= VENIX_S_IFCHR;
+		break;
+	case S_IFBLK:
+		vmode |= VENIX_S_IFBLK;
+		break;
+	case S_IFREG:
+		vmode |= VENIX_S_IFREG;
+		break;
+	}
+	return vmode;
+}
+
 int venix_o_to_host(int mode)
 {
 	return (mode);
@@ -257,7 +283,7 @@ void host_to_venix_sb(struct stat *sb, Word usb)
 
 	vsb.st_dev = sb->st_dev;
 	vsb.st_ino = sb->st_ino;
-	vsb.st_mode = sb->st_mode;	// need to translate?
+	vsb.st_mode = venix_host_to_mode(sb->st_mode);
 	vsb.st_nlink = sb->st_nlink;
 	vsb.st_uid = sb->st_uid;
 	vsb.st_gid = sb->st_gid;
