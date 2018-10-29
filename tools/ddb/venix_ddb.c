@@ -325,4 +325,3 @@ DB_CALL(db_expr_t call, db_expr_t *rv, int count, db_expr_t args[])
 	panic("function call into child");
 	return 0;
 }
-
