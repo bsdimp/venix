@@ -561,8 +561,28 @@ venix_creat()
 void
 venix_link()
 {
+	char fn1[VENIX_PATHSIZ];
+	char fn2[VENIX_PATHSIZ];
+	char host_fn1[MAXPATHLEN];
+	char host_fn2[MAXPATHLEN];
+	Word ufn1 = arg1();
+	Word ufn2 = arg2();
 
-	error("Unimplemented system call 9 _link\n");
+	if (copyinstr(ufn1, fn1, sizeof(fn1)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	venix_to_host_path(fn1, host_fn1, sizeof(host_fn1));
+	if (copyinstr(ufn2, fn2, sizeof(fn2)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	venix_to_host_path(fn2, host_fn2, sizeof(host_fn2));
+	if (link(host_fn1, host_fn2) == -1) {
+		sys_error(errno);
+		return;
+	}
+	sys_retval_int(0);
 }
 
 /* 10 _unlink */
@@ -585,8 +605,20 @@ venix_exec()
 void
 venix_chdir()
 {
+	char fn[VENIX_PATHSIZ];
+	char host_fn[MAXPATHLEN];
+	Word ufn = arg1();
 
-	error("Unimplemented system call 12 _chdir\n");
+	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	venix_to_host_path(fn, host_fn, sizeof(host_fn));
+	if (chdir(host_fn) == -1) {
+		sys_error(errno);
+		return;
+	}
+	sys_retval_int(0);
 }
 
 /* 13 _gtime */
