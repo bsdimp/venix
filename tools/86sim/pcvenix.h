@@ -192,6 +192,7 @@ int copyin(Word uptr, void *kaddr, size_t len)
 	char ch;
 	char *str = (char *)kaddr;
 
+	printf("Copyin from %#x cs %#x ds %#x\n", uptr, cs(), ds());
 	for (int i = 0; i < len; i++) {
 		ch = readByte(uptr + i, DSeg);
 		str[i] = ch;
@@ -207,8 +208,9 @@ int copyout(void *kptr, Word uptr, size_t len)
 {
 	uint8_t *p = reinterpret_cast<uint8_t *>(kptr);
 
-	for (int i = 0; i < len; i++)
+	for (int i = 0; i < len; i++) {
 		writeByte(p[i], uptr + i, DSeg);
+	}
 	return 0;
 }
 
@@ -422,6 +424,8 @@ void rdwr(rdwr_fn *fn, bool isread)
 	ssize_t rv;
 	void *buffer;
 
+	printf("%s(%d, %#x, %d)\n", isread ? "read" : "write", fd, ptr, len);
+
 	if (bad_fd(fd)) {
 		sys_error(EBADF);
 		return;
@@ -431,8 +435,12 @@ void rdwr(rdwr_fn *fn, bool isread)
 		return;
 	}
 	buffer = malloc(len);
-	if (!isread)
+	if (buffer == NULL)
+		error("Can't malloc");
+	if (!isread) {
 		copyin(ptr, buffer, len);
+		printf("openfd %d first char %#x\n", open_fd[fd], *(char *)buffer);
+	}
 	rv = fn(open_fd[fd], buffer, (size_t)len);
 	if (rv == -1) {
 		sys_error(errno);
@@ -617,7 +625,16 @@ void
 venix_sbreak()
 {
 
-	error("Unimplemented system call 17 _sbreak\n");
+//	printf("sbreak(%#x) old %#x\n", arg1(), brk);
+// XXX -- we need to limit this properly. It appears there's
+// a bug in malloc that calls this a lot, so we have to limit
+// it to some sane value...
+	if (arg1() >= 0x8000) {
+		sys_error(0xffff);
+		return;
+	}
+	brk = arg1();
+	sys_retval_int(0);
 }
 
 /* 18 _stat */
@@ -920,6 +937,7 @@ venix_ioctl()
 	/* Should validate fd and arg */
 	switch (cmd) {
 	case VENIX_TIOCGETP:
+		printf("TIOCGETP\n");
 		/* should really do the conversion */
 		sg.sg_ispeed = sg.sg_ospeed = VENIX_B9600;
 		sg.sg_erase = 0x7f;	// DEL

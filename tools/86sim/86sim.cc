@@ -67,6 +67,7 @@ void o(char c)
 #endif
 }
 
+Word ds() { return registers[DS]; }
 Word cs() { return registers[CS]; }
 void divideOverflow() { runtimeError("Divide overflow"); }
 DWord physicalAddress(Word offset, int seg, bool write)

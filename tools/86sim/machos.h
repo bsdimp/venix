@@ -38,7 +38,7 @@ extern Word bx();
 extern Word cx();
 extern Word dx();
 extern Word cs();
-extern Word dx();
+extern Word ds();
 extern Word bp();
 extern Word sp();
 extern Word si();
