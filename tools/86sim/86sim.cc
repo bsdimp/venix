@@ -13,6 +13,10 @@
 #include "pcdos.h"
 #endif
 
+typedef uint64_t db_addr_t;
+bool dodis = false;
+extern "C" db_addr_t db_disasm(db_addr_t, bool);
+
 Word registers[12];
 Byte* byteRegisters[8];
 Word ip = 0x100;
@@ -469,6 +473,12 @@ int main(int argc, char* argv[])
                 rep = 0;
             }
             prefix = false;
+	    if (dodis) {
+		    printf("\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x\n",
+			ax(), bx(), cx(), dx(), sp(), bp(), si(), di());
+		    printf("%04X:%04X: ", cs(), ip);
+		    db_disasm(ip, false);
+	    }
             opcode = fetchByte();
         }
         if (rep != 0 && (opcode < 0xa4 || opcode >= 0xb0 || opcode == 0xa8 ||
