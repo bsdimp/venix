@@ -6,16 +6,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+typedef uint64_t db_addr_t;
+bool dodis = false;
+extern "C" db_addr_t db_disasm(db_addr_t, bool);
+bool dosyscall = true;
+
 #include "machos.h"
 #ifdef VENIX
 #include "pcvenix.h"
 #else
 #include "pcdos.h"
 #endif
-
-typedef uint64_t db_addr_t;
-bool dodis = false;
-extern "C" db_addr_t db_disasm(db_addr_t, bool);
 
 Word registers[12];
 Byte* byteRegisters[8];
@@ -460,7 +461,7 @@ int main(int argc, char* argv[])
     memset(initialized, 0, 0x20000);
     mos->load(argc, argv);
     Byte* byteData = (Byte*)&registers[0];
-    int bigEndian = (byteData[2] == 0 ? 1 : 0);
+    int bigEndian = 0;
     int byteNumbers[8] = {0, 2, 4, 6, 1, 3, 5, 7};
     for (int i = 0 ; i < 8; ++i)
         byteRegisters[i] = &byteData[byteNumbers[i] ^ bigEndian];
