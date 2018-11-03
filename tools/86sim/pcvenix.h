@@ -1,5 +1,7 @@
 #include <sys/time.h>
 
+#define printf(...) do {} while (0)
+
 class Venix : public MachineOS
 {
 	static const int MAXPATHLEN = 1025;
@@ -1138,3 +1140,5 @@ void int_cd(void)
 }
 
 };
+
+#undef printf
