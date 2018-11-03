@@ -43,7 +43,7 @@ typedef struct {
 	char		*name;		/* symtab name */
 	char		*start;		/* symtab location */
 	char		*end;
-	char		*private;	/* optional machdep pointer */
+	char		*private_;	/* optional machdep pointer */
 } db_symtab_t;
 
 /*

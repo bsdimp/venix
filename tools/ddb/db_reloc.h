@@ -8,7 +8,7 @@ typedef struct {
 	char		*name;		/* symtab name */
 	char		*start;		/* symtab location */
 	char		*end;
-	char		*private;	/* optional machdep pointer */
+	char		*private_;	/* optional machdep pointer */
 } db_reloctab_t;
 
 void	db_add_reloc_table(char *, char *, char *, char *);

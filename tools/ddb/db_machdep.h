@@ -112,7 +112,7 @@ void panic(const char* fmt, ...);
 #define kdb_reenter_silent edb_reenter_silent
 
 void edb_backtrace(void);
-void *edb_jmpbuf(jmp_buf new);
+void *edb_jmpbuf(jmp_buf newjb);
 void edb_reenter(void);
 void edb_reenter_silent(void);
 

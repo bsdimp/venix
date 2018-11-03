@@ -191,7 +191,7 @@ db_add_symbol_table(char *start, char *end, char *name, char *ref)
 	db_symtabs[db_nsymtab].start = start;
 	db_symtabs[db_nsymtab].end = end;
 	db_symtabs[db_nsymtab].name = name;
-	db_symtabs[db_nsymtab].private = ref;
+	db_symtabs[db_nsymtab].private_ = ref;
 	db_nsymtab++;
 }
 

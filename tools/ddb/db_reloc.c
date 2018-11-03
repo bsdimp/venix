@@ -24,7 +24,7 @@ db_add_reloc_table(char *start, char *end, char *name, char *extra)
 	db_reloctabs[db_nreloctab].start = start;
 	db_reloctabs[db_nreloctab].end = end;
 	db_reloctabs[db_nreloctab].name = name;
-	db_reloctabs[db_nreloctab].private = extra;
+	db_reloctabs[db_nreloctab].private_ = extra;
 	db_nreloctab++;
 }
 
