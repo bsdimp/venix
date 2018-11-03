@@ -365,6 +365,8 @@ void load(int argc, char **argv)
 	    loadSegment : loadSegment + ((hdr.a_text + 15) >> 4);
 	for (int i = 0; i < FirstS; i++)
 		registers[i] = 0;
+	printf("Reloc sizes: text %d bytes data %d bytes\n",
+	    hdr.a_trsize, hdr.a_drsize);
 	printf("Launching at %#x:0 with ds %#x\n", registers[CS], registers[DS]);
 
 	/*
@@ -374,6 +376,8 @@ void load(int argc, char **argv)
 	 */
 	sp = hdr.a_text + hdr.a_stack;
 	Word args[100];
+	printf("%d args\n", argc - 1);
+	/* Note: argv[1] is the program name or argv[0] in the target */
 	for (int i = 1; i < argc; i++) {
 		int len;
 
@@ -382,6 +386,7 @@ void load(int argc, char **argv)
 		if (sp & 1) sp--;
 		copyout(argv[i], sp, len);
 		args[i - 1] = sp;
+		printf("argv[%d] = %#x '%s'\n", i, sp, argv[i]);
 	}
 	args[argc - 1] = 0;
 	if (sp & 1) sp--;
@@ -512,7 +517,8 @@ venix_close()
 		return;
 	}
 	printf("close %d\n", fd);
-	close(open_fd[fd]);
+	if (open_fd[fd] > 2)
+		close(open_fd[fd]);
 	open_fd[fd] = -1;
 	sys_retval_int(0);
 }
