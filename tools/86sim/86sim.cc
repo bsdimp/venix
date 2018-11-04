@@ -500,6 +500,7 @@ int main(int argc, char* argv[])
     initialized = (Byte*)alloc(0x20000);
     memset(initialized, 0, 0x20000);
     mos->load(argc, argv);
+    Word t;
     Byte* byteData = (Byte*)&registers[0];
     int bigEndian = 0;
     int byteNumbers[8] = {0, 2, 4, 6, 1, 3, 5, 7};
@@ -515,8 +516,8 @@ int main(int argc, char* argv[])
             }
             prefix = false;
 	    if (dodis) {
-		    debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x *IP = %#x\n",
-			ax(), bx(), cx(), dx(), sp(), bp(), si(), di(), readByte(ip, 1));
+		    debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x *IP = %#x FLAGS %#x\n",
+			ax(), bx(), cx(), dx(), sp(), bp(), si(), di(), readByte(ip, 1), flags);
 		    debug(dbg_emul, "%04X:%04X: ", cs(), ip);
 		    db_disasm(ip, false);
 	    }
@@ -954,7 +955,8 @@ int main(int argc, char* argv[])
                 break;
             case 0xe9:  // JMP cw
                 o('j');
-                doJump(ip + fetchWord());
+		t = fetchWord();
+                doJump(ip + t);
                 break;
             case 0xea:  // JMP cp
                 o('j');
