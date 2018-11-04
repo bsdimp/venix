@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -7,7 +8,7 @@
 #include <fcntl.h>
 
 typedef uint64_t db_addr_t;
-bool dodis = false;
+bool dodis = true;
 extern "C" db_addr_t db_disasm(db_addr_t, bool);
 bool dosyscall = true;
 
@@ -17,6 +18,45 @@ bool dosyscall = true;
 #else
 #include "pcdos.h"
 #endif
+
+enum dbg {
+	dbg_emul,
+	dbg_syscall,
+	dbg_error,
+};
+FILE *dbg = stderr;
+void debug(enum dbg type, const char *fmt, ...)
+{
+	va_list ap;
+	FILE *f;
+
+	f = dbg;
+	if (dbg == NULL && type == dbg_error)
+		f = stderr;
+	if (f == NULL)
+		return;
+	va_start(ap, fmt);
+	vfprintf(f, fmt, ap);
+}
+
+/*
+ * Printing
+ */
+extern "C"
+int
+db_printf(const char *fmt, ...)
+{
+	va_list	listp;
+	int retval;
+
+	if (dbg == NULL)
+		return 0;
+	va_start(listp, fmt);
+	retval = vfprintf(dbg, fmt, listp);
+	va_end(listp);
+
+	return (retval);
+}
 
 Word registers[12];
 Byte* byteRegisters[8];
@@ -49,14 +89,14 @@ int oCycle;
 
 void error(const char* operation)
 {
-    fprintf(stderr, "Error %s file %s: %s\n", operation, filename,
+    debug(dbg_error, "Error %s file %s: %s\n", operation, filename,
         strerror(errno));
     exit(1);
 }
 
 void runtimeError(const char* message)
 {
-    fprintf(stderr, "%s\nCS:IP = %04x:%04x\n", message, cs(), ip);
+    debug(dbg_error, "%s\nCS:IP = %04x:%04x\n", message, cs(), ip);
     exit(1);
 }
 
@@ -94,7 +134,7 @@ DWord physicalAddress(Word offset, int seg, bool write)
         initialized[a >> 3] |= 1 << (a & 7);
     }
     if ((initialized[a >> 3] & (1 << (a & 7))) == 0 || bad) {
-        fprintf(stderr, "Accessing invalid address %04x:%04x.\n",
+        debug(dbg_error, "Accessing invalid address %04x:%04x.\n",
             segmentAddress, offset);
         runtimeError("");
     }
@@ -436,7 +476,7 @@ void* alloc(size_t bytes)
 {
     void* r = malloc(bytes);
     if (r == 0) {
-        fprintf(stderr, "Out of memory\n");
+        debug(dbg_error, "Out of memory\n");
         exit(1);
     }
     return r;
@@ -452,7 +492,7 @@ int main(int argc, char* argv[])
     mos = new IBMPC_DOS();
 #endif
     if (argc < 2) {
-        printf("Usage: %s <program name>\n", argv[0]);
+	fprintf(stderr, "Usage: %s <program name>\n", argv[0]);
         exit(0);
     }
     ram = (Byte*)alloc(0x100000);
@@ -475,9 +515,9 @@ int main(int argc, char* argv[])
             }
             prefix = false;
 	    if (dodis) {
-		    printf("\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x\n",
+		    debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x\n",
 			ax(), bx(), cx(), dx(), sp(), bp(), si(), di());
-		    printf("%04X:%04X: ", cs(), ip);
+		    debug(dbg_emul, "%04X:%04X: ", cs(), ip);
 		    db_disasm(ip, false);
 	    }
             opcode = fetchByte();
@@ -585,7 +625,7 @@ int main(int argc, char* argv[])
             case 0xd8: case 0xd9: case 0xda: case 0xdb:
             case 0xdc: case 0xdd: case 0xde: case 0xdf:  // escape
                 data = readEA();
-		printf("Ignorning FPU\n");
+		debug(dbg_emul, "Ignorning FPU\n");
 		break;
             case 0x60: case 0x61: case 0x62: case 0x63:
             case 0x64: case 0x65: case 0x66: case 0x67:
@@ -596,7 +636,7 @@ int main(int argc, char* argv[])
             case 0xce: case 0x0f:  // INTO, POP CS
             case 0xe4: case 0xe5: case 0xe6: case 0xe7:
             case 0xec: case 0xed: case 0xee: case 0xef:  // IN, OUT
-                fprintf(stderr, "Invalid opcode %02x", opcode);
+                debug(dbg_error, "Invalid opcode %02x", opcode);
                 runtimeError("");
                 break;
             case 0x70: case 0x71: case 0x72: case 0x73:
@@ -1050,7 +1090,7 @@ int main(int argc, char* argv[])
                 ea();
                 if ((!wordSize && modRMReg() >= 2 && modRMReg() <= 6) ||
                     modRMReg() == 7) {
-                    fprintf(stderr, "Invalid instruction %02x %02x", opcode,
+                    debug(dbg_error, "Invalid instruction %02x %02x", opcode,
                         modRM);
                     runtimeError("");
                 }

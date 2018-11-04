@@ -151,23 +151,6 @@ panic(const char *fmt, ...)
 }
 
 
-/*
- * Printing
- */
-extern "C"
-int
-db_printf(const char *fmt, ...)
-{
-	va_list	listp;
-	int retval;
-
-	va_start(listp, fmt);
-	retval = vprintf(fmt, listp);
-	va_end(listp);
-
-	return (retval);
-}
-
 extern "C"
 bool
 X_db_line_at_pc(db_symtab_t *symtab, c_db_sym_t sym, char **file, int *line,

@@ -1003,8 +1003,9 @@ venix_exece()
 void
 venix_umask()
 {
+	int numask = arg1();
 
-	error("Unimplemented system call 60 _umask\n");
+	sys_retval_int(umask(numask));
 }
 
 /* 61 _chroot */
