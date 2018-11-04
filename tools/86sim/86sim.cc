@@ -17,7 +17,7 @@ enum dbg {
 	dbg_syscall,
 	dbg_error,
 };
-FILE *dbg = NULL;
+FILE *dbg = stdout;
 void debug(enum dbg type, const char *fmt, ...)
 {
 	va_list ap;
@@ -515,8 +515,8 @@ int main(int argc, char* argv[])
             }
             prefix = false;
 	    if (dodis) {
-		    debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x\n",
-			ax(), bx(), cx(), dx(), sp(), bp(), si(), di());
+		    debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x *IP = %#x\n",
+			ax(), bx(), cx(), dx(), sp(), bp(), si(), di(), readByte(ip, 1));
 		    debug(dbg_emul, "%04X:%04X: ", cs(), ip);
 		    db_disasm(ip, false);
 	    }
