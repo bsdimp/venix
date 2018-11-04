@@ -53,6 +53,12 @@ class Venix : public MachineOS
 	static const int VENIX_NOFILE = 20;	// Max files per process on Venix (from sys/param.h, so maybe tunable)
 	static const int VENIX_PATHSIZ = 256;
 	int open_fd[VENIX_NOFILE];
+
+	static const int VENIX_NSIG = 17;
+	static const int VENIX_SIG_DFL = 0;
+	static const int VENIX_SIG_IGN = 1;
+	int venix_sighandle[VENIX_NSIG];
+
 public:
 
 Venix() : brk(0), length(0), scall(0) {
@@ -70,6 +76,12 @@ Venix() : brk(0), length(0), scall(0) {
 	open_fd[2] = 2;
 	for (int i = 3; i < VENIX_NOFILE; i++)
 		open_fd[i] = -1;
+
+	/*
+	 * Initialize the signal maps to the default
+	 */
+	for (int i = 0; i < VENIX_NSIG; i++)
+		venix_sighandle[i] = VENIX_SIG_DFL;
 }
 
 ~Venix() {
@@ -171,6 +183,7 @@ Word callno() { return bx(); }
 Word arg1() { return ax(); }
 Word arg2() { return dx(); }
 Word arg3() { return cx(); }
+Word arg4() { return si(); }
 
 int copyinstr(Word uptr, void *kaddr, size_t len)
 {
@@ -704,8 +717,16 @@ venix_stat()
 void
 venix_seek()
 {
+	Word fd = arg1();
+	Word off1 = arg2();
+	Word off2 = arg3();
+	Word whence = arg4();
+	off_t off = off1 | (off2 << 16);
+	off_t rv;
 
-	error("Unimplemented system call 19 _seek\n");
+	printf("lseek(%d, %ld, %d)\n", fd, (long)off, whence);
+	rv = lseek(fd, off, whence);
+	sys_retval_long((uint32_t)rv);
 }
 
 /* 20 _getpid */
@@ -769,7 +790,7 @@ void
 venix_alarm()
 {
 
-	error("Unimplemented system call 27 _alarm\n");
+	sys_retval_int(alarm(arg1()));
 }
 
 /* 28 _fstat */
@@ -799,7 +820,7 @@ void
 venix_pause()
 {
 
-	error("Unimplemented system call 29 _pause\n");
+	pause();
 }
 
 /* 30 _utime */
@@ -927,8 +948,27 @@ venix_getgid()
 void
 venix_ssig()
 {
+	/*
+	 * To implement I have to catch signals and redirect since
+	 * function pointer addresses are relative to usrland I'm
+	 * emulating, not this process. I'll also need to emulating
+	 * delivery of the signal, which I'm currently unsure about.
+	 */
+	Word sig = arg1();
+	Word fn = arg2();
+	Word oldfn;
 
-	error("Unimplemented system call 48 _ssig\n");
+	if (sig >= VENIX_NSIG) {
+		sys_error(EINVAL);
+		return;
+	}
+	/*
+	 * XXX -- need to establish signal handlers for at least some of
+	 * the signals.
+	 */
+	oldfn = venix_sighandle[sig];
+	venix_sighandle[sig] = fn;
+	sys_retval_int(oldfn);
 }
 
 /* 49 _sysdata */

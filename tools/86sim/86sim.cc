@@ -12,19 +12,12 @@ bool dodis = true;
 extern "C" db_addr_t db_disasm(db_addr_t, bool);
 bool dosyscall = true;
 
-#include "machos.h"
-#ifdef VENIX
-#include "pcvenix.h"
-#else
-#include "pcdos.h"
-#endif
-
 enum dbg {
 	dbg_emul,
 	dbg_syscall,
 	dbg_error,
 };
-FILE *dbg = stderr;
+FILE *dbg = NULL;
 void debug(enum dbg type, const char *fmt, ...)
 {
 	va_list ap;
@@ -38,6 +31,13 @@ void debug(enum dbg type, const char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(f, fmt, ap);
 }
+
+#include "machos.h"
+#ifdef VENIX
+#include "pcvenix.h"
+#else
+#include "pcdos.h"
+#endif
 
 /*
  * Printing
