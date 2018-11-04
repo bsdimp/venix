@@ -17,7 +17,7 @@ enum dbg {
 	dbg_syscall,
 	dbg_error,
 };
-FILE *dbg = stdout;
+FILE *dbg = NULL;
 void debug(enum dbg type, const char *fmt, ...)
 {
 	va_list ap;
@@ -32,12 +32,16 @@ void debug(enum dbg type, const char *fmt, ...)
 	vfprintf(f, fmt, ap);
 }
 
+#define printf(...)
+
 #include "machos.h"
 #ifdef VENIX
 #include "pcvenix.h"
 #else
 #include "pcdos.h"
 #endif
+
+#undef printf
 
 /*
  * Printing
