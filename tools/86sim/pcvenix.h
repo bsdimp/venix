@@ -263,22 +263,30 @@ int venix_o_to_host(int mode)
 
 void sys_retval_long(uint32_t r)
 {
-	setCX(0);			// No errno
-	setAX(r & 0xffff);
-	setDX(r >> 16);
+	if (r == (uint32_t)-1) {
+		sys_error(errno);
+	} else {
+		setCX(0);			// No errno
+		setAX(r & 0xffff);
+		setDX(r >> 16);
+	}
 }
 
 void sys_retval_int(uint16_t r)
 {
-	setCX(0);			// No errno
-	setAX(r);
+	if (r == (uint16_t)-1) {
+		sys_error(errno);
+	} else {
+		setCX(0);			// No errno
+		setAX(r);
+	}
 }
 
 
 void sys_error(int e)
 {
 	setCX(e);		// cx = errno
-	sys_retval_int(0xffff); // return -1;
+	setAX(0xffff);		// return -1;
 }
 
 bool bad_addr(Word addr)
@@ -611,11 +619,7 @@ venix_link()
 		return;
 	}
 	venix_to_host_path(fn2, host_fn2, sizeof(host_fn2));
-	if (link(host_fn1, host_fn2) == -1) {
-		sys_error(errno);
-		return;
-	}
-	sys_retval_int(0);
+	sys_retval_int(link(host_fn1, host_fn2));
 }
 
 /* 10 _unlink */
@@ -647,11 +651,7 @@ venix_chdir()
 		return;
 	}
 	venix_to_host_path(fn, host_fn, sizeof(host_fn));
-	if (chdir(host_fn) == -1) {
-		sys_error(errno);
-		return;
-	}
-	sys_retval_int(0);
+	sys_retval_int(chdir(host_fn));
 }
 
 /* 13 _gtime */
@@ -694,8 +694,12 @@ venix_sbreak()
 // XXX -- we need to limit this properly. It appears there's
 // a bug in malloc that calls this a lot, so we have to limit
 // it to some sane value...
+//
+// Also, there may be a bug with split I/D space progreams, since that's
+// accounted a bit differently.
+//
 	if (arg1() >= 0x8000) {
-		sys_error(0xffff);
+		sys_error(ENOMEM);
 		return;
 	}
 	brk = arg1();
@@ -841,6 +845,8 @@ venix_pause()
 {
 
 	pause();
+	errno = EINTR;
+	sys_retval_int(0xffff);
 }
 
 /* 30 _utime */
@@ -985,6 +991,10 @@ venix_ssig()
 	 * function pointer addresses are relative to usrland I'm
 	 * emulating, not this process. I'll also need to emulating
 	 * delivery of the signal, which I'm currently unsure about.
+	 *
+	 * I also need to arrange so that the signal is delivered
+	 * before we start to fetch the next instruction (though
+	 * after any rep has finished)
 	 */
 	Word sig = arg1();
 	Word fn = arg2();
