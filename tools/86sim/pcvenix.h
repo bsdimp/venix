@@ -636,7 +636,7 @@ venix_unlink()
 		return;
 	}
 	venix_to_host_path(fn, host_fn, sizeof(host_fn));
-	sys_retval_int(unlink(fn));
+	sys_retval_int(unlink(host_fn));
 }
 
 /* 11 _exec */
@@ -682,16 +682,34 @@ venix_mknod()
 void
 venix_chmod()
 {
+	char fn[VENIX_PATHSIZ];
+	char host_fn[MAXPATHLEN];
+	Word ufn = arg1();
+	Word mode = arg2();
 
-	error("Unimplemented system call 15 _chmod\n");
+	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	venix_to_host_path(fn, host_fn, sizeof(host_fn));
+	sys_retval_int(chmod(host_fn, mode));
 }
 
 /* 16 _chown */
 void
 venix_chown()
 {
+	char fn[VENIX_PATHSIZ];
+	char host_fn[MAXPATHLEN];
+	Word ufn = arg1();
+	Word uid = arg2();
 
-	error("Unimplemented system call 16 _chown\n");
+	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	venix_to_host_path(fn, host_fn, sizeof(host_fn));
+	sys_retval_int(chmod(host_fn, uid));
 }
 
 /* 17 _sbreak */
@@ -881,7 +899,7 @@ venix_saccess()
 		return;
 	}
 	venix_to_host_path(fn, host_fn, sizeof(host_fn));
-	sys_retval_int(access(fn, mode));
+	sys_retval_int(access(host_fn, mode));
 }
 
 /* 34 _nice */
