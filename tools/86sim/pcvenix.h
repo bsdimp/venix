@@ -784,8 +784,9 @@ venix_sumount()
 void
 venix_setuid()
 {
+	Word uid = arg1();
 
-	error("Unimplemented system call 23 _setuid\n");
+	sys_retval_int(setuid(uid));
 }
 
 /* 24 _getuid */
@@ -988,8 +989,9 @@ venix_syssema()
 void
 venix_setgid()
 {
+	Word gid = arg1();
 
-	error("Unimplemented system call 46 _setgid\n");
+	sys_retval_int(setuid(gid));
 }
 
 /* 47 _getgid */
