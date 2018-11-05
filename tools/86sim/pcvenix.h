@@ -790,8 +790,14 @@ venix_ptrace()
 void
 venix_alarm()
 {
+	int rv;
 
-	sys_retval_int(alarm(arg1()));
+	rv = alarm(arg1());
+	if (rv == -1) {
+		sys_error(errno);
+		return;
+	}
+	sys_retval_int(rv);
 }
 
 /* 28 _fstat */
@@ -887,12 +893,18 @@ venix_kill()
 {
 	Word pid = arg1();
 	Word sig = arg2();
+	int rv;
 
 	if (sig > VENIX_NSIG) {
 		sys_error(EINVAL);
 		return;
 	}
-	sys_retval_int(kill(pid, sig));
+	rv = kill(pid, sig);
+	if (rv == -1) {
+		sys_error(errno);
+		return;
+	}
+	sys_retval_int(rv);
 }
 
 /* 41 _dup */
