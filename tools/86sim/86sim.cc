@@ -173,7 +173,7 @@ void write(Word value, Word offset, int seg = -1)
     else
         writeByte((Byte)value, offset, seg);
 }
-Byte fetchByte() { Byte b = readByte(ip, 1); ++ip; return b; }
+Byte fetchByte() { Byte b = readByte(ip, CSeg); ++ip; return b; }
 Word fetchWord() { Word w = fetchByte(); w += fetchByte() << 8; return w; }
 Word fetch(bool wordSize)
 {
