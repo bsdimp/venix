@@ -1,4 +1,5 @@
 #include <sys/time.h>
+#include <unistd.h>
 #include <signal.h>
 
 class Venix : public MachineOS
@@ -626,8 +627,16 @@ venix_link()
 void
 venix_unlink()
 {
+	char fn[VENIX_PATHSIZ];
+	char host_fn[MAXPATHLEN];
+	Word ufn = arg1();
 
-	error("Unimplemented system call 10 _unlink\n");
+	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	venix_to_host_path(fn, host_fn, sizeof(host_fn));
+	sys_retval_int(unlink(fn));
 }
 
 /* 11 _exec */
@@ -861,8 +870,17 @@ venix_utime()
 void
 venix_saccess()
 {
+	char fn[VENIX_PATHSIZ];
+	char host_fn[MAXPATHLEN];
+	Word ufn = arg1();
+	Word mode = arg2();
 
-	error("Unimplemented system call 33 _saccess\n");
+	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return;
+	}
+	venix_to_host_path(fn, host_fn, sizeof(host_fn));
+	sys_retval_int(access(fn, mode));
 }
 
 /* 34 _nice */
