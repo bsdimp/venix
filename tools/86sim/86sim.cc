@@ -17,7 +17,7 @@ enum dbg {
 	dbg_syscall,
 	dbg_error,
 };
-FILE *dbg = NULL;
+FILE *dbg = stdout;
 void debug(enum dbg type, const char *fmt, ...)
 {
 	va_list ap;

@@ -511,6 +511,19 @@ venix_open()
 	}
 	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	host_mode = venix_o_to_host(mode);
+	/*
+	 * XXX directories -- V7 had no readdir and read directories
+	 * and know about the dirent from the v7 filesystem.
+	 * #define	DIRSIZ	14
+	 * struct	direct
+	 * {
+	 * 	ino_t	d_ino;
+	 * 	char	d_name[DIRSIZ];
+	 * };
+	 * If we get a directory open, we'll have to do special things
+	 * on read. Also, 14 character name limit... woof... this affects
+	 * du, ls, etc
+	 */
 	fd = open(host_fn, host_mode);
 	if (fd == -1) {
 		sys_error(errno);
@@ -735,7 +748,7 @@ void
 venix_getpid()
 {
 
-	error("Unimplemented system call 20 _getpid\n");
+	sys_retval_int(getpid());
 }
 
 /* 21 _smount */
@@ -767,7 +780,7 @@ void
 venix_getuid()
 {
 
-	error("Unimplemented system call 24 _getuid\n");
+	sys_retval_int(getuid());
 }
 
 /* 25 _stime */
@@ -960,7 +973,7 @@ void
 venix_getgid()
 {
 
-	error("Unimplemented system call 47 _getgid\n");
+	sys_retval_int(getgid());
 }
 
 /* 48 _ssig */
