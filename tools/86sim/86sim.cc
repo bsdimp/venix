@@ -116,6 +116,8 @@ void o(char c)
 #endif
 }
 
+Word ss() { return registers[SS]; }
+Word es() { return registers[ES]; }
 Word ds() { return registers[DS]; }
 Word cs() { return registers[CS]; }
 void divideOverflow() { runtimeError("Divide overflow"); }
@@ -520,8 +522,9 @@ int main(int argc, char* argv[])
             }
             prefix = false;
 	    if (dodis) {
-		    debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x *IP = %#x FLAGS %#x\n",
-			ax(), bx(), cx(), dx(), sp(), bp(), si(), di(), readByte(ip, 1), flags);
+		    debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x *IP = %#x FLAGS %#x CS %#x DS %#x ES %#x SS %#x\n",
+			ax(), bx(), cx(), dx(), sp(), bp(), si(), di(), readByte(ip, 1), flags,
+			cs(), ds(), es(), ss());
 		    debug(dbg_emul, "%04X:%04X: ", cs(), ip);
 		    db_disasm(ip, false);
 	    }
