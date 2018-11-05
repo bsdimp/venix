@@ -1,4 +1,5 @@
 #include <sys/time.h>
+#include <signal.h>
 
 class Venix : public MachineOS
 {
@@ -884,8 +885,14 @@ venix_sync()
 void
 venix_kill()
 {
+	Word pid = arg1();
+	Word sig = arg2();
 
-	error("Unimplemented system call 37 _kill\n");
+	if (sig > VENIX_NSIG) {
+		sys_error(EINVAL);
+		return;
+	}
+	sys_retval_int(kill(pid, sig));
 }
 
 /* 41 _dup */
