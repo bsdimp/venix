@@ -1085,7 +1085,7 @@ venix_ioctl()
 		sys_retval_int(0);
 		break;
 	default:
-		printf("undefined ioctl fd %d cmd %#x arg %d\n", fd, cmd, arg);
+		fprintf(stderr, "undefined ioctl fd %d cmd %#x arg %d\n", fd, cmd, arg);
 		error("Unimplemented system call 54 _ioctl\n");
 		break;
 	}
