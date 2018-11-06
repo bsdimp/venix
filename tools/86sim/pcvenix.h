@@ -229,6 +229,18 @@ int copyout(void *kptr, Word uptr, size_t len)
 	return 0;
 }
 
+int copyinfn(Word uptr, char *hostfn, size_t len)
+{
+	char fn[VENIX_PATHSIZ];
+
+	if (copyinstr(uptr, fn, sizeof(fn)) != 0) {
+		sys_error(EFAULT);
+		return 1;
+	}
+	venix_to_host_path(fn, hostfn, len);
+	return 0;
+}
+
 mode_t venix_mode_to_host(uint16_t vmode)
 {
 	return vmode;
@@ -499,17 +511,15 @@ venix_write()
 void
 venix_open()
 {
-	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
 	Word ufn = arg1();
 	Word mode = arg2();
 	int fd, i;
 	int host_mode;
 
-	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	}
+
 	for (i = 0; i < VENIX_NOFILE; i++)
 		if (open_fd[i] == -1)
 			break;
@@ -518,7 +528,6 @@ venix_open()
 		sys_error(EMFILE);
 		return;
 	}
-	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	host_mode = venix_o_to_host(mode);
 	/*
 	 * XXX directories -- V7 had no readdir and read directories
@@ -571,16 +580,13 @@ venix_wait()
 void
 venix_creat()
 {
-	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
 	Word ufn = arg1();
 	Word mode = arg2();
 	int fd, i;
 
-	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	}
 	for (i = 0; i < VENIX_NOFILE; i++)
 		if (open_fd[i] == -1)
 			break;
@@ -589,7 +595,6 @@ venix_creat()
 		sys_error(EMFILE);
 		return;
 	}
-	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	fd = creat(host_fn, mode);
 	if (fd == -1) {
 		sys_error(errno);
@@ -603,23 +608,15 @@ venix_creat()
 void
 venix_link()
 {
-	char fn1[VENIX_PATHSIZ];
-	char fn2[VENIX_PATHSIZ];
 	char host_fn1[MAXPATHLEN];
 	char host_fn2[MAXPATHLEN];
 	Word ufn1 = arg1();
 	Word ufn2 = arg2();
 
-	if (copyinstr(ufn1, fn1, sizeof(fn1)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn1, host_fn1, sizeof(host_fn1)))
 		return;
-	}
-	venix_to_host_path(fn1, host_fn1, sizeof(host_fn1));
-	if (copyinstr(ufn2, fn2, sizeof(fn2)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn2, host_fn2, sizeof(host_fn2)))
 		return;
-	}
-	venix_to_host_path(fn2, host_fn2, sizeof(host_fn2));
 	sys_retval_int(link(host_fn1, host_fn2));
 }
 
@@ -627,15 +624,11 @@ venix_link()
 void
 venix_unlink()
 {
-	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
 	Word ufn = arg1();
 
-	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	}
-	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	sys_retval_int(unlink(host_fn));
 }
 
@@ -651,15 +644,11 @@ venix_exec()
 void
 venix_chdir()
 {
-	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
 	Word ufn = arg1();
 
-	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	}
-	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	sys_retval_int(chdir(host_fn));
 }
 
@@ -682,16 +671,12 @@ venix_mknod()
 void
 venix_chmod()
 {
-	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
 	Word ufn = arg1();
 	Word mode = arg2();
 
-	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	}
-	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	sys_retval_int(chmod(host_fn, mode));
 }
 
@@ -699,16 +684,12 @@ venix_chmod()
 void
 venix_chown()
 {
-	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
 	Word ufn = arg1();
 	Word uid = arg2();
 
-	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	}
-	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	sys_retval_int(chmod(host_fn, uid));
 }
 
@@ -737,18 +718,14 @@ venix_sbreak()
 void
 venix_stat()
 {
-	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
 	Word ufn = arg1();
 	Word usb = arg2();
 	struct stat sb;
 	int rv;
 
-	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	}
-	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	printf("stat %s\n", host_fn);
 	rv = stat(host_fn, &sb);
 	if (rv == -1) {
@@ -889,16 +866,12 @@ venix_utime()
 void
 venix_saccess()
 {
-	char fn[VENIX_PATHSIZ];
 	char host_fn[MAXPATHLEN];
 	Word ufn = arg1();
 	Word mode = arg2();
 
-	if (copyinstr(ufn, fn, sizeof(fn)) != 0) {
-		sys_error(EFAULT);
+	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	}
-	venix_to_host_path(fn, host_fn, sizeof(host_fn));
 	sys_retval_int(access(host_fn, mode));
 }
 
