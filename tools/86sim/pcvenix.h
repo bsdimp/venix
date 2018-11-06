@@ -812,14 +812,8 @@ venix_ptrace()
 void
 venix_alarm()
 {
-	int rv;
 
-	rv = alarm(arg1());
-	if (rv == -1) {
-		sys_error(errno);
-		return;
-	}
-	sys_retval_int(rv);
+	sys_retval_int(alarm(arg1()));
 }
 
 /* 28 _fstat */
