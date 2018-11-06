@@ -377,7 +377,7 @@ void load(int argc, char **argv)
 	/*
 	 * Mark the memory in use, including the stack.
 	 */
-	for (int i = 0; i < brk + 15; i++) {
+	for (Word i = 0; i < brk + 15; i++) {
 		registers[ES] = loadSegment + (i >> 4);
 		physicalAddress(i & 15, 0, true);
 	}
@@ -696,7 +696,6 @@ void
 venix_sbreak()
 {
 
-//	printf("sbreak(%#x) old %#x\n", arg1(), brk);
 // XXX -- we need to limit this properly. It appears there's
 // a bug in malloc that calls this a lot, so we have to limit
 // it to some sane value...
@@ -704,11 +703,25 @@ venix_sbreak()
 // Also, there may be a bug with split I/D space progreams, since that's
 // accounted a bit differently.
 //
+	Word obrk;
+
 	if (arg1() >= 0x8000) {
 		sys_error(ENOMEM);
 		return;
 	}
+	obrk = brk;
 	brk = arg1();
+	if (brk == 0)
+		brk = obrk;
+	if (obrk < brk) {
+		/* Mark the memory now in use */
+		for (Word i = obrk; i < brk + 15; i++) {
+			registers[ES] = registers[DS] + (i >> 4);
+			physicalAddress(i & 15, 0, true);
+		}
+		registers[ES] = registers[DS];
+	} /* else shrink ??? */
+	printf("sbreak(%#x) %#x\n", arg1(), obrk);
 	sys_retval_int(0);
 }
 
