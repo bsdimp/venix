@@ -400,8 +400,6 @@ void load(int argc, char **argv)
 	    loadSegment : loadSegment + ((hdr.a_text + 15) >> 4);
 	for (int i = 0; i < FirstS; i++)
 		registers[i] = 0;
-	printf("Reloc sizes: text %d bytes data %d bytes\n",
-	    hdr.a_trsize, hdr.a_drsize);
 	printf("Launching at %#x:0 with ds %#x\n", registers[CS], registers[DS]);
 
 	/*
