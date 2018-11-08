@@ -7,31 +7,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-typedef uint64_t db_addr_t;
-bool dodis = true;
-extern "C" db_addr_t db_disasm(db_addr_t, bool);
-bool dosyscall = true;
-
-enum dbg {
-	dbg_emul,
-	dbg_syscall,
-	dbg_error,
-};
-FILE *dbg = NULL;
-void debug(enum dbg type, const char *fmt, ...)
-{
-	va_list ap;
-	FILE *f;
-
-	f = dbg;
-	if (dbg == NULL && type == dbg_error)
-		f = stderr;
-	if (f == NULL)
-		return;
-	va_start(ap, fmt);
-	vfprintf(f, fmt, ap);
-}
-
+#include "debug.hh"
 #define printf(...)
 
 #include "machos.h"
@@ -42,25 +18,6 @@ void debug(enum dbg type, const char *fmt, ...)
 #endif
 
 #undef printf
-
-/*
- * Printing
- */
-extern "C"
-int
-db_printf(const char *fmt, ...)
-{
-	va_list	listp;
-	int retval;
-
-	if (dbg == NULL)
-		return 0;
-	va_start(listp, fmt);
-	retval = vfprintf(dbg, fmt, listp);
-	va_end(listp);
-
-	return (retval);
-}
 
 Word registers[12];
 Byte* byteRegisters[8];
