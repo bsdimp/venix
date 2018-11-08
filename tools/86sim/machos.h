@@ -31,6 +31,7 @@ extern void setSP(Word value);
 extern void setAH(Byte value);
 extern void setAL(Byte value);
 extern void setCF(bool);
+extern Word getFlags();
 extern Byte al();
 extern Byte ah();
 extern Word ax();
@@ -39,6 +40,8 @@ extern Word cx();
 extern Word dx();
 extern Word cs();
 extern Word ds();
+extern Word es();
+extern Word ss();
 extern Word bp();
 extern Word sp();
 extern Word si();
@@ -84,4 +87,5 @@ protected:
 public:
 	virtual void load(int argc, char **argv) = 0;
 	virtual void int_cd() = 0;
+	virtual void start_of_instruction() = 0;
 };

@@ -270,6 +270,7 @@ void test(Word d, Word s)
     source = s;
     bitwise(destination & source);
 }
+Word getFlags() { return flags; }
 bool cf() { return (flags & 1) != 0; }
 bool pf() { return (flags & 4) != 0; }
 bool af() { return (flags & 0x10) != 0; }
@@ -521,13 +522,7 @@ int main(int argc, char* argv[])
                 rep = 0;
             }
             prefix = false;
-	    if (dodis) {
-		    debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x *IP = %#x FLAGS %#x CS %#x DS %#x ES %#x SS %#x\n",
-			ax(), bx(), cx(), dx(), sp(), bp(), si(), di(), readByte(ip, 1), flags,
-			cs(), ds(), es(), ss());
-		    debug(dbg_emul, "%04X:%04X: ", cs(), ip);
-		    db_disasm(ip, false);
-	    }
+	    mos->start_of_instruction();
             opcode = fetchByte();
         }
         if (rep != 0 && (opcode < 0xa4 || opcode >= 0xb0 || opcode == 0xa8 ||

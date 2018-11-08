@@ -1236,4 +1236,16 @@ void int_cd(void)
 	}
 }
 
+void start_of_instruction(void)
+{
+	if (dodis) {
+		debug(dbg_emul, "\t\t\t\t| AX %#x BX %#x CX %#x DX %#x SP %#x BP %#x SI %#x DI %#x *IP = %#x FLAGS %#x CS %#x DS %#x ES %#x SS %#x\n",
+		    ax(), bx(), cx(), dx(), sp(), bp(), si(), di(), readByte(ip, 1), getFlags(),
+		    cs(), ds(), es(), ss());
+		debug(dbg_emul, "%04X:%04X: ", cs(), ip);
+		db_disasm(ip, false);
+	}
+	/* XXX check signal mask here */
+}
+
 };
