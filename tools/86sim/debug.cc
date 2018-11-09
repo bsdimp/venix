@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include "debug.hh"
 bool dodis = true;
-bool dosyscall = true;
+bool dosyscall = false;
+uint32_t mask = 0x1;
 
 FILE *dbg = NULL;
 void debug(enum dbg type, const char *fmt, ...)
@@ -13,7 +14,7 @@ void debug(enum dbg type, const char *fmt, ...)
 	f = dbg;
 	if (dbg == NULL && type == dbg_error)
 		f = stderr;
-	if (f == NULL)
+	if (f == NULL) // || type != dbg_load)
 		return;
 	va_start(ap, fmt);
 	vfprintf(f, fmt, ap);

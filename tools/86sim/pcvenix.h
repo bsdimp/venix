@@ -207,7 +207,6 @@ int copyin(Word uptr, void *kaddr, size_t len)
 	char ch;
 	char *str = (char *)kaddr;
 
-	printf("Copyin from %#x cs %#x ds %#x\n", uptr, cs(), ds());
 	for (int i = 0; i < len; i++) {
 		ch = readByte(uptr + i, DSeg);
 		str[i] = ch;
@@ -337,6 +336,7 @@ void load(int argc, char **argv)
 {
 	struct venix_exec hdr;
 	Word sp;
+	uint32_t b;
 
 	filename = argv[1];
 	FILE* fp = fopen(filename, "rb");
@@ -350,7 +350,8 @@ void load(int argc, char **argv)
 	if (fread(&hdr, sizeof(hdr), 1, fp) != 1)
 		error("reading");
 
-	printf("Magic is 0%o\n", hdr.a_magic);
+	debug(dbg_load, "Magic is 0%o (%s)\n", hdr.a_magic,
+	    hdr.a_magic == OMAGIC ? "OMAGIC" : (hdr.a_magic == NMAGIC ? "NMAGIC" : "CRAZY"));
 	if (hdr.a_magic != OMAGIC &&
 	    hdr.a_magic != NMAGIC)
 		error("Unsupported magic number");
@@ -372,12 +373,13 @@ void load(int argc, char **argv)
 	    hdr.a_data, 1, fp);
 	memset(&ram[loadOffset + hdr.a_text + hdr.a_stack + hdr.a_data], // bss
 	    0, hdr.a_bss);
-	brk = hdr.a_text + hdr.a_stack + hdr.a_data + hdr.a_bss;
+	b = (uint32_t)hdr.a_text + hdr.a_stack + hdr.a_data + hdr.a_bss;
+	debug(dbg_load, "b is %#x\n", b);
 
 	/*
 	 * Mark the memory in use, including the stack.
 	 */
-	for (Word i = 0; i < brk + 15; i++) {
+	for (Word i = 0; i < b + 15; i++) {
 		registers[ES] = loadSegment + (i >> 4);
 		physicalAddress(i & 15, 0, true);
 	}
@@ -387,7 +389,11 @@ void load(int argc, char **argv)
 	 * so adjust that after we've marked all the memory in use.
 	 */
 	if (hdr.a_magic == NMAGIC)
-		brk -= hdr.a_text;
+		b -= hdr.a_text;
+	brk = b;
+	debug(dbg_load, "text %#x data %#x bss %#x stack %#x -> brk %#x\n",
+	    hdr.a_text, hdr.a_data, hdr.a_bss, hdr.a_stack, brk);
+
 	/*
 	 * Initialize all the segment registers to be the same. For
 	 * venix, we read the whole image into memory, move the data
@@ -400,16 +406,25 @@ void load(int argc, char **argv)
 	    loadSegment : loadSegment + ((hdr.a_text + 15) >> 4);
 	for (int i = 0; i < FirstS; i++)
 		registers[i] = 0;
-	printf("Launching at %#x:0 with ds %#x\n", registers[CS], registers[DS]);
 
 	/*
 	 * Setup the stack by first 'pushing' the args onto it. First
 	 * the strings, then argv, then a couple of 0's for the env (Bad), then
 	 * a pointer to argv, then argc.
 	 */
-	sp = hdr.a_text + hdr.a_stack;
+	sp = hdr.a_stack;
+	if (hdr.a_magic == OMAGIC)
+		sp += hdr.a_text;
+	debug(dbg_load, "Text from %#x:0-%#x\n", registers[CS], hdr.a_text - 1);
+	Word x = (hdr.a_magic == OMAGIC) ? hdr.a_text : 0;
+	debug(dbg_load, "Stack from %#x:%x-%#x\n", registers[SS], x, x + hdr.a_stack - 1);
+	x += hdr.a_stack;
+	debug(dbg_load, "Data from %#x:%x-%x\n", registers[DS], x, x + hdr.a_data - 1);
+	x += hdr.a_data;
+	debug(dbg_load, "BSS from %#x:%x-%x\n", registers[DS], x, x + hdr.a_bss - 1);
+	debug(dbg_load, "brk = %#x\n", brk);
 	Word args[100];
-	printf("%d args\n", argc - 1);
+	debug(dbg_load, "%d args\n", argc - 1);
 	/* Note: argv[1] is the program name or argv[0] in the target */
 	for (int i = 1; i < argc; i++) {
 		int len;
@@ -419,7 +434,7 @@ void load(int argc, char **argv)
 		if (sp & 1) sp--;
 		copyout(argv[i], sp, len);
 		args[i - 1] = sp;
-		printf("argv[%d] = %#x '%s'\n", i, sp, argv[i]);
+		debug(dbg_load, "argv[%d] = %#x '%s'\n", i, sp, argv[i]);
 	}
 	args[argc - 1] = 0;
 	if (sp & 1) sp--;
@@ -433,14 +448,15 @@ void load(int argc, char **argv)
 	copyout(&vargc, sp, 2);
 
 	registers[SP] = sp;
-	ip = 0;			// jump to CS:0
+	ip = 0;					// jump to CS:0
+	debug(dbg_load, "Launching at %#x:0 with ds %#x\n", registers[CS], registers[DS]);
 }
 
 /* 1 _rexit */
 void
 venix_rexit()
 {
-	printf("exit(%d)\n", arg1());
+	debug(dbg_syscall, "exit(%d)\n", arg1());
 	exit(arg1());
 }
 
@@ -462,7 +478,7 @@ void rdwr(rdwr_fn *fn, bool isread)
 	ssize_t rv;
 	void *buffer;
 
-	printf("%s(%d, %#x, %d)\n", isread ? "read" : "write", fd, ptr, len);
+	debug(dbg_syscall, "%s(%d, %#x, %d)\n", isread ? "read" : "write", fd, ptr, len);
 
 	if (bad_fd(fd)) {
 		sys_error(EBADF);
@@ -477,7 +493,6 @@ void rdwr(rdwr_fn *fn, bool isread)
 		error("Can't malloc");
 	if (!isread) {
 		copyin(ptr, buffer, len);
-		printf("openfd %d first char %#x\n", open_fd[fd], *(char *)buffer);
 	}
 	rv = fn(open_fd[fd], buffer, (size_t)len);
 	if (rv == -1) {
@@ -540,6 +555,7 @@ venix_open()
 	 * on read. Also, 14 character name limit... woof... this affects
 	 * du, ls, etc
 	 */
+	debug(dbg_syscall, "open(%s, 0%o)\n", host_fn, mode);
 	fd = open(host_fn, host_mode);
 	if (fd == -1) {
 		sys_error(errno);
@@ -559,7 +575,7 @@ venix_close()
 		sys_error(EBADF);
 		return;
 	}
-	printf("close %d\n", fd);
+	debug(dbg_syscall, "close (%d)\n", fd);
 	if (open_fd[fd] > 2)
 		close(open_fd[fd]);
 	open_fd[fd] = -1;
@@ -589,8 +605,13 @@ venix_creat()
 		if (open_fd[i] == -1)
 			break;
 
+	debug(dbg_syscall, "creat(%#x %s, 0%o)\n", ufn, host_fn, mode);
 	if (i == VENIX_NOFILE) {
 		sys_error(EMFILE);
+		return;
+	}
+	if (strlen(host_fn) == 0) {
+		sys_error(EINVAL);
 		return;
 	}
 	fd = creat(host_fn, mode);
@@ -705,10 +726,6 @@ venix_sbreak()
 //
 	Word obrk;
 
-	if (arg1() >= 0x8000) {
-		sys_error(ENOMEM);
-		return;
-	}
 	obrk = brk;
 	brk = arg1();
 	if (brk == 0)
@@ -721,7 +738,7 @@ venix_sbreak()
 		}
 		registers[ES] = registers[DS];
 	} /* else shrink ??? */
-	printf("sbreak(%#x) %#x\n", arg1(), obrk);
+	debug(dbg_syscall, "sbreak(%#x) %#x\n", arg1(), obrk);
 	sys_retval_int(0);
 }
 
@@ -737,7 +754,7 @@ venix_stat()
 
 	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
 		return;
-	printf("stat %s\n", host_fn);
+	debug(dbg_syscall, "stat(%s)\n", host_fn);
 	rv = stat(host_fn, &sb);
 	if (rv == -1) {
 		sys_error(errno);
@@ -757,7 +774,7 @@ venix_seek()
 	off_t off = off1 | (off2 << 16);
 	off_t rv;
 
-	printf("lseek(%d, %ld, %d)\n", fd, (long)off, whence);
+	debug(dbg_syscall, "lseek(%d, %ld, %d)\n", fd, (long)off, whence);
 	rv = lseek(fd, off, whence);
 	sys_retval_long((uint32_t)rv);
 }
@@ -840,7 +857,7 @@ venix_fstat()
 		sys_error(EBADF);
 		return;
 	}
-	printf("fstat %d\n", fd);
+	debug(dbg_syscall, "fstat(%d)\n", fd);
 	rv = fstat(open_fd[fd], &sb);
 	if (rv == -1) {
 		sys_error(errno);
@@ -899,7 +916,6 @@ venix_ftime()
 
 	rv = gettimeofday(&tv, NULL);
 	if (rv) {
-		printf("Failed gettimeofday\n");
 		sys_error(errno);
 		return;
 	}
@@ -1073,7 +1089,7 @@ venix_ioctl()
 	/* Should validate fd and arg */
 	switch (cmd) {
 	case VENIX_TIOCGETP:
-		printf("TIOCGETP\n");
+		debug(dbg_syscall, "ioctl(TIOCGETP)\n");
 		/* should really do the conversion */
 		sg.sg_ispeed = sg.sg_ospeed = VENIX_B9600;
 		sg.sg_erase = 0x7f;	// DEL
@@ -1125,8 +1141,8 @@ venix_locking()
 void
 venix_nosys()
 {
-	printf("Venix unimplemented system call %d\n", scall);
-	exit(0);
+	fprintf(stderr, "Venix unimplemented system call %d\n", scall);
+	exit(1);
 }
 
 typedef void (Venix::*sysfn)(void);

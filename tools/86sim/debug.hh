@@ -1,4 +1,5 @@
 enum dbg {
+	dbg_load,
 	dbg_emul,
 	dbg_syscall,
 	dbg_error,
