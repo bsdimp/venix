@@ -1003,7 +1003,7 @@ venix_setgid()
 {
 	Word gid = arg1();
 
-	sys_retval_int(setuid(gid));
+	sys_retval_int(setgid(gid));
 }
 
 /* 47 _getgid */
