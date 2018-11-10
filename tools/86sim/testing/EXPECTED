@@ -1,0 +1,16 @@
+SUPER> ./xo
+CS: 94e0 DS: 94e0 ES: 94e0 SS: 94e0
+&data = 134a &bss = 1518 &stack = ff80
+etext = 1346 edata = 1516 end = 1922
+SUPER> ./xn
+CS: 8a60 DS: 94e0 ES: 94e0 SS: 94e0
+&data = 4 &bss = 1d2 &stack = ff80
+etext = 1346 edata = 1d0 end = 5dc
+SUPER> ./xoz
+CS: 94e0 DS: 94e0 ES: 94e0 SS: 94e0
+&data = 334a &bss = 3518 &stack = 1f7e
+etext = 3346 edata = 3516 end = 3922
+SUPER> ./xnz
+CS: 8a60 DS: 8be0 ES: 8be0 SS: 8be0
+&data = 2004 &bss = 21d2 &stack = 1f7e
+etext = 1346 edata = 21d0 end = 25dc
