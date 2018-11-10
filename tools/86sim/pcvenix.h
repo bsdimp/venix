@@ -356,73 +356,88 @@ void load(int argc, char **argv)
 	    hdr.a_magic != NMAGIC)
 		error("Unsupported magic number");
 
-	/*
-	 * Layout in memory is text, stack, data, bss, but is
-	 * hdr, text, data in the disk file. Move things around
-	 * to cope.
-	 *	Move data above stack
-	 *	bzero the stack
-	 *	bzero bss
-	 * we'll likely need to create a pseudo-a area to propery
-	 * emulate Venix, and we should note brk there as the end
-	 * of bss.
-	 */
-	fread(&ram[loadOffset], hdr.a_text, 1, fp);			// text
-	memset(&ram[loadOffset + hdr.a_text], 0, hdr.a_stack);		// stack
-	fread(&ram[loadOffset + hdr.a_text + hdr.a_stack],		// data
-	    hdr.a_data, 1, fp);
-	memset(&ram[loadOffset + hdr.a_text + hdr.a_stack + hdr.a_data], // bss
-	    0, hdr.a_bss);
-	b = (uint32_t)hdr.a_text + hdr.a_stack + hdr.a_data + hdr.a_bss;
-	debug(dbg_load, "b is %#x\n", b);
+	for (int i = 0; i < FirstS; i++)
+		registers[i] = 0;
+
+	uint32_t ptr = 0;
+	uint32_t startMem, endMem;
+	if (hdr.a_stack == 0)
+		error("We don't support non -z binaries -- need to understand 'uses full 64k comment'\n");
+	registers[CS] = loadSegment;
+	startMem = loadSegment << 4;
+	if (hdr.a_magic == OMAGIC) {
+		/*
+		 * OMAGIC + -z stack layout looks like:
+		 *
+		 * 0 :  stack
+		 *	text
+		 *	data
+		 *	bss
+		 * With all the segment registers the same.
+		 */
+		registers[DS] = registers[ES] = registers[SS] = loadSegment;
+		debug(dbg_load, "stack from %#x:%#x-%#x\n", registers[CS], ptr, hdr.a_stack - 1);
+		memset(&ram[loadOffset + ptr], 0, hdr.a_stack);			// stack (under the text)
+		ptr += hdr.a_stack;
+		debug(dbg_load, "Text from %#x:%#x-%#x\n", registers[CS], ptr, ptr + hdr.a_text - 1);
+		fread(&ram[loadOffset + ptr], hdr.a_text, 1, fp);		// text
+		ptr += hdr.a_text;
+		debug(dbg_load, "Data from %#x:%#x-%#x\n", registers[CS], ptr, ptr + hdr.a_data - 1);
+		fread(&ram[loadOffset + ptr], hdr.a_data, 1, fp);		// data
+		ptr += hdr.a_data;
+		debug(dbg_load, "BSS from %#x:%#x-%#x\n", registers[CS], ptr, ptr + hdr.a_bss - 1);
+		memset(&ram[loadOffset + ptr], 0, hdr.a_bss);			// bss
+		ptr += hdr.a_bss;
+		endMem = (loadOffset + ptr) << 4;
+	} else {
+		/*
+		 * NMAGIC + -z stack layout looks like:
+		 *
+		 * cs :  text (rounded to next 'click' or 512 byte boundary)
+		 * ds	stack
+		 *	data
+		 *	bss
+		 * With separate cs and ds regsiters. ss and es are set to ds.
+		 */
+		debug(dbg_load, "Text from %#x:%#x-%#x\n", registers[CS], ptr, ptr + hdr.a_text - 1);
+		fread(&ram[loadOffset + ptr], hdr.a_text, 1, fp);		// text
+		ptr += hdr.a_text;
+		ptr = ptr + 511 & ~511;					// Round to nearest click
+		registers[DS] = registers[ES] = registers[SS] = loadSegment + (ptr >> 4);
+		Word dataOffset = loadOffset + ptr;
+		ptr = 0;
+		debug(dbg_load, "stack from %#x:%#x-%#x\n", registers[DS], ptr, hdr.a_stack - 1);
+		memset(&ram[dataOffset + ptr], 0, hdr.a_stack);			// stack (under the text)
+		ptr += hdr.a_stack;
+		debug(dbg_load, "Data from %#x:%#x-%#x\n", registers[DS], ptr, ptr + hdr.a_data - 1);
+		fread(&ram[dataOffset + ptr], hdr.a_data, 1, fp);		// data
+		ptr += hdr.a_data;
+		debug(dbg_load, "BSS from %#x:%#x-%#x\n", registers[DS], ptr, ptr + hdr.a_bss - 1);
+		memset(&ram[dataOffset + ptr], 0, hdr.a_bss);			// bss
+		ptr += hdr.a_bss;
+		endMem = (dataOffset + ptr) << 4;
+	}
+	b = ptr;
+	sp = hdr.a_stack;
+	ip = hdr.a_entry;					// jump to CS:a_entry
+	debug(dbg_load, "Starting at %#x:%#x\n", registers[CS], ip);
+	debug(dbg_load, "break is %#x\n", b);
 
 	/*
 	 * Mark the memory in use, including the stack.
 	 */
-	for (Word i = 0; i < b + 15; i++) {
-		registers[ES] = loadSegment + (i >> 4);
-		physicalAddress(i & 15, 0, true);
-	}
+	for (uint32_t i = startMem; i < endMem; i++)
+		initialized[i >> 3] |= 1 << (i & 7);
 
-	/*
-	 * For NMAGIC binaries, the 'break' address doesn't include the text section,
-	 * so adjust that after we've marked all the memory in use.
-	 */
-	if (hdr.a_magic == NMAGIC)
-		b -= hdr.a_text;
 	brk = b;
 	debug(dbg_load, "text %#x data %#x bss %#x stack %#x -> brk %#x\n",
 	    hdr.a_text, hdr.a_data, hdr.a_bss, hdr.a_stack, brk);
-
-	/*
-	 * Initialize all the segment registers to be the same. For
-	 * venix, we read the whole image into memory, move the data
-	 * segment, setup the stack and go.
-	 *
-	 * For NMAGIC, we need to adjust, but  for OMAGIC things are fine.
-	 */
-	registers[CS] = loadSegment;
-	registers[DS] = registers[ES] = registers[SS] = (hdr.a_magic == OMAGIC) ?
-	    loadSegment : loadSegment + ((hdr.a_text + 15) >> 4);
-	for (int i = 0; i < FirstS; i++)
-		registers[i] = 0;
 
 	/*
 	 * Setup the stack by first 'pushing' the args onto it. First
 	 * the strings, then argv, then a couple of 0's for the env (Bad), then
 	 * a pointer to argv, then argc.
 	 */
-	sp = hdr.a_stack;
-	if (hdr.a_magic == OMAGIC)
-		sp += hdr.a_text;
-	debug(dbg_load, "Text from %#x:0-%#x\n", registers[CS], hdr.a_text - 1);
-	Word x = (hdr.a_magic == OMAGIC) ? hdr.a_text : 0;
-	debug(dbg_load, "Stack from %#x:%x-%#x\n", registers[SS], x, x + hdr.a_stack - 1);
-	x += hdr.a_stack;
-	debug(dbg_load, "Data from %#x:%x-%x\n", registers[DS], x, x + hdr.a_data - 1);
-	x += hdr.a_data;
-	debug(dbg_load, "BSS from %#x:%x-%x\n", registers[DS], x, x + hdr.a_bss - 1);
-	debug(dbg_load, "brk = %#x\n", brk);
 	Word args[100];
 	debug(dbg_load, "%d args\n", argc - 1);
 	/* Note: argv[1] is the program name or argv[0] in the target */
@@ -448,7 +463,6 @@ void load(int argc, char **argv)
 	copyout(&vargc, sp, 2);
 
 	registers[SP] = sp;
-	ip = 0;					// jump to CS:0
 	debug(dbg_load, "Launching at %#x:0 with ds %#x\n", registers[CS], registers[DS]);
 }
 
