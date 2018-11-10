@@ -5,7 +5,7 @@ bool dodis = true;
 bool dosyscall = false;
 uint32_t mask = 0x1;
 
-FILE *dbg = stderr;
+FILE *dbg = NULL;
 void debug(enum dbg type, const char *fmt, ...)
 {
 	va_list ap;

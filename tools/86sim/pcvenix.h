@@ -61,6 +61,8 @@ class Venix : public MachineOS
 	static const int VENIX_SIG_IGN = 1;
 	int venix_sighandle[VENIX_NSIG];
 
+	int magic;
+	int stack;
 public:
 
 Venix() : brk(0), length(0), scall(0) {
@@ -303,6 +305,8 @@ void sys_error(int e)
 
 bool bad_addr(Word addr)
 {
+	if (stack == 0 && addr > sp())
+		return false;
 	return (addr >= brk);
 }
 
@@ -363,6 +367,8 @@ void load(int argc, char **argv)
 	uint32_t startMem, endMem;
 	registers[CS] = loadSegment;
 	startMem = loadSegment << 4;
+	magic = hdr.a_magic;
+	stack = hdr.a_stack;
 	if (hdr.a_magic == OMAGIC) {
 		/*
 		 * OMAGIC + -z stack layout looks like:
@@ -372,6 +378,19 @@ void load(int argc, char **argv)
 		 *	data
 		 *	bss
 		 * With all the segment registers the same.
+		 *
+		 * OMAGIC + w/o -z stack layout looks like:
+		 *
+		 * 0 :  text
+		 *	data
+		 *	bss
+		 *	...
+		 *	stack
+		 * With all the segment registers the same.
+		 *
+		 * All the segments are in the file one after the other with
+		 * no padding. HDR TEXT (a_text bytes) DATA (d_data bytes)
+		 * <rest of stuff, reloc, symbols etc>
 		 */
 		registers[DS] = registers[ES] = registers[SS] = loadSegment;
 		if (hdr.a_stack != 0) {
