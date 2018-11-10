@@ -361,8 +361,6 @@ void load(int argc, char **argv)
 
 	uint32_t ptr = 0;
 	uint32_t startMem, endMem;
-	if (hdr.a_stack == 0)
-		error("We don't support non -z binaries -- need to understand 'uses full 64k comment'\n");
 	registers[CS] = loadSegment;
 	startMem = loadSegment << 4;
 	if (hdr.a_magic == OMAGIC) {
@@ -376,9 +374,13 @@ void load(int argc, char **argv)
 		 * With all the segment registers the same.
 		 */
 		registers[DS] = registers[ES] = registers[SS] = loadSegment;
-		debug(dbg_load, "stack from %#x:%#x-%#x\n", registers[CS], ptr, hdr.a_stack - 1);
-		memset(&ram[loadOffset + ptr], 0, hdr.a_stack);			// stack (under the text)
-		ptr += hdr.a_stack;
+		if (hdr.a_stack != 0) {
+			debug(dbg_load, "stack from %#x:%#x-%#x\n", registers[SS], ptr, hdr.a_stack - 1);
+			memset(&ram[loadOffset + ptr], 0, hdr.a_stack);			// stack (under the text)
+			ptr += hdr.a_stack;
+		} else {
+			debug(dbg_load, "stack down from %#x:%#x\n", registers[SS], 0xff80);
+		}
 		debug(dbg_load, "Text from %#x:%#x-%#x\n", registers[CS], ptr, ptr + hdr.a_text - 1);
 		fread(&ram[loadOffset + ptr], hdr.a_text, 1, fp);		// text
 		ptr += hdr.a_text;
@@ -388,7 +390,10 @@ void load(int argc, char **argv)
 		debug(dbg_load, "BSS from %#x:%#x-%#x\n", registers[CS], ptr, ptr + hdr.a_bss - 1);
 		memset(&ram[loadOffset + ptr], 0, hdr.a_bss);			// bss
 		ptr += hdr.a_bss;
-		endMem = (loadOffset + ptr) << 4;
+		if (hdr.a_stack != 0)
+			endMem = (loadOffset + ptr) << 4;
+		else
+			endMem = (loadOffset + 0x10000) << 4;
 	} else {
 		/*
 		 * NMAGIC + -z stack layout looks like:
@@ -406,19 +411,29 @@ void load(int argc, char **argv)
 		registers[DS] = registers[ES] = registers[SS] = loadSegment + (ptr >> 4);
 		Word dataOffset = loadOffset + ptr;
 		ptr = 0;
-		debug(dbg_load, "stack from %#x:%#x-%#x\n", registers[DS], ptr, hdr.a_stack - 1);
-		memset(&ram[dataOffset + ptr], 0, hdr.a_stack);			// stack (under the text)
-		ptr += hdr.a_stack;
+		if (hdr.a_stack != 0) {
+			debug(dbg_load, "stack from %#x:%#x-%#x\n", registers[SS], ptr, hdr.a_stack - 1);
+			memset(&ram[dataOffset + ptr], 0, hdr.a_stack);			// stack (under the text)
+			ptr += hdr.a_stack;
+		} else {
+			debug(dbg_load, "stack down from %#x:%#x\n", registers[SS], 0xff80);
+		}
 		debug(dbg_load, "Data from %#x:%#x-%#x\n", registers[DS], ptr, ptr + hdr.a_data - 1);
 		fread(&ram[dataOffset + ptr], hdr.a_data, 1, fp);		// data
 		ptr += hdr.a_data;
 		debug(dbg_load, "BSS from %#x:%#x-%#x\n", registers[DS], ptr, ptr + hdr.a_bss - 1);
 		memset(&ram[dataOffset + ptr], 0, hdr.a_bss);			// bss
 		ptr += hdr.a_bss;
-		endMem = (dataOffset + ptr) << 4;
+		if (hdr.a_stack != 0)
+			endMem = (dataOffset + ptr) << 4;
+		else
+			endMem = (dataOffset + 0x10000) << 4;
 	}
 	b = ptr;
-	sp = hdr.a_stack;
+	if (hdr.a_stack != 0)
+		sp = hdr.a_stack - 2;
+	else
+		sp = 0xff80;
 	ip = hdr.a_entry;					// jump to CS:a_entry
 	debug(dbg_load, "Starting at %#x:%#x\n", registers[CS], ip);
 	debug(dbg_load, "break is %#x\n", b);
