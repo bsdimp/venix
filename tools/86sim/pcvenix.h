@@ -1,10 +1,12 @@
 #include <sys/time.h>
+#include <sys/param.h>
 #include <unistd.h>
 #include <signal.h>
+#include <termios.h>
 
 class Venix : public MachineOS
 {
-	static const int MAXPATHLEN = 1025;
+	static const int HOST_MAXPATHLEN = 1025;
 
 	// errno for Venix == Errno for FreeBSD <= 34
 	static const int VENIX_EDEADLOCK  = 40;
@@ -29,12 +31,12 @@ class Venix : public MachineOS
 	static const int VENIX_B0        = 0;
 	static const int VENIX_B50       = 1;
 	static const int VENIX_B75       = 2;
-	static const int VENIX_B11       = 3;
-	static const int VENIX_B13       = 4;
-	static const int VENIX_B15       = 5;
-	static const int VENIX_B20       = 6;
-	static const int VENIX_B30       = 7;
-	static const int VENIX_B60       = 8;
+	static const int VENIX_B110      = 3;
+	static const int VENIX_B134      = 4;
+	static const int VENIX_B150      = 5;
+	static const int VENIX_B200      = 6;
+	static const int VENIX_B300      = 7;
+	static const int VENIX_B600      = 8;
 	static const int VENIX_B1200     = 9;
 	static const int VENIX_B1800     = 10;
 	static const int VENIX_B2400     = 11;
@@ -273,6 +275,59 @@ uint16_t venix_host_to_mode(mode_t hmode)
 int venix_o_to_host(int mode)
 {
 	return (mode);
+}
+
+int venix_host_to_speed(speed_t s)
+{
+	static struct {
+		int host;
+		int venix;
+	} speeds[] = {
+		{ B0, VENIX_B0 },
+		{ B50, VENIX_B50 },
+		{ B75, VENIX_B75 },
+		{ B110, VENIX_B110 },
+		{ B134, VENIX_B134 },
+		{ B150, VENIX_B150 },
+		{ B200, VENIX_B200 },
+		{ B300, VENIX_B300 },
+		{ B600, VENIX_B600 },
+		{ B1200, VENIX_B1200 },
+		{ B1800, VENIX_B1800 },
+		{ B2400, VENIX_B2400 },
+		{ B4800, VENIX_B4800 },
+		{ B9600, VENIX_B9600 },
+	};
+
+	for (int i = 0; i < nitems(speeds); i++)
+		if (speeds[i].host == s)
+			return speeds[i].venix;
+
+	return VENIX_B9600;
+}
+
+int venix_host_to_tc_flags(struct termios *attr)
+{
+	int f = 0;
+
+	if (attr->c_iflag & IXOFF)
+		f |= VENIX_TANDEM;
+	if ((attr->c_iflag & (BRKINT | IXON | IMAXBEL)) ||
+	    (attr->c_lflag & (ISIG | IEXTEN)) ||
+	    (attr->c_oflag & OPOST))
+		f |= VENIX_CBREAK;
+	f |= VENIX_LCASE;
+	if (attr->c_lflag & ECHO)
+		f |= VENIX_ECHO;
+	if (!(attr->c_iflag & ICRNL))
+		f |= VENIX_CRMOD;
+	if (!(attr->c_lflag & ICANON))
+		f |= VENIX_RAW;
+	if (attr->c_cflag & PARODD)
+		f |= VENIX_ODDP;
+	else if (attr->c_cflag & PARENB)
+		f |= VENIX_EVENP;
+	return (f);
 }
 
 void sys_retval_long(uint32_t r)
@@ -572,7 +627,7 @@ venix_write()
 void
 venix_open()
 {
-	char host_fn[MAXPATHLEN];
+	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1();
 	Word mode = arg2();
 	int fd, i;
@@ -642,7 +697,7 @@ venix_wait()
 void
 venix_creat()
 {
-	char host_fn[MAXPATHLEN];
+	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1();
 	Word mode = arg2();
 	int fd, i;
@@ -675,8 +730,8 @@ venix_creat()
 void
 venix_link()
 {
-	char host_fn1[MAXPATHLEN];
-	char host_fn2[MAXPATHLEN];
+	char host_fn1[HOST_MAXPATHLEN];
+	char host_fn2[HOST_MAXPATHLEN];
 	Word ufn1 = arg1();
 	Word ufn2 = arg2();
 
@@ -691,7 +746,7 @@ venix_link()
 void
 venix_unlink()
 {
-	char host_fn[MAXPATHLEN];
+	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1();
 
 	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
@@ -711,7 +766,7 @@ venix_exec()
 void
 venix_chdir()
 {
-	char host_fn[MAXPATHLEN];
+	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1();
 
 	if (copyinfn(ufn, host_fn, sizeof(host_fn)))
@@ -738,7 +793,7 @@ venix_mknod()
 void
 venix_chmod()
 {
-	char host_fn[MAXPATHLEN];
+	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1();
 	Word mode = arg2();
 
@@ -751,7 +806,7 @@ venix_chmod()
 void
 venix_chown()
 {
-	char host_fn[MAXPATHLEN];
+	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1();
 	Word uid = arg2();
 
@@ -794,7 +849,7 @@ venix_sbreak()
 void
 venix_stat()
 {
-	char host_fn[MAXPATHLEN];
+	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1();
 	Word usb = arg2();
 	struct stat sb;
@@ -936,7 +991,7 @@ venix_utime()
 void
 venix_saccess()
 {
-	char host_fn[MAXPATHLEN];
+	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1();
 	Word mode = arg2();
 
@@ -1133,16 +1188,22 @@ venix_ioctl()
 	int cmd = arg2();
 	Word arg = arg3();
 	struct venix_sgttyb sg;
+	struct termios attr;
 
 	/* Should validate fd and arg */
 	switch (cmd) {
 	case VENIX_TIOCGETP:
 		debug(dbg_syscall, "ioctl(TIOCGETP)\n");
+		if (tcgetattr(open_fd[fd], &attr) == -1) {
+			sys_error(errno);
+			break;
+		}
 		/* should really do the conversion */
-		sg.sg_ispeed = sg.sg_ospeed = VENIX_B9600;
-		sg.sg_erase = 0x7f;	// DEL
-		sg.sg_kill = 3;		// ^C
-		sg.sg_flags = 0;	// Flags, any interesting?
+		sg.sg_ispeed = venix_host_to_speed(cfgetispeed(&attr));
+		sg.sg_ospeed = venix_host_to_speed(cfgetospeed(&attr));
+		sg.sg_erase = attr.c_cc[VERASE];
+		sg.sg_kill = attr.c_cc[VINTR];
+		sg.sg_flags = venix_host_to_tc_flags(&attr);
 		copyout(&sg, arg, sizeof(sg));
 		sys_retval_int(0);
 		break;
