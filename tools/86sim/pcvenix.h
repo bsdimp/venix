@@ -319,7 +319,7 @@ int venix_host_to_tc_flags(struct termios *attr)
 	f |= VENIX_LCASE;
 	if (attr->c_lflag & ECHO)
 		f |= VENIX_ECHO;
-	if (!(attr->c_iflag & ICRNL))
+	if (attr->c_iflag & ICRNL)
 		f |= VENIX_CRMOD;
 	if (!(attr->c_lflag & ICANON))
 		f |= VENIX_RAW;
