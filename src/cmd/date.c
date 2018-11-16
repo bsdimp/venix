@@ -133,7 +133,10 @@ gtime()
 	if (hour<0 || hour>23)
 		return(1);
 	timbuf = 0;
-	year += 1900;
+	if (year < 70)
+		year += 2000;
+	else
+		year += 1900;
 	for(i=1970; i<year; i++)
 		timbuf += dysize(i);
 	/* Leap year */
