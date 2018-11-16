@@ -23,19 +23,19 @@ The **emulator** colum is the status of the binary when run with the
 | Command | compiles | runs | identical | emulator |
 | ------- | -------- | ---- | --------- | -------- |
 | OLDrmail | | | | |
-| STTY | | | | |
-| [ | | | | |
+| STTY | | | | working |
+| [ | | | | working |
 | ar | n | | | |
 | as | | | | |
-| basename | y | u | n | |
-| cat | y | u | n | |
+| basename | y | u | n | working |
+| cat | y | u | n | working |
 | cc | | | | |
 | chgrp | y | u | n | |
 | chmod | y | u | n | |
 | chown | y | u | n | |
-| cmp | y | u | n | |
+| cmp | y | u | n | working |
 | comm | y | u | n | |
-| cp | y | y | n | |
+| cp | y | y | n | working |
 | csh | | | | |
 | date | y | y | n | |
 | dd | | | | |
@@ -44,7 +44,7 @@ The **emulator** colum is the status of the binary when run with the
 | ds | | | | |
 | du | | | | |
 | dump | | | | |
-| echo | | | | |
+| echo | | | | working |
 | ed | | | | |
 | edit | | | | |
 | ex | | | | |
@@ -93,7 +93,7 @@ The **emulator** colum is the status of the binary when run with the
 | smail | | | | |
 | sort | | | | |
 | split | | | | |
-| stty | | | | |
+| stty | | | | working |
 | su | | | | |
 | sum | | | | |
 | sync | | | | |
