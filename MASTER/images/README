@@ -1,0 +1,5 @@
+These files are dd-copies of the physical Venix diskettes, all 360KB diskettes. The content is tar formatted, but the sector mapping is odd, and not readily readable. Use the extrated tar-files instead.
+
+If you need to create physical (or virtual) disettes, the dd-files are your friends. Be aware that you need to do sector remapping if you're not using 360kb diskettes. More about that later, there is a utility to do that.
+
+The PC_AT_SYS directory contains the SYS images for AT-like hardware (286). There is a similar set of SYS images for the PC_XT (8088).
