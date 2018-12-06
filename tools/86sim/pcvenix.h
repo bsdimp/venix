@@ -67,14 +67,15 @@ class Venix : public MachineOS
 	int magic;
 	int stack;
 
-
-	static const int VNEIX_MAXPROC=9999;
+	static const int VENIX_MAXPROC=30000;
 	static const int VENIX_NPROC=30;
 	pid_t pid_host[VENIX_NPROC];
 	typedef short venix_pid_t;
 	venix_pid_t pid_venix[VENIX_NPROC];
 	venix_pid_t pid;
 
+	/* XXX need to translate errno */
+	static const int VENIX_EAGAIN = 11;	/* Otherwise they are 1:1 on FreeBSD */
 public:
 
 Venix() : brk(0), length(0), scall(0) {
@@ -594,8 +595,40 @@ venix_rexit()
 void
 venix_fork()
 {
+	pid_t p;
+	venix_pid_t vp;
 
-	error("Unimplemented system call 2 _fork\n");
+	p = fork();
+	if (p == -1) {
+		sys_error(errno);
+		return;
+	}
+	if (p == 0) {
+		/* child */
+		sys_retval_int(0);
+		return;
+	} else {
+		/* parent */
+		vp = pid;
+	again:
+		vp++;
+		if (vp == 0)
+			vp++;
+		if (vp >= VENIX_MAXPROC)
+			vp = 1;
+		for (int i = 0; i < VENIX_NPROC; i++)
+			if (pid_venix[i] == vp)
+				goto again;
+		for (int i = 0; i < VENIX_NPROC; i++) {
+			if (pid_host[i] == -1) {
+				pid_host[i] = p;
+				pid_venix[i] = vp;
+				sys_retval_int(vp);
+				return;
+			}
+		}
+		sys_error(VENIX_EAGAIN);
+	}
 }
 
 typedef ssize_t (rdwr_fn)(int, void *, size_t);
