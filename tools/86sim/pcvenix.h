@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <sys/time.h>
 #include <sys/param.h>
 #include <unistd.h>
@@ -65,6 +66,15 @@ class Venix : public MachineOS
 
 	int magic;
 	int stack;
+
+
+	static const int VNEIX_MAXPROC=9999;
+	static const int VENIX_NPROC=30;
+	pid_t pid_host[VENIX_NPROC];
+	typedef short venix_pid_t;
+	venix_pid_t pid_venix[VENIX_NPROC];
+	venix_pid_t pid;
+
 public:
 
 Venix() : brk(0), length(0), scall(0) {
@@ -88,6 +98,11 @@ Venix() : brk(0), length(0), scall(0) {
 	 */
 	for (int i = 0; i < VENIX_NSIG; i++)
 		venix_sighandle[i] = VENIX_SIG_DFL;
+	pid = 2;
+	pid_host[0] = getpid();
+	pid_venix[0] = pid++;
+	for (int i = 1; i < VENIX_NPROC; i++)
+		pid_host[i] = -1;
 }
 
 ~Venix() {
@@ -559,7 +574,19 @@ void load(int argc, char **argv)
 void
 venix_rexit()
 {
-	debug(dbg_syscall, "exit(%d)\n", arg1());
+	pid_t p;
+	venix_pid_t vp;
+	int i;
+
+	p = getpid();
+	for (i = 0; i < VENIX_NPROC; i++)
+		if (p == pid_host[i]) {
+			vp = pid_venix[i];
+			break;
+		}
+	assert(i != VENIX_NPROC);
+	pid_venix[i] = -1;
+	debug(dbg_syscall, "venix pid %d exit(%d)\n", vp, arg1());
 	exit(arg1());
 }
 
