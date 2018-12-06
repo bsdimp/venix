@@ -1198,7 +1198,6 @@ venix_ioctl()
 			sys_error(errno);
 			break;
 		}
-		/* should really do the conversion */
 		sg.sg_ispeed = venix_host_to_speed(cfgetispeed(&attr));
 		sg.sg_ospeed = venix_host_to_speed(cfgetospeed(&attr));
 		sg.sg_erase = attr.c_cc[VERASE];
