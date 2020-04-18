@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <sys/time.h>
 #include <sys/param.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
 #include <termios.h>
@@ -756,13 +757,18 @@ void
 venix_wait()
 {
 	Word status = arg1();
-	Word rv = 0;
+	Word rv;
+	int mystat;
+	pid_t pid;
 
 //	error("Unimplemented system call 7 _wait\n");
-	
+
 	debug(dbg_syscall, "wait(%#x)\n", status);
+
+	pid = wait(&mystat);
+	rv = mystat;
 	copyout(&rv, status, sizeof(rv));
-	sys_retval_int(pid_venix[1]);
+	sys_retval_int(pid);//XXX xlate
 }
 
 /* 8 _creat */
@@ -1298,12 +1304,54 @@ venix_exece()
 	Word argv = arg2();
 	Word envp = arg3();
 	char host_name[HOST_MAXPATHLEN];
+	Word args[100];
+	Word envs[100];
+	char *str_args[100];
+	char *str_envs[100];
+	int i;
 
-	if (copyinfn(name, host_name, sizeof(host_name)))
+	if (copyinfn(name, host_name, sizeof(host_name))) {
+		sys_error(EFAULT);
 		return;
-
+	}
 	debug(dbg_syscall, "exece(%#x %s %#x %#x)\n", name, host_name, argv, envp);
+	memset(args, 0, sizeof(*args));
+	memset(str_args, 0, sizeof(*str_args));
+	memset(envs, 0, sizeof(*envs));
+	memset(str_envs, 0, sizeof(*str_envs));
+	i = 0;
+	do {
+		if (copyin(argv + 2 * i, &args[i], sizeof(Word)))
+			goto errout;
+//		fprintf(stderr, "---args[%d]=%#x\n", i, args[i]);
+		if (args[i] == 0) {
+			i++;
+			break;
+		}
+		str_args[i] = (char *)malloc(1024);
+		if (copyinstr(args[i], str_args[i], 1024))
+			goto errout;
+		fprintf(stderr, "---arg[%d]=\"%s\"\n", i, str_args[i] ? str_args[i] : "NULL");
+		i++;
+	} while (1);
+#if 0
+	i = 0;
+	do {
+		if (copyin(envp + 2 * i, envs + i, sizeof(Word)))
+			goto errout;
+		str_envs[i] = (char *)malloc(1024);
+		if (copyinstr(envs[i], str_envs + i, 1024))
+			goto errout;
+		debug(dbg_syscall, "---env[%d]=\"%s\"\n", i, str_envs[i] ? str_envs[i] : "NULL");
+	} while (envs[i] != 0);
+#endif
 	error("Unimplemented system call 59 _exece\n");
+errout:
+	for (i = 0; str_args[i]; i++)
+		free(str_args[i]);
+	for (i = 0; str_envs[i]; i++)
+		free(str_envs[i]);
+	sys_error(EFAULT);
 }
 
 /* 60 _umask */
