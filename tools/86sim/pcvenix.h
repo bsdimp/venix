@@ -581,13 +581,16 @@ venix_rexit()
 	int i;
 
 	p = getpid();
-	for (i = 0; i < VENIX_NPROC; i++)
+	debug(dbg_syscall, "Host pid %d\n", p);
+	for (i = 0; i < VENIX_NPROC; i++) {
+		debug(dbg_syscall, "Host pid[%d] %d\n", i, pid_host[i]);
 		if (p == pid_host[i]) {
 			vp = pid_venix[i];
 			break;
 		}
-	assert(i != VENIX_NPROC);
-	pid_venix[i] = -1;
+	}
+//	assert(i != VENIX_NPROC);
+//	pid_venix[i] = -1;
 	debug(dbg_syscall, "venix pid %d exit(%d)\n", vp, arg1());
 	exit(arg1());
 }
@@ -752,8 +755,14 @@ venix_close()
 void
 venix_wait()
 {
+	Word status = arg1();
+	Word rv = 0;
 
-	error("Unimplemented system call 7 _wait\n");
+//	error("Unimplemented system call 7 _wait\n");
+	
+	debug(dbg_syscall, "wait(%#x)\n", status);
+	copyout(&rv, status, sizeof(rv));
+	sys_retval_int(pid_venix[1]);
 }
 
 /* 8 _creat */
@@ -1285,7 +1294,15 @@ venix_ioctl()
 void
 venix_exece()
 {
+	Word name = arg1();
+	Word argv = arg2();
+	Word envp = arg3();
+	char host_name[HOST_MAXPATHLEN];
 
+	if (copyinfn(name, host_name, sizeof(host_name)))
+		return;
+
+	debug(dbg_syscall, "exece(%#x %s %#x %#x)\n", name, host_name, argv, envp);
 	error("Unimplemented system call 59 _exece\n");
 }
 
@@ -1379,7 +1396,7 @@ Venix::sysfn sysent[NSYS] = {
 	&Venix::venix_nosys,
 	&Venix::venix_sysphys,
 	&Venix::venix_syslock,
-	&Venix::venix_ioctl,
+	&Venix::venix_ioctl, // 54
 	&Venix::venix_nosys,
 	&Venix::venix_nosys,
 	&Venix::venix_nosys,
