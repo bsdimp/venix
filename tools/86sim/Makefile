@@ -3,7 +3,7 @@ MAN=
 
 SRCS=86sim.cc
 SRCS+=	sim_db.cc debug.cc
-CFLAGS += -DVENIX
+CFLAGS += -DVENIX -g
 
 # Add in ddb
 .PATH: ../ddb
