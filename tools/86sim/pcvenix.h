@@ -744,8 +744,7 @@ venix_close()
 	debug(dbg_syscall, "close (%d)\n", fd);
 	if (open_fd[fd] > 2)
 		close(open_fd[fd]);
-	if (fd != 0)
-		open_fd[fd] = -1;
+	open_fd[fd] = -1;
 	sys_retval_int(0);
 }
 
