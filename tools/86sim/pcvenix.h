@@ -24,7 +24,7 @@ class Venix : public MachineOS
 	static const int VENIX_TIOCNXCL  = (('t'<<8)|14);	/* clear exclusive use */
 	static const int VENIX_TIOCFLUSH = (('t'<<8)|16);	/* flush i/o */
 	static const int VENIX_TIOCSETC  = (('t'<<8)|17);	/** % set special characters */
-	static const int VENIX_TIOCGETC  = (('t'<<8)|18);	/** %get special characters */
+	static const int VENIX_TIOCGETC  = (('t'<<8)|18);	/** % get special characters */
 	static const int VENIX_TIOCQCNT	 = (('t'<<8)|30);	/* get char counts on i/o queues */
 	static const int VENIX_AIOCWAIT	 = (('a'<<8)|0);	/* wait/test outstanding requests */
 	/* FIO and DIO features not supported */
@@ -497,7 +497,7 @@ void load(int argc, char **argv)
 		debug(dbg_load, "Text from %#x:%#x-%#x\n", registers[CS], ptr, ptr + hdr.a_text - 1);
 		fread(&ram[loadOffset + ptr], hdr.a_text, 1, fp);		// text
 		ptr += hdr.a_text;
-		ptr = ptr + 511 & ~511;					// Round to nearest click
+		ptr = (ptr + 511) & ~511;					// Round to nearest click
 		registers[DS] = registers[ES] = registers[SS] = loadSegment + (ptr >> 4);
 		Word dataOffset = loadOffset + ptr;
 		ptr = 0;
@@ -526,7 +526,7 @@ void load(int argc, char **argv)
 		sp = 0xff80;
 	ip = hdr.a_entry;					// jump to CS:a_entry
 	debug(dbg_load, "Starting at %#x:%#x\n", registers[CS], ip);
-	debug(dbg_load, "break is %#x\n", b);
+	debug(dbg_load, "break is %#x sp is %#x\n", b, sp);
 
 	/*
 	 * Mark the memory in use, including the stack.
@@ -554,7 +554,7 @@ void load(int argc, char **argv)
 		if (sp & 1) sp--;
 		copyout(argv[i], sp, len);
 		args[i - 1] = sp;
-		debug(dbg_load, "argv[%d] = %#x '%s'\n", i, sp, argv[i]);
+		debug(dbg_load, "argv[%d] = %#x '%s'\n", i - 1, sp, argv[i]);
 	}
 	args[argc - 1] = 0;
 	if (sp & 1) sp--;
@@ -569,6 +569,7 @@ void load(int argc, char **argv)
 
 	registers[SP] = sp;
 	debug(dbg_load, "Launching at %#x:0 with ds %#x\n", registers[CS], registers[DS]);
+	debug(dbg_load, "sp is %#x\n", registers[SP]);
 }
 
 /* 1 _rexit */
@@ -701,6 +702,7 @@ venix_open()
 			break;
 
 	if (i == VENIX_NOFILE) {
+		debug(dbg_syscall, "open(%s, 0%o) -- EMFILE\n", host_fn, mode);
 		sys_error(EMFILE);
 		return;
 	}
@@ -726,6 +728,7 @@ venix_open()
 	}
 	open_fd[i] = fd;
 	sys_retval_int(i);
+	debug(dbg_syscall, "-> %d %d\n", i, fd);
 }
 
 /* 6 _close */
@@ -741,7 +744,8 @@ venix_close()
 	debug(dbg_syscall, "close (%d)\n", fd);
 	if (open_fd[fd] > 2)
 		close(open_fd[fd]);
-	open_fd[fd] = -1;
+	if (fd != 0)
+		open_fd[fd] = -1;
 	sys_retval_int(0);
 }
 
@@ -938,7 +942,8 @@ venix_seek()
 	off_t rv;
 
 	debug(dbg_syscall, "lseek(%d, %ld, %d)\n", fd, (long)off, whence);
-	rv = lseek(fd, off, whence);
+	rv = lseek(open_fd[fd], off, whence);
+	debug(dbg_syscall, "-> rv %#x\n", rv);
 	sys_retval_long((uint32_t)rv);
 }
 
@@ -1249,13 +1254,16 @@ venix_ioctl()
 	Word arg = arg3();
 	struct venix_sgttyb sg;
 	struct termios attr;
+	int e;
 
 	/* Should validate fd and arg */
 	switch (cmd) {
 	case VENIX_TIOCGETP:
-		debug(dbg_syscall, "ioctl(TIOCGETP)\n");
+		debug(dbg_syscall, "ioctl(TIOCGETP, %d %#x %#x)\n", fd, cmd, arg);
 		if (tcgetattr(open_fd[fd], &attr) == -1) {
-			sys_error(errno);
+			e = errno;
+			debug(dbg_syscall, "error %d\n", e);
+			sys_error(e);
 			break;
 		}
 		sg.sg_ispeed = venix_host_to_speed(cfgetispeed(&attr));
@@ -1264,6 +1272,7 @@ venix_ioctl()
 		sg.sg_kill = attr.c_cc[VINTR];
 		sg.sg_flags = venix_host_to_tc_flags(&attr);
 		copyout(&sg, arg, sizeof(sg));
+		debug(dbg_syscall, "success!\n");
 		sys_retval_int(0);
 		break;
 	default:
