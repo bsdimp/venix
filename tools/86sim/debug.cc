@@ -1,9 +1,21 @@
+#include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "debug.hh"
 bool dodis = true;
 bool dosyscall = false;
 uint32_t mask = 0x1;
+
+const char* filename;
+
+void error(const char* operation)
+{
+    debug(dbg_error, "Error %s file %s: %s\n", operation, filename,
+        strerror(errno));
+    exit(1);
+}
 
 FILE *dbg = NULL;
 void debug(enum dbg type, const char *fmt, ...)

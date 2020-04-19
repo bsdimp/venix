@@ -31,7 +31,6 @@ Word flags = 2;
 Byte modRM;
 bool wordSize;
 DWord data;
-const char* filename;
 DWord destination;
 DWord source;
 int segment = 0;
@@ -47,13 +46,6 @@ int ios;
 bool running = false;
 int stackLow;
 int oCycle;
-
-void error(const char* operation)
-{
-    debug(dbg_error, "Error %s file %s: %s\n", operation, filename,
-        strerror(errno));
-    exit(1);
-}
 
 void runtimeError(const char* message)
 {

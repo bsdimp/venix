@@ -12,7 +12,6 @@ extern int stackLow;
 extern int ios;
 extern int segment;
 extern DWord data;
-extern const char *filename;
 
 extern DWord physicalAddress(Word offset, int seg, bool write);
 extern Byte readByte(Word offset, int seg = -1);
@@ -46,7 +45,6 @@ extern Word bp();
 extern Word sp();
 extern Word si();
 extern Word di();
-extern void error(const char* operation);
 extern void runtimeError(const char* message);
 extern void* alloc(size_t bytes);
 

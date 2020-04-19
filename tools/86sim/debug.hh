@@ -1,3 +1,6 @@
+extern const char *filename;
+void error(const char* operation);
+
 enum dbg {
 	dbg_load,
 	dbg_emul,
