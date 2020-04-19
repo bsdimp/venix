@@ -18,8 +18,11 @@ void debug(enum dbg type, const char *fmt, ...)
 	if (f == NULL) // || type != dbg_load)
 		return;
 #else
-	if (type == dbg_syscall)
-		f = stderr;
+	if (type != dbg_syscall && type != dbg_load)
+		return;
+	if (dbg == NULL)
+		dbg = fopen("/tmp/venix.dbg", "w");
+	f = dbg;
 #endif
 	if (f == NULL)
 		return;
@@ -37,6 +40,7 @@ db_printf(const char *fmt, ...)
 	va_list	listp;
 	int retval;
 
+	return 0;
 	if (dbg == NULL)
 		return 0;
 	va_start(listp, fmt);

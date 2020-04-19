@@ -582,16 +582,14 @@ venix_rexit()
 	int i;
 
 	p = getpid();
-	debug(dbg_syscall, "Host pid %d\n", p);
 	for (i = 0; i < VENIX_NPROC; i++) {
-		debug(dbg_syscall, "Host pid[%d] %d\n", i, pid_host[i]);
 		if (p == pid_host[i]) {
 			vp = pid_venix[i];
 			break;
 		}
 	}
-//	assert(i != VENIX_NPROC);
-//	pid_venix[i] = -1;
+	assert(i != VENIX_NPROC);
+	pid_venix[i] = -1;
 	debug(dbg_syscall, "venix pid %d exit(%d)\n", vp, arg1());
 	exit(arg1());
 }
@@ -904,6 +902,15 @@ venix_sbreak()
 //
 // Also, there may be a bug with split I/D space progreams, since that's
 // accounted a bit differently.
+//
+// There's also a bug with the stack. For the assembler, we have:
+// Data from 0x1192:0-0x626f
+// BSS from 0x1192:0x6270-0xe8b5
+// sp is 0xff4c
+// which leaves just 0xe8b6 to 0xff4c or 5782 between the top of bss and
+// the bottom of the stack.... maybe I should trim argv[0] to just the
+// command name rather than the full path... It would save ~30 bytes. But
+// we have no sanity checks and we sbrk into the stack, it seems...
 //
 	Word obrk;
 
