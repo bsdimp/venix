@@ -443,6 +443,7 @@ void* alloc(size_t bytes)
         debug(dbg_error, "Out of memory\n");
         exit(1);
     }
+    memset(r, 0, bytes);
     return r;
 }
 
@@ -460,9 +461,7 @@ int run(int argc, char* argv[])
         exit(0);
     }
     ram = (Byte*)alloc(0x100000);
-    memset(ram, 0, 0x100000);
     initialized = (Byte*)alloc(0x20000);
-    memset(initialized, 0, 0x20000);
     mos->load(argc, argv);
     Word t;
     Byte* byteData = (Byte*)&registers[0];
