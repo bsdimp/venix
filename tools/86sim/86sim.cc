@@ -446,7 +446,7 @@ void* alloc(size_t bytes)
     return r;
 }
 
-int main(int argc, char* argv[])
+int run(int argc, char* argv[])
 {
     MachineOS *mos;
 
@@ -1087,4 +1087,5 @@ int main(int argc, char* argv[])
         }
     }
     runtimeError("Timed out");
+    return (1);
 }

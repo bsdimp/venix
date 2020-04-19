@@ -1,7 +1,7 @@
 PROG_CXX=86sim
 MAN=
 
-SRCS=86sim.cc
+SRCS=86sim.cc main.cc
 SRCS+=	sim_db.cc debug.cc
 CFLAGS += -DVENIX -g
 
