@@ -1,10 +1,19 @@
 #include <assert.h>
-#include <sys/time.h>
-#include <sys/param.h>
-#include <sys/wait.h>
-#include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
 #include <signal.h>
+#include <stdio.h>
+#include <string.h>
 #include <termios.h>
+#include <unistd.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+
+#include "debug.hh"
+
+#define printf(...)
 
 class Venix : public MachineOS
 {
@@ -1513,3 +1522,5 @@ void start_of_instruction(void)
 }
 
 };
+
+#undef printf

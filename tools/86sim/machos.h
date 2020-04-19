@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 typedef unsigned char Byte;
 typedef unsigned short int Word;
 typedef unsigned int DWord;

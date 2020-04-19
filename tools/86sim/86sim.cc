@@ -8,16 +8,8 @@
 #include <fcntl.h>
 
 #include "debug.hh"
-#define printf(...)
 
 #include "machos.h"
-#ifdef VENIX
-#include "pcvenix.h"
-#else
-#include "pcdos.h"
-#endif
-
-#undef printf
 
 Word registers[12];
 Byte* byteRegisters[8];
@@ -439,22 +431,9 @@ void* alloc(size_t bytes)
     return r;
 }
 
-int run(int argc, char* argv[])
+int run(MachineOS *mos)
 {
-    MachineOS *mos;
 
-#ifdef VENIX
-    mos = new Venix();
-#else
-    mos = new IBMPC_DOS();
-#endif
-    if (argc < 2) {
-	fprintf(stderr, "Usage: %s <program name>\n", argv[0]);
-        exit(0);
-    }
-    ram = (Byte*)alloc(0x100000);
-    initialized = (Byte*)alloc(0x20000);
-    mos->load(argc, argv);
     Word t;
     Byte* byteData = (Byte*)&registers[0];
     int bigEndian = 0;
@@ -463,7 +442,7 @@ int run(int argc, char* argv[])
         byteRegisters[i] = &byteData[byteNumbers[i] ^ bigEndian];
     running = true;
     bool prefix = false;
-    for (int i = 0; i < 1000000000; ++i) {
+    while (1) {
         if (!repeating) {
             if (!prefix) {
                 segmentOverride = -1;
@@ -1077,6 +1056,5 @@ int run(int argc, char* argv[])
                 break;
         }
     }
-    runtimeError("Timed out");
     return (1);
 }
