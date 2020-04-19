@@ -44,7 +44,7 @@ int16_t		r_symbolnum;	/* local symbol ordinal */
 int16_t		r_pcrel:1, 	/* was relocated pc relative already */
 		r_length:2,	/* 0=byte, 1=word, 2=long */
 		r_extern:1,	/* does not include value of sym referenced */
-		:12;
+		r_unused:12;
 };
 
 /* Format of the old symbol table entry. This is here for compatability.

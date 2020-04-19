@@ -727,6 +727,7 @@ main(argc,argv)
       fatal(PRG,"symbol table overflow");
 
    if (relnum) {                          /* Get reloc data */
+      printf("Reloff is %ld\n", reloff);
       if (lseek(fd,reloff,0) != reloff)
          fatal(PRG,"lseek error");
       else
@@ -734,13 +735,14 @@ main(argc,argv)
          for (relptr = 0; relptr < relnum; ++relptr) {
 #ifdef VENIX
             read(fd, (char *) &relo[relptr],sizeof(struct relocation_info));
-	    printf("Relo %d: addr %#x symnum %d pcrel %d len %d extern %d\n",
+	    printf("Relo %d: addr %#x symnum %d pcrel %d len %d extern %d unused %x\n",
 		relptr,
 		relo[relptr].r_address,
 		relo[relptr].r_symbolnum,
 		relo[relptr].r_pcrel,
 		1 << relo[relptr].r_length,
-		relo[relptr].r_extern);
+		relo[relptr].r_extern,
+		relo[relptr].r_unused);
 #else
             read(fd, (char *) &relo[relptr],sizeof(struct reloc));
 #endif
@@ -750,6 +752,7 @@ main(argc,argv)
    }
 
    if (tabnum) {                            /* Read in symtab */
+      printf("Symtab offset is %ld\n", taboff);
       if (lseek(fd,taboff,0) != taboff)
          fatal(PRG,"lseek error");
       else
