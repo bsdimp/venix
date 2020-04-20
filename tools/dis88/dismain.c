@@ -174,7 +174,11 @@ objdump(c)
 
    for (k = 0; k < objptr; ++k)
       {
+#ifdef VENIX
+      printf("%d",objbuf[k]);
+#else
       printf("$%02.2x",objbuf[k]);
+#endif
       if (k < (objptr - 1))
          putchar(',');
       }
@@ -735,14 +739,13 @@ main(argc,argv)
          for (relptr = 0; relptr < relnum; ++relptr) {
 #ifdef VENIX
             read(fd, (char *) &relo[relptr],sizeof(struct relocation_info));
-	    printf("Relo %d: addr %#x symnum %d pcrel %d len %d extern %d unused %x\n",
+	    printf("Relo %d: addr %#x symnum %d pcrel %d len %d extern %d\n",
 		relptr,
 		relo[relptr].r_address,
 		relo[relptr].r_symbolnum,
 		relo[relptr].r_pcrel,
 		1 << relo[relptr].r_length,
-		relo[relptr].r_extern,
-		relo[relptr].r_unused);
+		relo[relptr].r_extern);
 #else
             read(fd, (char *) &relo[relptr],sizeof(struct reloc));
 #endif
