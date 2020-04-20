@@ -51,6 +51,8 @@ L000:
 	.data
 	.byte	0,0		| v7 has these two bytes here for a NULL pointer...
 L001:
-	.byte	0xbf,0x0f
-	.comm	_environ,2
+	.word	0xfbf		| 8087 control word
+
+	.bss
+	.comm	_environ, 2
 
