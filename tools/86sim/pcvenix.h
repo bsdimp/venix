@@ -1406,7 +1406,7 @@ typedef void (Venix::*sysfn)(void);
 
 #define NSYS 72
 Venix::sysfn sysent[NSYS] = {
-	&Venix::venix_nosys,
+	&Venix::venix_nosys,		// 0
 	&Venix::venix_rexit,
 	&Venix::venix_fork,
 	&Venix::venix_read,
@@ -1416,7 +1416,7 @@ Venix::sysfn sysent[NSYS] = {
 	&Venix::venix_wait,
 	&Venix::venix_creat,
 	&Venix::venix_link,
-	&Venix::venix_unlink,
+	&Venix::venix_unlink,		// 10
 	&Venix::venix_exec,
 	&Venix::venix_chdir,
 	&Venix::venix_gtime,
@@ -1426,7 +1426,7 @@ Venix::sysfn sysent[NSYS] = {
 	&Venix::venix_sbreak,
 	&Venix::venix_stat,
 	&Venix::venix_seek,
-	&Venix::venix_getpid,
+	&Venix::venix_getpid,		// 20
 	&Venix::venix_smount,
 	&Venix::venix_sumount,
 	&Venix::venix_setuid,
@@ -1436,17 +1436,17 @@ Venix::sysfn sysent[NSYS] = {
 	&Venix::venix_alarm,
 	&Venix::venix_fstat,
 	&Venix::venix_pause,
-	&Venix::venix_utime,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
+	&Venix::venix_utime,		// 30
+	&Venix::venix_nosys,		// 31
+	&Venix::venix_nosys,		// 32
 	&Venix::venix_saccess,
 	&Venix::venix_nice,
 	&Venix::venix_ftime,
 	&Venix::venix_sync,
 	&Venix::venix_kill,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
+	&Venix::venix_nosys,		// 38
+	&Venix::venix_nosys,		// 39
+	&Venix::venix_nosys,		// 40
 	&Venix::venix_dup,
 	&Venix::venix_pipe,
 	&Venix::venix_times,
@@ -1456,28 +1456,28 @@ Venix::sysfn sysent[NSYS] = {
 	&Venix::venix_getgid,
 	&Venix::venix_ssig,
 	&Venix::venix_sysdata,
-	&Venix::venix_suspend,
-	&Venix::venix_nosys,
+	&Venix::venix_suspend,		// 50
+	&Venix::venix_nosys,		// 51
 	&Venix::venix_sysphys,
 	&Venix::venix_syslock,
-	&Venix::venix_ioctl, // 54
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
+	&Venix::venix_ioctl,		// 54
+	&Venix::venix_nosys,		// 55
+	&Venix::venix_nosys,		// 56
+	&Venix::venix_nosys,		// 57
+	&Venix::venix_nosys,		// 58
 	&Venix::venix_exece,
-	&Venix::venix_umask,
+	&Venix::venix_umask,		// 60
 	&Venix::venix_chroot,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
+	&Venix::venix_nosys,		// 62
+	&Venix::venix_nosys,		// 63
 	&Venix::venix_locking,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
-	&Venix::venix_nosys,
+	&Venix::venix_nosys,		// 65
+	&Venix::venix_nosys,		// 66
+	&Venix::venix_nosys,		// 67
+	&Venix::venix_nosys,		// 68
+	&Venix::venix_nosys,		// 69
+	&Venix::venix_nosys,		// 70
+	&Venix::venix_nosys,		// 71
 };
 
 void int_cd(void)
