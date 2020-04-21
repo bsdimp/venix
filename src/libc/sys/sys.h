@@ -41,12 +41,16 @@
 #define	S_DUP		41	/* 2 */
 #define	S_PIPE		42	/* special 2 */
 #define	S_TIMES		43	/* 1 */
-/* 44 prof */
-/* 45 */
+#define S_PROFIL	44	/* 4 */
+/* 45 sem operations, atypical encoding */
 #define	S_SETGID	46	/* 1 */
 #define	S_GETGID	47	/* 0 */
 #define	S_SIGNAL	48	/* special */
-/* 49-53 */
+#define	S_SDATA		49	/* 3 */
+#define	S_SUSPEND	50	/* 2 */
+/* 51 */
+#define	S_PHYS		52	/* 3 */
+#define	S_LOCK		53	/* 1 */
 #define	S_IOCTL		54	/* 3 */
 #define	S_EXECE		59	/* 3 */
 #define	S_UMASK		60	/* 1 */
