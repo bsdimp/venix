@@ -1,0 +1,79 @@
+#!/bin/sh
+
+die () {
+    echo $*
+    exit 1
+}
+
+rm -rf good canary
+names=$(awk < sys.h '
+function doit(name, number, args) {
+    fn= name "..s";
+    printf("\t.comm\t_errno,2\n")		>  fn;
+    printf("\t.globl\t_errno\n")		>> fn;
+    printf("\t.globl\t_%s\n", name)		>> fn;
+    printf("_%s:\n", name)   			>> fn;
+    printf("\tpush\tbp\n")			>> fn;
+    printf("\tmov\tbp,sp\n")			>> fn;
+    if (args >= 4) {
+        printf("\tpush\tsi\n")			>> fn;
+    }
+    printf("\tmov\tbx,#%d\n", number)		>> fn;
+    if (args >= 1) {
+        printf("\tmov\tax,*4(bp)\n")		>> fn;
+    }
+    if (args >= 2) {
+        printf("\tmov\tdx,*6(bp)\n")		>> fn;
+    }
+    if (args >= 3) {
+        printf("\tmov\tcx,*8(bp)\n")		>> fn;
+    }
+    if (args >= 4) {
+        printf("\tmov\tsi,*10(bp)\n")		>> fn;
+    }
+    printf("\tint\t0xf1\n")			>> fn;
+    printf("\tjcxz\tL001\n")			>> fn;
+    printf("\tmov\t_errno,cx\n")		>> fn;
+    printf("L001:\n")				>> fn;
+    if (args >= 4) {
+        printf("\tpop\tsi\n")			>> fn;
+    }
+    printf("\tpop\tbp\n")			>> fn;
+    printf("\tret\n")				>> fn;
+    close(fn)
+}
+
+$1 == "#define" && $2 ~ /^S_/ {
+    name=tolower(substr($2,3));
+    print name;
+    if ($5 != "special") {
+       doit(name, $3, $5);
+    }
+}')
+
+
+V=$HOME/venix/extracted
+E=$HOME/git/venix/tools/86sim/86sim
+D=$HOME/git/venix/tools/dis88/dis88
+
+echo $names
+
+mkdir good
+mkdir canary
+
+cd good
+$E $V/bin/ar x $V/lib/libc.a
+cd ..
+
+mv *..s canary
+cd canary
+for i in $names; do
+    n="$i..s"
+    [ -f "../$i.s" ] && n="../$i.s"
+    [ -f $n ] || die "$n is missing"
+    $E $V/bin/as $n -o $i.o
+    $D $i.o | grep -v Dis > $i.canary.dis
+    $D ../good/$i.o | grep -v Dis > $i.good.dis
+    echo ${i}:
+    diff -u $i.good.dis $i.canary.dis
+done
