@@ -1,0 +1,25 @@
+Path: plus5!wuphys!wucs!busch!we53!ltuxa!cuae2!ihnp4!cbosgd!ulysses!bellcore!decvax!genrad!panda!sources-request
+From: sources-request@panda.UUCP
+Newsgroups: mod.sources
+Subject: xargs - execute a command with many arguments
+Message-ID: <1380@panda.UUCP>
+Date: 6 Feb 86 14:43:16 GMT
+Sender: jpn@panda.UUCP
+Lines: 146
+Approved: jpn@panda.UUCP
+Posted: Thu Feb  6 08:43:16 1986
+
+Mod.sources:  Volume 3, Issue 106
+Submitted by: seismo!amdahl!gam (Gordon A. Moffett)
+
+Here is a reimplementation of the System V utility xargs.  I haven't
+heard any complaints about it, though [1] There is room for improvement
+regarding the command buffer size (tho' it is better than the System V
+area in that particular regard) [2] It does not have all the features
+of the System V version (as the man page points out).
+
+                               Gordon A. Moffett
+                               {ihnp4,seismo,hplabs}!amdahl!gam
+
+--------------------------------------------------------------------
+

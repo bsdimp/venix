@@ -1,0 +1,47 @@
+.TH XARGS 1
+.SH NAME
+xargs \- execute a command with many arguments
+.SH SYNOPSIS
+.B xargs
+command ...
+.SH DESCRIPTION
+.I Xargs
+is based on the System V command of the same name.  This
+version performs the default function of
+.IR xargs ,
+which is also the simplest function.
+.PP
+Because Unix imposes a limit on how much space the arguments
+of a command may use, that if the argument list were too
+large the system prohibits the
+command from being executed (in System V, this error is
+.BR E2BIG ,
+.B errno
+= 7).
+.PP
+To avoid this problem,
+.I xargs
+will take arguments which are themselves a command and
+.I its
+arguments (options), and then read standard input and
+apply it to the command with its given arguments.
+.I Xargs
+is careful not to excede the system-imposed limit, which
+is expected to be greater than the system's stream file
+buffer size,
+.B BUFSIZ
+in
+.IR /usr/include/stdio.h .
+(The true upper limit can be found in the manual page
+.IR intro(2),
+where the
+.B E2BIG
+error is described).
+It continues to execute the command with the read-in arguments
+until it reaches end-of-file.
+.SH "SEE ALSO"
+intro(2), exec(2)
+.SH BUGS
+Not really the System V Release 2 version at all, but just
+looks like it.
+.SH NOTES
