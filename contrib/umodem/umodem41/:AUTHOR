@@ -1,0 +1,18 @@
+Path: plus5!wucs1!cuae2!clyde!rutgers!princeton!allegra!ulysses!gamma!pyuxww!lcuxc!lcuxb!lcuxa!mike2
+From: mike2@lcuxa.UUCP
+Newsgroups: net.sources
+Subject: UMODEM
+Message-ID: <114@lcuxa.UUCP>
+Date: 5 Jan 87 15:56:38 GMT
+Organization: Bell Communications Research, Piscataway, NJ
+Lines: 1516
+
+In response to the several requests for this over the past week
+or so, following is a "shar" file of one of the many UMODEM
+programs that float around.  It is fairly primitive, but it 
+does work.  It can be improved, but doing so may not be worth
+the effort.  Be aware that the various improvements to implement
+ARPA FTP transfers are not documented in the manual pages below.
+The source code is quite clear on this, as are the 'help' menus.
+--------------------------CUT HERE--------------------------
+

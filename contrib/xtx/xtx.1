@@ -1,0 +1,84 @@
+.TH XTX 1 "UKC local 19/10/85"
+.UC
+.SH NAME
+xtx \- execute embedded text commands
+.SH SYNOPSIS
+.B xtx
+[
+.B \-a
+] [
+.B \-c
+letter
+|
+.B \+ "letter"
+] [
+.B -e
+] files ....
+.SH DESCRIPTION
+.I Xtx
+looks for a magic string in a file and then takes the characters which follow
+up to the next newline character as a command to be executed by 
+.I sh (1).
+The default magic string is
+.TP
+<\-xtx\-*>.
+.PP
+Any tabs and spaces which immediately follow the magic string are removed
+before the remainder of the line is sent to
+.I sh
+for execution.
+.PP
+Several commands can be embedded in the file and selected independently by
+the use of selector characters.
+If the character * in the xtx command string
+is replaced by another (printing) character; then
+the line is only executed if the character is specified to 
+.I xtx 
+using the 
+.B -c
+letter
+or 
+.B + letter
+switches.
+For instance, a string of the form <\-xtx\-l> will only be recognised and
+executed if
+.I xtx
+is called with the argument of `+l'; for Unix purists the form `-c l' may
+also be specified with the same effect.
+.PP
+The arguments to the program are:-
+.TP
+.B -a
+Print all the xtx lines which can be found in the file with their selector
+letter.
+.TP
+.B -e
+Echo the command which would be executed by this call to
+.I xtx.
+.TP
+.B -c
+is followed by a letter, use this letter as the selector character for the
+.I xtx
+run.
+.B + <letter>
+same as -c but allows the selector letter to be specified in the same argument.
+.PP
+All other arguments are files which are searched for matching command lines;
+a `-' on the input causes data to be taken from the standard input for
+searching.
+.SH "SEE ALSO"
+sh(1)
+.SH AUTHOR
+Peter Collinson UKC.
+.PP
+The basic idea is not new and exists in several editors (David Tilbrook's)
+.I qed
+and the infamous
+.I vi .
+However, the idea of making a tool for it seemed like the right thing to
+do.
+.PP
+By the way,
+xtx is pronounced `extex' and is a verb.
+It is possible therefore to `extex' a file in order to execute something
+on it in whatever way seems reasonable.

@@ -1,0 +1,143 @@
+1 UMODEM
+     UMODEM is a program which is used to assist in file
+transfers between a microcomputer running the CP/M operating
+system and a minicomputer running either VAX/VMS or Version 7
+UNIX.  It is an implementation of the CP/M User's Group MODEM
+file transfer protocol.
+     UMODEM supports both text and binary file transmission,
+error detection by checksums, and automatic error recovery.  To
+transfer files between the microcomputer and the VAX, you must
+have a compatible program running on the CP/M system, such as the
+popular MODEM program.  MODEM is in the public domain.
+     UMODEM is identical in function to the XMODEM file transfer
+program found on most CP/M Computer Bulletin Board Systems and
+the SNDRCV programs used with VAXNET.
+
+2 Qualifiers
+     UMODEM reads the command line to find the switches governing
+its operation and the name of the file to be sent to the CP/M
+system or created on the VAX.  Switches begin with a "-", file
+names don't.  Each switch is one-letter long and multiple
+switches are permitted (such as "-lrt").
+     The most important switches are "r" and "s":  "Receive" and
+"Send" a file.
+3 R
+Receive a file on the VAX
+     Used in conjunction with the "t" (text) or "b" (binary)
+commands.  Creates a new file on the VAX with the name given by
+the file name argument.  A new version of the file is created
+under VMS; an error message is sent under UNIX if the file
+already exists.
+3 S
+Send a file to the VAX
+     Used in conjunction with the "t" (text) or "b" (binary)
+commands.  Sends an existing file named in the file name argument
+from the VAX to the CP/M system.
+3 T
+Text file transfer
+     A qualifier to the "r" and "s" commands.  Selects "text mode
+file transfer":  converts CP/M CR-LF record delimiters into UNIX
+LF (or VMS LF stream file) record delimiters.  Handles VMS CR-LF
+pairs properly.  This is the normal mode of file transfer.
+3 B
+Binary file transfer
+     A qualifier to the "r" and "s" commands.  Selects "binary
+mode file transfer":  no conversions are made between CP/M file
+format and the VMS or UNIX file formats.
+3 L
+Log file suppression
+     This qualifier causes UMODEM to supress the normal action of
+logging its activity to the file UMODEM.LOG.
+     If this switch is NOT present, UMODEM will create a file
+called UMODEM.LOG in the current directory and write statistics
+regarding the file transfer to it.  These statistics include the
+name of the file transferred and its size.  If UMODEM.LOG already
+exists, the new information is appended to the old file.
+3 Y
+Display file information only--no file transfer
+     Displays the size of the existing file specified in the file
+name argument and an estimate of the time needed to transfer the
+file at 300 baud.  No file transfer will be performed.  This
+information is also displayed when the "s" switch is selected.
+! 3 M
+! "Mung mode"--permit file overwrite on receive (UNIX only)
+!      Use of this qualifier to the "r" switch permits the user to
+! overwrite an existing file on the UNIX system.  Normally, UMODEM
+! first checks to see if a file with the name specified in the file
+! name argument already exists before attempting to create a new
+! file and stops with an error message if such a file does exist.
+3 File name
+     The file name is any legal file name.  If no directory
+specification is present, the current default directory is
+assumed.  Under VMS, logical names may be used.
+
+2 Error recovery
+     UMODEM permits up to ten retries when a transmission error
+is detected.  If this limit is exceeded, UMODEM will quit with
+an error message.
+     If UMODEM is invoked with insufficient parameters or
+encounters an error in opening the file you specify, an error
+message is sent and the program terminates.  In addition, the
+program times out if it doesn't receive the acknowledgment it
+expects from the microcomputer within a minute or so.  If you
+inadvertently start up UMODEM, just don't do anything and the
+program will stop itself eventually.  See the subtopic
+"Operation" for more details.
+
+2 Operation
+     UMODEM is an implementation of the CP/M User's Group file
+transfer protocol of Ward Christensen.  Files are sent in
+"packets" of 128 characters each.  Control information is
+prepended and appended to each packet to identify the packet and
+provide a means of verifying the integrity of the information
+contained in the packet.  UMODEM waits for an acknowledgment from
+the other computer before beginning a file transfer.  If it has
+to wait too long, it automatically quits.  This "timeout" feature
+is important, as interrupts (^C, ^Y) are disabled during file
+transfer.
+     The cyclic redundancy check (CRC) method of error detection
+implemented on many CP/M systems is not yet available; the
+checksum method specified in the original CPMUG standard is the
+technique used in UMODEM.
+
+2 UNIX-VMS_file_transfers
+     Since UMODEM runs under both VMS and Version 7 UNIX, it is
+capable of transferring files between such machines when used in
+conjunction with a virtual terminal program such as VAXNET, which
+runs under VMS.  Naturally, the same procedure may be used to
+initiate file transfers between a VMS machine and a remote CP/M
+system from the VMS machine.
+     UMODEM/VMS translates the logical name TT to determine which
+terminal to communicate with.  Normally TT corresponds to the
+terminal you are currently logged in to ("local").  By issuing a
+"$ DEFINE/USER TT term" command before invoking UMODEM, one may
+perform transfers over a different terminal line (a "remote"
+line) than the one you are currently using for your interactive
+session.  See the following example.  NOTE that UMODEM requires
+that the remote line be set to EIGHT_BIT operation.  This is done
+automatically when UMODEM is used on the local line, but must be
+done manually when using UMODEM on a remote line.
+3 Example
+UNIX-VMS file transfer initiated from the VMS system using
+VAXNET.
+     $ set terminal/eight_bit remote    ! Needed for UMODEM, but
+     $ vaxnet remote                    !   not VAXNET
+     <you log on to the remote system>
+     % umodem -rt vms.file              ! Start UMODEM on the
+     ...                                !   remote UNIX system
+     UMODEM:  Ready to RECEIVE File
+     ^/ Q                               ! Get out of VAXNET
+     $ define/user tt remote            ! Temporarily redefine
+                                        !   logical name TT
+     $ umodem -st vms.fil               ! Sends file from the
+     ...                                !   VMS system
+     UMODEM:  Ready to SEND File
+     $ vaxnet remote                    ! Back to remote terminal
+     %                                  !   operation.  Remember
+                                        !   to log off!
+
+2 Problems/Questions
+     Contact Wally Reiher:  username REIHER, MB9-19, 495-1768.
+He has a version of MODEM configured for the Heath/Zenith-89
+microcomputer system which is in the public domain and free for
+the asking.

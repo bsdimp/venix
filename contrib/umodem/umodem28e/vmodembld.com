@@ -1,0 +1,6 @@
+$!++
+$!	Command file to build the VMODEM program.
+$!--
+$ LINK/EXECUTABLE=VMODEM VMODEM/LIBRARY/INCLUDE=(VMODEM)
+$ PURGE VMODEM.EXE
+$ RENAME VMODEM.EXE ;1

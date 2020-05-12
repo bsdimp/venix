@@ -1,0 +1,20 @@
+Relay-Version: version B 2.10.3 4.3bsd-beta 6/6/85; site plus5.UUCP
+Posting-Version: version B 2.10.2 9/18/84 +MMDF+2.11; site ukc.UUCP
+Path: plus5!wuphys!wucs!busch!we53!mgnetp!ihnp4!houxm!mhuxt!mhuxr!ulysses!allegra!mit-eddie!think!harvard!seismo!mcvax!ukc!pc
+From: pc@ukc.UUCP (R.P.A.Collinson)
+Newsgroups: net.sources
+Subject: Execute embedded text strings - a tool
+Message-ID: <310@ukc.UUCP>
+Date: 21 Oct 85 22:22:24 GMT
+Date-Received: 24 Oct 85 13:50:36 GMT
+Reply-To: pc@ukc.UUCP ()
+Organization: U of Kent at Canterbury, Canterbury, UK
+Lines: 281
+
+Here is a little program with a lot of power. It allows you to place
+shell commands as comments in files and then execute the commands by
+pointing the xtx command at the file. It solves many troff/nroff problems
+and can be used in various other situations.
+
+See the manual page for various `this was someone else's idea' caveats.
+

@@ -1,0 +1,56 @@
+'\" t
+.TH umodem 1 "Local"
+.SH NAME
+umodem \- file transfer to and from personal computers
+.SH SYNOPSIS
+.B umodem\ 
+\fB-rb\fR | \fB-rt\fR | \fB-sb\fR | \fB-st\fR [ \fBqlmdy7\fR ] \fIfilename\fR
+.br
+.SH DESCRIPTION
+This command is used to transfer files to and from a Personal Computer
+using the standard "CP/M User's Group (Ward Christensen)" protocol.
+\fIUmodem\fR can be used to transfer one file at a time either to the PC or
+from the PC, and is compatible with most file transfer programs running on
+the PC.
+.SH "umodem"
+.I Umodem
+cooperates with the a multitude of programs that run
+on a Personal Computer to perform a file transfer.
+The integrity of the transfer is enhanced by use of a block checksum
+for error detection, and block retransmission for error correction.
+.PP
+.I Umodem
+requires exactly one of the following :
+.TP 8
+.B -rb
+Receive Binary \- transfer a file
+.I from
+the Personal Computer, in raw binary mode.  Every byte of the file will be
+transferred intact.  This mode is usually used to transfer, for example, .COM
+files.
+.TP
+.B -rt
+Receive Text \- transfer a file
+.I from
+the Personal Computer, in text mode.  In this mode the program attempts to
+convert from the CP/M text file format to the Unix format on-the-fly,
+by stripping carriage-return characters, and by ceasing to store data
+after a Control-Z is detected.
+.TP
+.B -sb
+Send Binary \- transfer a file
+.I to
+the Personal Computer, in raw binary mode.  Every byte of the file will be
+transferred intact.  This mode is usually used to transfer, for example, .COM
+files.
+.TP
+.B -st
+Send Text \- transfer a file
+.I to
+the Personal Computer, in text mode.  In this mode the program attempts to
+convert from the Unix text file format to the CP/M format on-the-fly,
+by adding carriage-retXprotocols.  Only single file transfers are supported.
+.SH FILES
+$HOME/umodem.log - created or appended to if the
+.B "-l"
+option is specified.

@@ -1,0 +1,292 @@
+Command? R CPMUG-PROTOCOL
+
+<CPMUG-PROTOCOL>   27-AUG-82
+Parent: PROTOCOLS
+MODEM PROTOCOL OVERVIEW  178 lines, 7.5K
+
+1/1/82 by Ward Christensen.  I will maintain a master copy of
+this.  Please pass on changes or suggestions via CBBS/Chicago
+at (312) 545-8086, or by voice at (312) 849-6279.
+
+NOTE this does not include things which I am not familiar with,
+such as the CRC option implemented by John Mahr.
+
+Last Rev: (none)
+
+At the request of Rick Mallinak on behalf of the guys at
+Standard Oil with IBM P.C.s, as well as several previous
+requests, I finally decided to put my modem protocol into
+writing.  It had been previously formally published only in the
+AMRAD newsletter.
+
+        Table of Contents
+1. DEFINITIONS
+2. TRANSMISSION MEDIUM LEVEL PROTOCOL
+3. MESSAGE BLOCK LEVEL PROTOCOL
+4. FILE LEVEL PROTOCOL
+5. DATA FLOW EXAMPLE INCLUDING ERROR RECOVERY
+6. PROGRAMMING TIPS.
+
+-------- 1. DEFINITIONS.
+<soh>   01H
+<eot>   04H
+<ack>   05H
+<nak>   15H
+<can>   18H
+
+-------- 2. TRANSMISSION MEDIUM LEVEL PROTOCOL
+Asynchronous, 8 data bits, no parity, one stop bit.
+
+    The protocol imposes no restrictions on the contents of the
+data being transmitted.  No control characters are looked for
+in the 128-byte data messages.  Absolutely any kind of data may
+be sent - binary, ASCII, etc.  The protocol has not formally
+been adopted to a 7-bit environment for the transmission of
+ASCII-only (or unpacked-hex) data , although it could be simply
+by having both ends agree to AND the protocol-dependent data
+with 7F hex before validating it.  I specifically am referring
+to the checksum, and the block numbers and their ones-
+complement.
+.cp 16
+
+    Those wishing to maintain compatibility of the CP/M file
+structure, i.e. to allow modemming ASCII files to or from CP/M
+systems should follow this data format:
+  * ASCII tabs used (09H); tabs set every 8.
+  * Lines terminated by CR/LF (0DH 0AH)
+  * End-of-file indicated by ^Z, 1AH.  (one or more)
+  * Data is variable length, i.e. should be considered a
+    continuous stream of data bytes, broken into 128-byte
+    chunks purely for the purpose of transmission. 
+  * A CP/M "peculiarity": If the data ends exactly on a
+    128-byte boundary, i.e. CR in 127, and LF in 128, a
+    subsequent sector containing the ^Z EOF character(s)
+    is optional, but is preferred.  Some utilities or
+    user programs still do not handle EOF without ^Zs.
+  * The last block sent is no different from others, i.e.
+    there is no "short block".  
+
+-------- 3. MESSAGE BLOCK LEVEL PROTOCOL
+ Each block of the transfer looks like:
+<SOH><blk #><255-blk #><--128 data bytes--><cksum>
+    in which:
+<SOH>       = 01 hex
+<blk #>     = binary number, starts at 01 increments by 1, and
+              wraps 0FFH to 00H (not to 01)
+<255-blk #> = blk # after going thru 8080 "CMA" instr, i.e.
+              each bit complemented in the 8-bit block number.
+              Formally, this is the "ones complement".
+<cksum>     = the sum of the data bytes only.  Toss any carry.
+
+-------- 4. FILE LEVEL PROTOCOL
+
+---- 4A. COMMON TO BOTH SENDER AND RECEIVER:
+
+    All errors are retried 10 times.  For versions running with
+an operator (i.e. NOT with XMODEM), a message is typed after 10
+errors asking the operator whether to "retry or quit".
+    Some versions of the protocol use <can>, ASCII ^X, to
+cancel transmission.  This was never adopted as a standard, as
+having a single "abort" character makes the transmission
+susceptible to false termination due to an <ack> <nak> or <soh>
+being corrupted into a <can> and canceling transmission.
+    The protocol may be considered "receiver driven", that is,
+the sender need not automatically re-transmit, although it does
+in the current implementations.
+.cp 13
+
+---- 4B. RECEIVE PROGRAM CONSIDERATIONS:
+    The receiver has a 10-second timeout.  It sends a <nak>
+every time it times out.  The receiver's first timeout, which
+sends a <nak>, signals the transmitter to start.  Optionally,
+the receiver could send a <nak> immediately, in case the sender
+was ready.  This would save the initial 10 second timeout. 
+However, the receiver MUST continue to timeout every 10 seconds
+in case the sender wasn't ready.
+    Once into a receiving a block, the receiver goes into a
+one-second timeout for each character and the checksum.  If the
+receiver wishes to <nak> a block for any reason (invalid
+header, timeout receiving data), it must wait for the line to
+clear.  See "programming tips" for ideas
+    Synchronizing:  If a valid block number is received, it
+will be: 1) the expected one, in which case everything is fine;
+or 2) a repeat of the previously received block.  This should
+be considered OK, and only indicates that the receivers <ack>
+got glitched, and the sender re-transmitted; 3) any other block
+number indicates a fatal loss of synchronization, such as the
+rare case of the sender getting a line-glitch that looked like
+an <ack>.  Abort the transmission, sending a <can>
+
+---- 4C. SENDING PROGRAM CONSIDERATIONS.
+
+    While waiting for transmission to begin, the sender has
+only a single very long timeout, say one minute.  In the
+current protocol, the sender has a 10 second timeout before
+retrying.  I suggest NOT doing this, and letting the protocol
+be completely receiver-driven.  This will be compatible with
+existing programs.
+    When the sender has no more data, it sends an <eot>, and
+awaits an <ack>, resending the <eot> if it doesn't get one. 
+Again, the protocol could be receiver-driven, with the sender
+only having the high-level 1-minute timeout to abort.
+
+.cp24
+
+-------- 5. DATA FLOW EXAMPLE INCLUDING ERROR RECOVERY
+
+Here is a sample of the data flow, sending a 3-block message.
+It includes the two most common line hits - a garbaged block,
+and an <ack> reply getting garbaged.  <xx> represents the
+checksum byte.
+
+SENDER                                  RECEIVER
+                                times out after 10 seconds,
+                        <---            <nak>
+<soh> 01 FE -data- <xx> --->
+                        <---            <ack>
+<soh> 02 FD -data- xx   --->    (data gets line hit)
+                        <---            <nak>
+<soh> 02 FD -data- xx   --->
+                        <---            <ack>
+<soh> 03 FC -data- xx   --->
+   (ack gets garbaged)  <---            <ack>
+<soh> 03 FC -data- xx   --->            <ack>
+<eot>                   --->
+                        <---            <ack>
+
+-------- 6. PROGRAMMING TIPS.
+
+* The character-receive subroutine should be called with a
+parameter specifying the number of seconds to wait.  The
+receiver should first call it with a time of 10, then <nak> and
+try again, 10 times.
+  After receiving the <soh>, the receiver should call the
+character receive subroutine with a 1-second timeout, for the
+remainder of the message and the <cksum>.  Since they are sent
+as a continuous stream, timing out of this implies a serious
+like glitch that caused, say, 127 characters to be seen instead
+of 128.
+
+* When the receiver wishes to <nak>, it should call a "PURGE"
+subroutine, to wait for the line to clear.  Recall the sender
+tosses any characters in its UART buffer immediately upon
+completing sending a block, to ensure no glitches were mis-
+interpreted.
+  The most common technique is for "PURGE" to call the
+character receive subroutine, specifying a 1-second timeout,
+and looping back to PURGE until a timeout occurs.  The <nak> is
+then sent, ensuring the other end will see it.
+
+* You may wish to add code recommended by Jonh Mahr to your
+character receive routine - to set an error flag if the UART
+shows framing error, or overrun.  This will help catch a few
+more glitches - the most common of which is a hit in the high
+bits of the byte in two consecutive bytes.  The <cksum> comes
+out OK since counting in 1-byte produces the same result of
+adding 80H + 80H as with adding 00H + 00H.
+-- No child messages --
+
+Command? CPM
+Type BINEX after the A0> prompt to return to BIN-EX
+Type CHAT to chat with the system operator; BYE to quit
+BIN-EX message texts are on USER 1, A: and B: drives
+Files for downloading are on USER 0, both drives; DIR for directory
+
+
+A0>USER 0
+
+A0>DIR A:
+
+ALIENS11.DOC   4k | ALIENS11.OBJ  14k | BACKUP  .ASM  28k | BACKUP  .DOC   8k
+BINEX   .COM   2k | BY2-8250.ASM   8k | BY2-8251.ASM   8k | BY2-MMII.ASM   8k
+BY2-SIO .ASM   8k | BYE     .COM   2k | BYEII   .ASM  52k | CAL     .OBJ   6k
+CATALOG .      4k | CHAT    .COM   2k | CHESS   .OBJ   8k | DISK    .OBJ   4k
+DISK74A .DOC   6k | DISK76  .ASM  48k | DOWNLOAD.HLP   6k | DU      .OBJ   6k
+DU-V77  .DOC   6k | FIND    .COM   2k | FIND    .DOC   2k | FIND    .OBJ   2k
+FIXTEX  .ASM  22k | HELP    .OBJ   4k | MBOOT   .ASM   8k | MBOOTVT .ASM   6k
+MDM705  .DOC  34k | MDM705  .OBJ  18k | MDM705  .SET   8k | MDM705CF.ASM  14k
+MDM705NM.ASM   4k | MDM705VT.DOC   4k | MDM705VT.OBJ  16k | MDMEQU02.DOC  12k
+PACMAN  .DOC   2k | PACMAN  .OBJ  18k | PIPMODEM.ASM   4k | PIPMODEM.DOC   8k
+PROT    .OBJ   4k | RCPM-038.LST  22k | SD      .OBJ   2k | SSUB    .OBJ   4k
+USQ     .OBJ  10k | XMODEM  .COM   4k | XMODEM  .HLP   2k | Z2CON   .WQ   78k
+Z80CHESS.DOC   6k | Z80CHESS.OBJ   8k | ZZERR   .DAT   2k | ZZMUMPS .DOC   2k
+ZZMUMPS .OBJ  42k | ZZSETGLB.OBJ   2k | ZZSETMPS.OBJ   2k
+        Drive A, user 0 contains 616K in 55 files with 144K free
+A0>TYP XMODEM.HLP
+TYP?
+A0>TYPE A:XMODEM.HLP
+Ctrl-S pauses, Ctrl-C Aborts, Ctrl-X skips to next file
+
+Listing file A:XMODEM.HLP
+
+   XMODEM is the downloading program on this system. It transfers binary
+files block by block with error checking using either a CHECKSUM
+or CRC. The protocol is known as the CPMUG or Christensen protocol.
+It is compatible with several communications programs. 
+ 
+   The syntax for its use is:
+
+                XMODEM S filename.typ    (to send a file from here to you)
+
+or
+
+                XMODEM R filename.typ    (to receive a file from you) 
+
+
+Programs which are compatible include:
+
+MDM705    PUBLIC DOMAIN     (available from this system)  CP/M
+MODEM7      "      "        
+MODEM2      "      "
+MODEM etc   "      "
+
+MODEMIBM  PUBLIC DOMAIN     (available from this system) PCDOS
+AMODEM    PUBLIC DOMAIN     (available from this system) ATARI
+UMODEM    PUBLIC DOMAIN     (available from this suytem) UNIX
+
+AMCALL    MicroCALL Services 9655-M Homestead Court, Laurel MD 20707
+
+ASCOM     DMA or Westico  25 Van Zant Street, Norwalk CT 06855 
+          CP/M-80, CP/M-86, PCDOS, MSDOS  
+
+M.I.T.E.  Mycroft Labs  PO Box 6045 Tallahassee, FL 32301      
+          CP/M-80       
+
+COMMX     Hawkeye Grafix  23914 Mobile, Canoga Park, CA 91307
+          CP/M-80  $150 or $900 source (also available in
+          FORTRAN for use on mainframe) (213) 348-7909
+
+PC-TALK III  The Headlands Press, PO BOX 862, Tiburon, CA 94920
+             for IBM-PC  suggested donation $35.00 (or freeware)
+
+MODEM80   The Alternate Source, 705 N. Pennsylvania, Lansing, MI 48906
+          $39.85 TRS-80 MOD 1 & III Reviewed in May 1983 Creative Computing
+
+ZTERM Professional    Southwestern Data Systems, PO Box 582, Santee CA 92071
+          $149   Apple softcard CP/M Review May 1983 Creative Computing
+
+ASCII Express Professional Southwestern Data Systems - APPLE II 48K
+
+LMODEM    (DEC-10)
+UMODEM    (UNIX)     Written in C (available on this system)
+VMODEM    (VAX-VMS)  a VAX version of UMODEM (available on this system)
+XCHANGE-11 (PDP-11 RSTS-E)
+A0>DIR B:
+
+AMODEM42.ATR  10k | APMBOOT .ASM   8k | CAT     .OBJ   2k | CIS-DOW .MAC  14k
+CIS-EXEC.AQM  20k | CIS-EXEC.DOC   4k | CIS-MNET.PRO  14k | CISINFO .DOC   2k
+CISPROTO.DOC  18k | CRCK8   .OBJ   6k | DBASE   .NTS   6k | ELIZA   .BAS   8k
+HELP    .HQP   2k | HELP2   .HQP  14k | HELP20  .AQM  24k | INDEX   .OBJ  10k
+INTNET  .TXT   4k | LDIR    .OBJ   6k | LRUN    .OBJ   2k | LU      .DOC  24k
+LU      .OBJ  18k | LUDEF1  .DOC   8k | MASTHEAD.ASM   6k | MDM705  .INF   6k
+MDM705  .MSG   2k | MDM705AP.ASM  10k | MDM705DP.ASM   8k | MDM705HZ.ASM   8k
+MDM705OS.ASM  14k | MDM705XE.ASM  10k | MENU    .DQC   4k | MENU    .OQJ  10k
+MFT     .ASM  18k | MMDF    .PQO  22k | MNETCMD .TRS   2k | MODEM80 .TRS  12k
+MODEMIBM.ASM  56k | NAPLPS  .DOC  22k | NCAT    .OBJ   8k | PC-APRG .DOC  12k
+PCSERPRO.DQC  16k | PRLMOV  .ASM   4k | RAMDSK  .ASM  24k | RAMDSK  .DOC   4k
+RAMDSK  .OBJ   2k | RESOURCE.OBJ   8k | REZ     .DOC  30k | SCRAMBLE.ASM   6k
+SCRAMBLE.DOC   2k | SORTV   .DOC   2k | SORTV-12.MAC  14k | SYNONYM .ASM   6k
+SYNONYM .DOC   4k | UMODEM  .DOC   4k | UMODEM28.C    38k | UMODEM28.HLP   8k
+UNSPOOL .DOC  10k | UNSPOOL .MAC  18k | UNSPOOL .OBJ   2k | VMODEM28.C     8k
+VMODEM28.H     2k | XREF    .BAS   6k
+        Drive B, user 0 contains 672K in 62 files with 28K free

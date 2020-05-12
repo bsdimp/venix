@@ -1,0 +1,53 @@
+       			       Free software BY
+			     Northern Telecom Inc.
+
+     This  software  is  furnished for free and may be used and  copied as
+     desired. This software or  any  other copies  thereof may be provided
+     or  otherwise  made  available  to any other person.  No title to and
+     ownership of  the  software  is  hereby transferred or allowed. 
+
+     The information in this software is subject to change  without notice
+     and should not be construed as a commitment by NORTHERN TELECOM INC.
+
+     NORTHERN TELECOM assumes no responsibility for the use or reliability  
+     of this software on any equipment whatsoever.
+
+	Northern Telecom Inc.
+	Network Support Systems Division
+	P.O. Box 649, Airport Road
+	Concord, New Hampshire 03301
+	(603) 224-6511 X2024
+
+	Program:	VMODEM
+	Author:		Robin Miller
+	Language:	VAX-11 C
+	Date:		Fall 1985
+
+     Description:
+
+	VMODEM is  the VMS version of the UMODEM program which uses the
+     XMODEM  protocol  used on many micros.  I've included this program
+     because  the VAXNET program now supports this protocol and you may
+     wish  to  use  this program instead of the SNDRCV program for file
+     transfers.  The XMODEM protocol has better error checking than the
+     SNDRCV protocol but only allows sending or receiving a single file
+     at a time.  It also has the advantage of running on UNIX where the
+     SNDRCV program does not.
+
+------------------------------------------------------------------------------
+
+    August 24, 1985 by Robin Miller.
+
+	This  version  of VMODEM has been significatly rewritten to be
+     more  reliable and more efficient. Previously when sending files,
+     the  program  used  single  character  writes.  Now  the transmit
+     buffer is constructed and written with one write.
+
+	The  main  reason  for  this rewrite was due to the capability
+     added  to  the  native mode MISH program which generates files in
+     binary format via the /XMODEM quailifier to be used with VMODEM.
+
+	Also,  the  start  of  the send and receive routines have been
+     modified  so  the  user  can abort VMODEM by typing CTRL/X (CAN).
+     Previously, certain conditions would make it impossible to abort
+     the VMODEM program.

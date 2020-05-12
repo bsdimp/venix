@@ -1,0 +1,197 @@
+1 VMODEM
+!
+! VMODEM.HLP by Robin Miller on April 19, 1984.
+!
+ VMODEM is a program to downline load to various personal computers. It
+ transfers  either  text  or  binary  files  block  by block with error
+ checking using a checksum.  The protocol used is known as the CPMUG or
+ Christensen  Protocol.  To  use this program, define a symbol to start
+ the  program as shown below.  The program is written in the C language
+ and uses UNIX style command lines.
+
+    $ vmodem :== $sys$norden:vmodem
+    $ vmodem
+    UMODEM Version 2.8 -- UNIX-Based Remote File Transfer Facility
+
+    Usage:  
+	    umodem -[rb!rt!sb!st][l][p][y][1][7] filename
+
+	    rb <-- Receive Binary
+	    rt <-- Receive Text
+	    sb <-- Send    Binary
+	    st <-- Send    Text
+	    l  <-- (ell) Turn OFF LOG File Entries
+	    p  <-- Turn ON Parameter Display
+	    y  <-- Display file status (size) information only
+	    7  <-- Enable 7-bit transfer mask
+2 Examples
+ The  following  is an example of sending and receiving files using
+ VAXNET  and  VMODEM.  You may notice the difference of the elapsed
+ time between the GET and the SEND.  The VMODEM program transmits a
+ single  byte  at a time when it sends files.  This results in alot
+ of overhead and a much slower transmission.
+
+    Vaxnet> PROTOCOL XMODEM		! Set protocol to XMODEM.
+    Vaxnet> STATUS
+
+    VAXNET Status Report:
+
+    Log file name:    VMODEM.LOG
+    Local logging:    Enabled
+    Remote port:      _TTB5:
+    Interrupt char:   ^A
+    System type:      DEC
+    Local echo:       Disabled
+    Remote speed:     9600
+    Protocol type:    XMODEM
+    File type:        ASCII
+    Retry limit:      10
+    Timeout count:    10
+    Number of bits:   8
+    Dump echo:        Enabled
+    Watch files:      Enabled
+    Display screen:   Enabled
+    Display record:   25
+    Auto reformat:    Enabled
+    Reformat wait:    Enabled
+    Debug mode:       Disabled
+    Typeahead limit:  32
+
+    Vaxnet> 
+
+    $ vmodem -rt xxx.xxx
+    UMODEM Version 2.8 -- UNIX-Based Remote File Transfer Facility
+
+    UMODEM:  LOG File 'umodem.log' is Open
+
+    UMODEM:  File Name: xxx.xxx
+    UMODEM:  8-Bit Transmission Enabled
+    UMODEM:  Ready to RECEIVE File
+
+    Vaxnet> SEND [MILLER]LOGIN.COM
+
+    *** Type CTRL/C to abort the file transmission. ***
+
+    *** File "USER1:[MILLER]LOGIN.COM;1" successfully transferred. ***
+    *** ELAPSED: 00:00:09.29  CPU: 0:00:01.13 ***
+
+    XMODEM Status Report:
+    Total blocks:     42, total records:    152, total bytes:    5041
+    Parity errors:     0,      overruns:      0,    timeouts:       0
+
+    $ diff xxx.xxx [miller]login.com
+    Number of difference sections found: 0
+    Number of difference records found: 0
+
+    DIFFERENCES /MERGED=1-
+        USER1:[MILLER.VAXNET.VMODEM]XXX.XXX;1-
+        USER1:[MILLER]LOGIN.COM;1
+    $ 
+    $ vmodem -st xxx.xxx
+    UMODEM Version 2.8 -- UNIX-Based Remote File Transfer Facility
+
+    UMODEM:  LOG File 'umodem.log' is Open
+
+    UMODEM:  File Name: xxx.xxx
+    UMODEM:  Estimated File Size 6K, 41 Records, 5192 Bytes
+             Estimated transfer time at 300 baud:  2 min, 54 sec.
+    UMODEM:  8-Bit Transmission Enabled
+    UMODEM:  Ready to SEND File
+
+    Vaxnet> GET XXX.TMP
+
+    *** Type CTRL/C to abort the file transmission. ***
+
+    *** File "XXX.TMP" successfully transferred. ***
+    *** ELAPSED: 00:00:52.76  CPU: 0:00:01.28 ***
+
+    XMODEM Status Report:
+    Total blocks:     42, total records:    152, total bytes:    5041
+    Parity errors:     0,      overruns:      0,    timeouts:       0
+
+    $ type umodem.log
+
+    ++++++++
+
+    UMODEM Version 2.8
+
+    ----
+    UMODEM Receive Function
+    File Name: xxx.xxx
+    TERM II File Transfer Protocol 3 (CP/M UG) Selected
+    8-Bit Transmission Enabled
+    Timeout on Sector 0
+
+    Receive Complete
+    Number of Received CP/M Records is 42
+
+    ++++++++
+
+    UMODEM Version 2.8
+
+    ----
+    UMODEM Send Function
+    File Name: xxx.xxx
+    Estimated File Size 6K, 41 Records, 5192 Bytes
+    TERM II File Transfer Protocol 3 (CP/M UG) Selected
+    8-Bit Transmission Enabled
+
+    Send Complete
+    $ diff xxx.xxx xxx.tmp
+    Number of difference sections found: 0
+    Number of difference records found: 0
+
+    DIFFERENCES /MERGED=1-
+        USER1:[MILLER.VAXNET.VMODEM]XXX.XXX;1-
+        USER1:[MILLER.VAXNET.VMODEM]XXX.TMP;1
+    $ del xxx.*;*/lo
+    %DELETE-I-DELETED, USER1:[MILLER.VAXNET.VMODEM]XXX.TMP;1 deleted
+    %DELETE-I-DELETED, USER1:[MILLER.VAXNET.VMODEM]XXX.XXX;1 deleted
+    $ lo
+      MILLER       logged out at 19-APR-1984 14:21:30.63
+2 RECEIVE
+ This is an example of receiving a file using VMODEM.
+
+    $ vmodem -rt xxx.xxx
+    UMODEM Version 2.8 -- UNIX-Based Remote File Transfer Facility
+
+    UMODEM:  LOG File 'umodem.log' is Open
+
+    UMODEM:  File Name: xxx.xxx
+    UMODEM:  8-Bit Transmission Enabled
+    UMODEM:  Ready to RECEIVE File
+
+    Vaxnet> SEND [MILLER]LOGIN.COM
+
+    *** Type CTRL/C to abort the file transmission. ***
+
+    *** File "USER1:[MILLER]LOGIN.COM;1" successfully transferred. ***
+    *** ELAPSED: 00:00:09.29  CPU: 0:00:01.13 ***
+
+    XMODEM Status Report:
+    Total blocks:     42, total records:    152, total bytes:    5041
+    Parity errors:     0,      overruns:      0,    timeouts:       0
+2 SEND
+ This is an example of sending a file from VMODEM.
+
+    $ vmodem -st xxx.xxx
+    UMODEM Version 2.8 -- UNIX-Based Remote File Transfer Facility
+
+    UMODEM:  LOG File 'umodem.log' is Open
+
+    UMODEM:  File Name: xxx.xxx
+    UMODEM:  Estimated File Size 6K, 41 Records, 5192 Bytes
+             Estimated transfer time at 300 baud:  2 min, 54 sec.
+    UMODEM:  8-Bit Transmission Enabled
+    UMODEM:  Ready to SEND File
+
+    Vaxnet> GET XXX.TMP
+
+    *** Type CTRL/C to abort the file transmission. ***
+
+    *** File "XXX.TMP" successfully transferred. ***
+    *** ELAPSED: 00:00:52.76  CPU: 0:00:01.28 ***
+
+    XMODEM Status Report:
+    Total blocks:     42, total records:    152, total bytes:    5041
+    Parity errors:     0,      overruns:      0,    timeouts:       0

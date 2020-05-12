@@ -1,0 +1,54 @@
+.TH umodem 41 "Public Domain"
+.SH NAME
+umodem - UNIX xmodem and terminal program
+.SH SYNOPSIS
+umodem - [sb|st|rb|rt|o ...]
+.SH DESCRIPTION
+.I umodem
+This documentation is intended to supplement the documentation
+for earlier versions of umodem that did not support terminal
+mode.
+.br
+
+This is a combination xmodem program (that can be activated 
+remotely through a dial-in connection on a UNIX system) and
+terminal program (that can access a dialout port on the UNIX
+system, and invoke xmodem transfers with a remotely-dialed
+system).  It employes the original Christensen checksum
+error checking only, not the more recent CRC checks.
+.br
+
+No dialer protocol support is contained in the
+program.  If the terminal mode is used, the user must send
+the appropriate codes to a modem attached to a UNIX port.
+.I umodem
+takes the current directory as default
+.SH TERMINAL MODE
+Terminal mode is invoked with the call umodem -o, but, before
+doing so the variable MODEM must be set with the identity of
+the modem port, typically of the form /dev/tty#.  If the
+port is /dev/tty11, prior to invoking umodem the command:
+
+		export MODEM; MODEM=/dev/tty11
+
+must be sent.  There is no error-checking in this implementation
+to check whether MODEM has been set appropriately; unpredictable
+results will occur in its absence!
+.SH DIAGNOSTICS
+.br
+When invoking terminal mode, there is no error checking for
+a MODEM variable.  Get in the habit of making certain that MODEM
+has been set (e.g., echo $MODEM) before invoking umodem -o.
+.br
+
+The escape character from terminal mode has been set to CONTROL-G
+for minimal interference with other applications.  This can be
+changed in the source code, if necessary.
+.br
+
+When in terminal mode, to receive an xmodem transfer from a remote
+end, escape to the command mode (CTRL-G) and enter rb [name] or 
+rt [name] as appropriate.  No error checking is performed if you
+forget to specify a filename, and the incoming file will be stored
+unpredictably, depending on the UNIX system.
+

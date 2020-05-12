@@ -1,0 +1,276 @@
+1 VMODEM
+!
+! VMODEM.HLP by Robin Miller on August 25, 1985.
+!
+ VMODEM is a program to downline load to various personal computers. It
+ transfers  either  text  or  binary  files  block  by block with error
+ checking using a checksum.  The protocol used is known as the CPMUG or
+ Christensen  Protocol.  To  use this program, define a symbol to start
+ the  program as shown below.  The program is written in the C language
+ and uses UNIX style command lines.
+
+     $ vmodem :== $sys$norden:vmodem
+     $ vmodem
+     $ vmodem
+     VMODEM Version 2.9 -- VAX/VMS-Based Remote File Transfer Facility
+     
+     Usage:  
+        vmodem -[rb!rt!sb!st][l][p][y][7] filename
+     
+        rb <-- Receive Binary.
+        rt <-- Receive Text.
+        sb <-- Send    Binary.
+        st <-- Send    Text.
+        d  <-- Create vmodem.log else append to existing.
+        l  <-- (ell) Turn OFF LOG File Entries.
+        y  <-- Display file status (size) information only.
+        7  <-- Enable 7-bit transfer mask.
+2 Examples
+ This  example  shows  the  commands  neccessary to send and get a file
+ using the VMODEM program.  Since the  VMODEM  protocol  supports  both
+ ASCII  and BINARY, both the .MIS and .MSH files are transferred during
+ the example.  Notice that the protocol had to  be  changed  to  XMODEM
+ since the default is the normal VAXNET protocol.  
+     
+     Vaxnet> SET PROTOCOL XMODEM
+     Vaxnet> SHOW PROTOCOL
+     Protocol type:    XMODEM
+     Vaxnet> SHOW FILE_TYPE
+     File type:        ASCII
+     Vaxnet> SHOW BITS
+     Number of bits:   8
+     Vaxnet> 
+     
+3 RECEIVE
+     $ vmodem -rt ref.mis
+     VMODEM Version 2.9 -- VAX/VMS-Based Remote File Transfer Facility
+     
+     VMODEM:  LOG File 'vmodem.log' is Open
+     
+     VMODEM:  File Name: ref.mis
+     VMODEM:  Text Mode Selected
+     VMODEM:  8-Bit Transmission Enabled
+     VMODEM:  Ready to RECEIVE File
+     
+     Vaxnet> SEND REF.MIS
+     
+     *** Type CTRL/C to abort the file transmission. ***
+     
+     *** File "REF.MIS;1" successfully transferred. ***
+     *** ELAPSED: 00:01:02.05  CPU: 0:00:01.93 ***
+     
+     XMODEM Status Report:
+     Total blocks:     48, total records:     84, total bytes:    5970
+     Parity errors:     0,      overruns:      0,    timeouts:       0
+     
+     $ type vmodem.log
+     
+     
+     ++++++++
+     
+     VMODEM Version 2.9
+     
+     ----
+     VMODEM Receive Function
+     File Name: ref.mis
+     TERM II File Transfer Protocol 3 (CP/M UG) Selected
+     Text Mode Selected
+     8-Bit Transmission Enabled
+     Timeout on Sector 0
+     
+     Receive Complete
+     Number of Received CP/M Records is 48
+     $ 
+     $ diff ref.mis home:ref.mis
+     Number of difference sections found: 0
+     Number of difference records found: 0
+     
+     DIFFERENCES /IGNORE=()/MERGED=1-
+         $1$DUA2:[MILLER.VMODEM]REF.MIS;1-
+         $1$DUA2:[MILLER]REF.MIS;1
+     $ 
+     $ mish ref/decompress
+     %MISH-I-DONE, File: REF.EXE, total blocks = 15, total records = 84
+     $ 
+     $ diff ref.exe home:ref.exe
+     Number of difference sections found: 0
+     Number of difference records found: 0
+     
+     DIFFERENCES /IGNORE=()/MERGED=1-
+         $1$DUA2:[MILLER.VMODEM]REF.EXE;1-
+         $1$DUA2:[MILLER]REF.EXE;1
+     $ 
+     $ run ref
+     Enter the input file name: ^Z
+     $ 
+     $ del home:ref.aaa;0
+3 SEND
+ The following is an example of sending a file using VMODEM.
+
+     $ vmodem -std ref.mis
+     VMODEM Version 2.9 -- VAX/VMS-Based Remote File Transfer Facility
+     
+     VMODEM:  LOG File 'vmodem.log' is Open
+     
+     VMODEM:  Estimated File Size 6K, 48 Records, 6053 Bytes
+              Estimated transfer time at 1200 baud:  0 min, 51 sec.
+     VMODEM:  File Name: ref.mis
+     VMODEM:  Text Mode Selected
+     VMODEM:  8-Bit Transmission Enabled
+     VMODEM:  Ready to SEND File
+     
+     Vaxnet> GET REF.AAA
+    
+     *** Type CTRL/C to abort the file transmission. ***
+     
+     *** File "REF.AAA" successfully transferred. ***
+     *** ELAPSED: 00:01:01.25  CPU: 0:00:02.47 ***
+     
+     XMODEM Status Report:
+     Total blocks:     48, total records:     84, total bytes:    5970
+     Parity errors:     0,      overruns:      0,    timeouts:       0
+     
+     
+     $ diff ref.mis home:ref.aaa
+     Number of difference sections found: 0
+     Number of difference records found: 0
+     
+     DIFFERENCES /IGNORE=()/MERGED=1-
+         $1$DUA2:[MILLER.VMODEM]REF.MIS;1-
+         $1$DUA2:[MILLER]REF.AAA;1
+     $ 
+     $ type vmodem.log
+     
+     
+     ++++++++
+     
+     VMODEM Version 2.9
+     
+     ----
+     VMODEM Send Function
+     File Name: ref.mis
+     Estimated File Size 6K, 48 Records, 6053 Bytes
+     TERM II File Transfer Protocol 3 (CP/M UG) Selected
+     Text Mode Selected
+     8-Bit Transmission Enabled
+     
+     Send Complete
+     $ 
+     $ del ref.*;*
+     $ del home:ref.aaa;0
+     $ 
+     Vaxnet> SET FILE_TYPE BINARY
+     Vaxnet> 
+     
+     $ vmodem -rbd ref.msh
+     VMODEM Version 2.9 -- VAX/VMS-Based Remote File Transfer Facility
+     
+     VMODEM:  LOG File 'vmodem.log' is Open
+     
+     VMODEM:  File Name: ref.msh
+     VMODEM:  Binary Mode Selected
+     VMODEM:  8-Bit Transmission Enabled
+     VMODEM:  Ready to RECEIVE File
+     
+     Vaxnet> SEND REF.MSH
+     
+     *** Type CTRL/C to abort the file transmission. ***
+     
+     *** File "REF.MSH;1" successfully transferred. ***
+     *** ELAPSED: 00:00:41.92  CPU: 0:00:01.35 ***
+     
+     XMODEM Status Report:
+     Total blocks:     32, total records:     32, total bytes:    4096
+     Parity errors:     0,      overruns:      0,    timeouts:       0
+     
+     
+     $ type vmodem.log
+     
+     
+     ++++++++
+     
+     VMODEM Version 2.9
+     
+     ----
+     VMODEM Receive Function
+     File Name: ref.msh
+     TERM II File Transfer Protocol 3 (CP/M UG) Selected
+     Binary Mode Selected
+     8-Bit Transmission Enabled
+     Timeout on Sector 0
+     
+     Receive Complete
+     Number of Received CP/M Records is 32
+     $ 
+     $ diff ref.msh home:ref.msh
+     Number of difference sections found: 0
+     Number of difference records found: 0
+     
+     DIFFERENCES /IGNORE=()/MERGED=1-
+         $1$DUA2:[MILLER.VMODEM]REF.MSH;1-
+         $1$DUA2:[MILLER]REF.MSH;1
+     $ 
+     $ mish ref/decompress/xmodem
+     %MASH-I-DONE, File: REF.EXE, total blocks = 15, total records = 32
+     $ 
+     $ diff ref.exe home:ref.exe
+     Number of difference sections found: 0
+     Number of difference records found: 0
+     
+     DIFFERENCES /IGNORE=()/MERGED=1-
+         $1$DUA2:[MILLER.VMODEM]REF.EXE;1-
+         $1$DUA2:[MILLER]REF.EXE;1
+     $ 
+     $ run ref
+     Enter the input file name: ^Z
+     $ 
+     $ vmodem -sbd ref.msh
+     VMODEM Version 2.9 -- VAX/VMS-Based Remote File Transfer Facility
+     
+     VMODEM:  LOG File 'vmodem.log' is Open
+     
+     VMODEM:  Estimated File Size 4K, 32 Records, 4095 Bytes
+              Estimated transfer time at 1200 baud:  0 min, 35 sec.
+     VMODEM:  File Name: ref.msh
+     VMODEM:  Binary Mode Selected
+     VMODEM:  8-Bit Transmission Enabled
+     VMODEM:  Ready to SEND File
+     
+     Vaxnet> GET REF.BBB
+     
+     *** Type CTRL/C to abort the file transmission. ***
+     
+     *** File "REF.BBB" successfully transferred. ***
+     *** ELAPSED: 00:00:40.15  CPU: 0:00:01.53 ***
+     
+     XMODEM Status Report:
+     Total blocks:     32, total records:     32, total bytes:    4096
+     Parity errors:     0,      overruns:      0,    timeouts:       0
+     
+     
+     $ type vmodem.log
+     
+     
+     ++++++++
+     
+     VMODEM Version 2.9
+     
+     ----
+     VMODEM Send Function
+     File Name: ref.msh
+     Estimated File Size 4K, 32 Records, 4095 Bytes
+     TERM II File Transfer Protocol 3 (CP/M UG) Selected
+     Binary Mode Selected
+     8-Bit Transmission Enabled
+     
+     Send Complete
+     $ 
+     $ diff ref.msh home:ref.bbb
+     Number of difference sections found: 0
+     Number of difference records found: 0
+     
+     DIFFERENCES /IGNORE=()/MERGED=1-
+         $1$DUA2:[MILLER.VMODEM]REF.MSH;1-
+         $1$DUA2:[MILLER]REF.BBB;1
+     $ 
+     $ del ref.*;*
