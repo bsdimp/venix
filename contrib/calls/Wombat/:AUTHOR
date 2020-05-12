@@ -1,0 +1,28 @@
+Path: plus5!wuphys!wucs!we53!ltuxa!cuae2!ihnp4!houxm!whuxl!whuxlm!akgua!gatech!seismo!caip!pyrnj!mirror!sources-request
+From: sources-request@mirror.UUCP
+Newsgroups: mod.sources
+Subject: v06i003:  new calls; shows function call flow (calls.new)
+Message-ID: <78@mirror.UUCP>
+Date: 17 Jun 86 00:23:48 GMT
+Sender: rs@mirror.UUCP
+Lines: 1045
+Approved: rs@mirror.UUCP
+Posted: Mon Jun 16 19:23:48 1986
+
+Submitted by: Wombat <cca!caip!pur-ee!pucc-j.Purdue.EDU!rsk>
+Mod.sources: Volume 6, Issue 3
+Archive-name: calls.new
+
+[ I collapsed the handling of the -D -I and -U flags, and changed the
+  lines that used sprintf's return value.  Other than index/strchr, it
+  should work on any Unix.  --R$]
+
+This is a massively revised, bug-fixed, and hacked version of "calls",
+which has been bouncing around the net for some time.  Comments and
+bugs and whatnot to Kevin Braunsdorf at pucc-j!ksb or ksb@j.cc.purdue.edu.
+
+It's also available via anonymous ftp on j.cc.purdue.edu.
+
+-- 
+Rich Kulawiec, pucc-j!rsk, rsk@j.cc.purdue.edu
+

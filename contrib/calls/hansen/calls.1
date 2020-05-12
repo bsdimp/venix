@@ -1,0 +1,175 @@
+.TH CALLS 1 PUBLIC
+.SH NAME
+calls \- print out calling pattern of functions in a program
+.SH SYNOPSIS
+calls [-tvs] [-w n] [-f function] [-D def] [-U def] [-I dir] [filenames]
+.SH DESCRIPTION
+.B Calls
+reads
+.IR filenames ,
+which should be the source of C programmes, and outputs the analysed calling
+pattern to standard output.
+If no filenames are given, or a filename of \- is seen, standard input will
+be read.
+.B Calls
+is intended to help analyse the flow of a programme by laying out the
+functions called in the heirarchical manner used in "Software Tools" by
+B. Kernighan and P. Plauger.
+.P
+Functions called but not defined within the source file are shown as:
+.sp
+.RS
+function [external]
+.RE
+.P
+Recursive references are shown as:
+.sp
+.RS
+<<< function
+.RE
+.P
+For example, given the file
+.B programme.c
+in which
+.I main
+calls
+.I abc
+and
+.IR def ,
+.I abc
+calls
+.I ghi
+and
+.IR jkl ,
+which are defined within the same source file, and
+.I def
+calls
+.IR mno ,
+defined in the same source, and
+.IR pqr ,
+which is presumably a library function or defined in a different source file.
+The function
+.I ghi
+calls
+.I abc
+in a recursive loop.
+.sp
+.RS
+.nf
+main() {
+	abc();
+	def();
+}
+abc() {
+	ghi();
+	jkl();
+}
+def() {
+	mno();
+	pqr();
+}
+ghi() {
+	abc();
+}
+jkl() { }
+mno() { }
+.fi
+.RE
+.sp
+Executing "calls programme.c" will produce:
+.sp
+.RS
+.nf
+1   main
+2	abc
+3		ghi
+4			<<< abc
+5		jkl
+6	def
+7		mno
+8		pqr [external]
+.fi
+.RE
+.SS FLAGS
+.TP 20
+-t
+Provides a terse form of output, in which the calling pattern for any
+function is printed only once on the first occurrence of the function.
+Subsequent occurrences output the function name and a notation
+.IP "" 30
+\|... [see line xx]
+.IP "" 20
+This is the default case.
+.TP 20
+-v
+Full output of function calling patterns on every occurrence.
+.TP 20
+.BI -w nn
+Set the output paper width to nn.
+The default is 132 columns.
+.TP 20
+-s
+Normally all filenames given will have their calling sequences combined into
+one heirarchy.
+This option will force the calling heirarchies to be separated.
+The filename for each file will be printed before the calling pattern.
+.TP 20
+.BI -D name
+.TP 20
+.BI -D name=defn
+Define the
+.I name
+for the preprocessor, as if by #define.
+If no definition is given, the name is defined as 1.
+.TP 20
+.BI -U name
+Remove any initial definition of
+.IR name ,
+where
+.I name
+is a reserved symbol that is predefined by the preprocessor.
+.TP 20
+.BI -I dir
+Change the algorithm for searching for #include files whose names do not
+begin with / to look in
+.I dir
+before looking in the directories on the standard list.
+.TP 20
+.BI -f name
+Function names within the input programme may be selected as
+roots of the layout.
+For example, using the previous programme:
+.sp
+.RS
+calls -f def -f abc programme.c
+.sp
+.nf
+1   def
+2	mno
+3	pqr [external]
+
+
+4   abc
+5	ghi
+6		<<< abc
+7	jkl
+.fi
+.RE
+.SH AUTHOR
+M. M. Taylor (DCIEM)
+.br
+Modified for V7 and stdio, Alexis Kwan (HCR for DCIEM)
+.br
+Fixed bugs with '_' and variable names, names > ATOM_LENGTH chars.
+12-Jun-84, Kevin Szabo,
+watmath!wateng!ksbszabo (Elec Eng, U of Waterloo).
+.br
+Many other bug fixes and features, Tony Hansen (ihnp4!pegasus!hansen)
+.SH BUGS
+Forward declared functions defined within a function body which are not
+subsequently used within that function body will be listed as having been
+called.
+.ig
+Many intended features are not implemented:
+flags -g (list globals used), and -F and -P (Fortran and Pascal languages).
+..

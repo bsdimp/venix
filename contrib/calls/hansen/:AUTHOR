@@ -1,0 +1,37 @@
+Relay-Version: version B 2.10.3 4.3bsd-beta 6/6/85; site plus5.UUCP
+Posting-Version: version B 2.10.2 9/3/84; site panda.UUCP
+Path: plus5!wuphys!wucs!busch!we53!mgnetp!ihnp4!cbosgd!ulysses!allegra!mit-eddie!genrad!panda!sources-request
+From: sources-request@panda.UUCP
+Newsgroups: mod.sources
+Subject: calls(1)
+Message-ID: <1119@panda.UUCP>
+Date: 17 Nov 85 18:08:46 GMT
+Date-Received: 19 Nov 85 01:05:35 GMT
+Sender: jpn@panda.UUCP
+Organization: AT&T-IS Labs, Lincroft, NJ
+Lines: 1130
+Approved: jpn@panda.UUCP
+
+Mod.sources:  Volume 3, Issue 47
+Submitted by: cbosgd!pegasus!hansen
+
+
+#
+# In 1983, the calls program was given to the net by
+# M. Taylor from DCIEM. Subsequent hacking by various 
+# people produced a version posted in 1984. About that 
+# time, I started using it heavily, found some things
+# lacking in it, and began fixing/reworking a number
+# of bugs/features. The current version has been in use
+# for over a year now with no further changes, so it is time
+# to give it back out to the net for further use and abuse.
+#
+#				Tony Hansen
+#				AT&T-IS
+#				ihnp4!pegasus!hansen
+
+# Note that this version assumes that "cc -E" is available
+# to access the C preprocessor. It also assumes that getopt(3)
+# is available, which most people should have by now. (If not,
+# write.)
+
