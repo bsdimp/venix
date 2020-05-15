@@ -1,0 +1,16 @@
+#
+#tar up files, pipe through btoa to mail.
+#recieve by saving mail in temp file, then "untarmail temp"
+if ($#argv < 3) then
+  echo "usage:  tarmail  mailpath  subject-string  directory-or-file-name(s)"
+  exit
+else
+  set mailpath = $1
+  echo mailpath = $mailpath
+  shift
+  set subject = $1
+  echo subject-string = $subject
+  shift
+  echo files = $*
+  tar cvf - $* | btoa | mail -s $subject $mailpath
+endif

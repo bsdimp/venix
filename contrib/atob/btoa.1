@@ -1,0 +1,58 @@
+.TH btoa LOCAL 
+.SH NAME
+btoa, atob, tarmail, untarmail \- encode/decode binary to printable ASCII
+.SH SYNOPSIS
+.B btoa
+< inbinary
+> outtext
+.PP
+.B atob
+< intext
+> outbinary
+.PP
+.B tarmail
+who subject files ...
+.SH DESCRIPTION
+.I btoa
+is a filter that reads anything from the standard input, and encodes it into
+printable ASCII on the standard output.  It also attaches checksum
+information used by the reverse filter "atob" to check integrity.  atob gives
+NO output (and exits with an error message) if its input is garbage or the
+checksums do not check.
+.PP
+tarmail ralph here-it-is-ralph foo.c a.out
+.PP
+.I tarmail
+is a shell that tar's up all the given files, pipes them through btoa, and
+mails them to the given person with the given subject phrase.  "tarmail" with no
+args will print a short message reminding you what the required args are.
+When the mail is received at the other end, that person should use
+mail to save the message in some temporary file name (say "xx").
+Then saying "untarmail xx"
+will decode the message and untar it.  By using tarmail, binary files and
+entire directory structures can be easily transmitted between machines.
+Naturally, you should understand what tar itself does before you use tarmail.
+.PP
+Other uses:
+.PP
+crypt < secrets | btoa | mail ralph
+.PP
+will mail the encrypted contents of the file "secrets" to ralph.  If ralph
+knows the encryption key, he can decode it by saving the mail (say in "xx"),
+and then running:
+.PP
+atob < xx | crypt
+.PP
+(crypt requests the key from the terminal,
+and the "secrets" come out on the terminal).
+.SH FILES
+/usr/local/bin:  the programs
+.SH AUTHOR
+Paul Rutter
+.SH FEATURES
+It uses a compact base-85 encoding so that
+4 bytes are encoded into 5 characters.  
+As a special case, 32-bit zero is encoded as one character.
+.SH BUGS
+It uses an obscure base-85 "squoz code" scheme
+to encode 4 bytes into 5 characters.

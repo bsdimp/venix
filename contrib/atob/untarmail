@@ -1,0 +1,5 @@
+#
+#atob and untar mail sent via tarmail
+atob < $1 | tar xvpf -
+mv $1 /usr/tmp/$1.$$
+echo tarmail file moved to: /usr/tmp/$1.$$

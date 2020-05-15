@@ -1,0 +1,26 @@
+
+These programs encode binary files as printable ascii files that should pass
+through mail.  They also calculate and check end to end checksums.
+
+btoa	"binary to ascii"
+atob	"ascii to binary" (checks checksums, no output if bad)
+
+"tarmail" and "untarmail" are shell scripts which make it convenient to tar
+up directory structures, mail them to remote sites, and untar them.  The use
+of tar ensures that protection modes, file dates, and (if su) owners are
+recreated at the other end.  Using tarmail has been more convienent (in our
+situation) than using uucp directly.
+
+The "btoa" encoding is slightly more efficient than uuencode (especially if
+the data has zero padding, as many object file formats do).  I find btoa/atob
+easier to use than uuencode/uudecode because they are straight filters
+(uuencode wants to create the file and mode for you).  Also, it is nice to
+have the additional assurance of the checksums, to protect against mistakes,
+wild mailers, and the general unknown.
+
+IF you are on a 16-bit machine, you will have to run around changing "int" to
+"long" before these filters work.  If the c style looks a bit strange, that
+is because the programs were written using a strange preprocessor.
+
+							Paul Rutter
+							philabs!per

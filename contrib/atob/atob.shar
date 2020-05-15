@@ -1,0 +1,412 @@
+From 4914385641221330091
+X-Google-Language: ENGLISH,ASCII-7-bit
+X-Google-Thread: 159752,2e3d8404e02b198d,start
+X-Google-Attributes: gid159752,public
+X-Google-ArrivalTime: 1985-05-28 10:08:37 PST
+Relay-Version: version B 2.10 5/3/83; site utzoo.UUCP
+Posting-Version: version B 2.10.2 9/5/84; site philabs.UUCP
+Path: utzoo!watmath!clyde!burl!ulysses!allegra!mit-eddie!genrad!decvax!linus!philabs!per
+From: per@philabs.UUCP (Paul Rutter)
+Newsgroups: net.sources
+Subject: btoa and atob: binary<->ASCII filters for those without uuencode
+Message-ID: <337@philabs.UUCP>
+Date: Tue, 28-May-85 13:08:37 EDT
+Article-I.D.: philabs.337
+Posted: Tue May 28 13:08:37 1985
+Date-Received: Thu, 30-May-85 04:23:06 EDT
+Distribution: net
+Organization: Philips Labs, Briarcliff Manor, NY
+Lines: 390
+
+*** REPLACE THIS LINE WITH YOUR SOURCES ***
+
+A few people on net.micro.att have been talking about their lack of uuencode,
+making it difficult to send binary through the mail.  Here are two public
+domain filters which may be useful.  (I first sent this out about a year
+ago.  I have not tried it on the "Unix PC" because I do not have one, but it
+works fine on VAXes, SUNs, and Apollos).
+
+--- CUT HERE ---
+# The rest of this file is a shell script (sh) which will extract:
+# README Makefile btoa.1 btoa.c atob.c tarmail untarmail
+echo x - README
+cat >README <<'!Funky!Stuff!'
+
+These programs encode binary files as printable ascii files that should pass
+through mail.  They also calculate and check end to end checksums.
+
+btoa	"binary to ascii"
+atob	"ascii to binary" (checks checksums, no output if bad)
+
+"tarmail" and "untarmail" are shell scripts which make it convenient to tar
+up directory structures, mail them to remote sites, and untar them.  The use
+of tar ensures that protection modes, file dates, and (if su) owners are
+recreated at the other end.  Using tarmail has been more convienent (in our
+situation) than using uucp directly.
+
+The "btoa" encoding is slightly more efficient than uuencode (especially if
+the data has zero padding, as many object file formats do).  I find btoa/atob
+easier to use than uuencode/uudecode because they are straight filters
+(uuencode wants to create the file and mode for you).  Also, it is nice to
+have the additional assurance of the checksums, to protect against mistakes,
+wild mailers, and the general unknown.
+
+IF you are on a 16-bit machine, you will have to run around changing "int" to
+"long" before these filters work.  If the c style looks a bit strange, that
+is because the programs were written using a strange preprocessor.
+
+							Paul Rutter
+							philabs!per
+!Funky!Stuff!
+echo x - Makefile
+cat >Makefile <<'!Funky!Stuff!'
+
+install:	atob btoa tarmail untarmail btoa.1
+		mv atob btoa /usr/local/bin
+		cp tarmail untarmail /usr/local/bin
+		cp btoa.1 /usr/man/man1/btoa.1
+		cp btoa.1 /usr/man/man1/tarmail.1
+
+btoa:		btoa.c
+		cc -O -s btoa.c -o btoa
+
+atob:		atob.c
+		cc -O -s atob.c -o atob
+
+clean:		
+		rm -f atob btoa *.o
+!Funky!Stuff!
+echo x - btoa.1
+cat >btoa.1 <<'!Funky!Stuff!'
+.TH btoa LOCAL 
+.SH NAME
+btoa, atob, tarmail, untarmail \- encode/decode binary to printable ASCII
+.SH SYNOPSIS
+.B btoa
+< inbinary
+> outtext
+.PP
+.B atob
+< intext
+> outbinary
+.PP
+.B tarmail
+who subject files ...
+.SH DESCRIPTION
+.I btoa
+is a filter that reads anything from the standard input, and encodes it into
+printable ASCII on the standard output.  It also attaches checksum
+information used by the reverse filter "atob" to check integrity.  atob gives
+NO output (and exits with an error message) if its input is garbage or the
+checksums do not check.
+.PP
+tarmail ralph here-it-is-ralph foo.c a.out
+.PP
+.I tarmail
+is a shell that tar's up all the given files, pipes them through btoa, and
+mails them to the given person with the given subject phrase.  "tarmail" with no
+args will print a short message reminding you what the required args are.
+When the mail is received at the other end, that person should use
+mail to save the message in some temporary file name (say "xx").
+Then saying "untarmail xx"
+will decode the message and untar it.  By using tarmail, binary files and
+entire directory structures can be easily transmitted between machines.
+Naturally, you should understand what tar itself does before you use tarmail.
+.PP
+Other uses:
+.PP
+crypt < secrets | btoa | mail ralph
+.PP
+will mail the encrypted contents of the file "secrets" to ralph.  If ralph
+knows the encryption key, he can decode it by saving the mail (say in "xx"),
+and then running:
+.PP
+atob < xx | crypt
+.PP
+(crypt requests the key from the terminal,
+and the "secrets" come out on the terminal).
+.SH FILES
+/usr/local/bin:  the programs
+.SH AUTHOR
+Paul Rutter
+.SH FEATURES
+It uses a compact base-85 encoding so that
+4 bytes are encoded into 5 characters.  
+As a special case, 32-bit zero is encoded as one character.
+.SH BUGS
+It uses an obscure base-85 "squoz code" scheme
+to encode 4 bytes into 5 characters.
+!Funky!Stuff!
+echo x - btoa.c
+cat >btoa.c <<'!Funky!Stuff!'
+/*
+ * stream filter to change 8 bit bytes into printable ascii
+ * computes the number of bytes, and three kinds of simple checksums
+ * assumes that int is 32 bits
+ * incoming bytes are collected into 32-bit words, then printed in base 85
+ *  exp(85,5) > exp(2,32)
+ * the ASCII characters used are between ' ' and 't'
+ * 'z' encodes 32-bit zero; 'x' is used to mark the end of encoded data.
+ *
+ *  Paul Rutter
+ *  philabs!per
+ */
+
+#include <stdio.h>
+
+#define reg register
+
+#define MAXPERLINE 78
+
+int Ceor = 0;
+int Csum = 0;
+int Crot = 0;
+
+int ccount = 0;
+int bcount = 0;
+int word;
+
+#define EN(c) ((c) + ' ')
+
+encode(c) reg c;
+{
+  Ceor ^= c;
+  Csum += c;
+  Csum += 1;
+  if ((Crot & 0x80000000)) {
+    Crot <<= 1;
+    Crot += 1;
+  }
+  else {
+    Crot <<= 1;
+  }
+  Crot += c;
+
+  word <<= 8;
+  word |= c;
+  if (bcount == 3) {
+    wordout(word);
+    bcount = 0;
+  }
+  else {
+    bcount += 1;
+  }
+}
+
+wordout(word) reg word;
+{
+  if (word == 0) {
+    charout('z');
+  }
+  else {
+    /*first division must be unsigned*/;
+    charout((int) EN((unsigned) word / (unsigned)(85 * 85 * 85 * 85)));
+    word = (unsigned) word % (unsigned)(85 * 85 * 85 * 85);
+    charout(EN(word / (85 * 85 * 85)));
+    word %= (85 * 85 * 85);
+    charout(EN(word / (85 * 85)));
+    word %= (85 * 85);
+    charout(EN(word / 85));
+    word %= 85;
+    charout(EN(word));
+  }
+}
+
+charout(c) {
+  putchar(c);
+  ccount += 1;
+  if (ccount == MAXPERLINE) {
+    putchar('\n');
+    ccount = 0;
+
+  }
+}
+
+main(argc,argv) char **argv;
+{
+  reg c, n;
+  if (argc != 1) {
+    fprintf(stderr,"bad args to %s\n", argv[0]);
+    exit(2);
+  }
+  printf("xbtoa Begin\n");
+  n = 0;
+  while ((c = getchar()) != EOF) {
+    encode(c);
+    n += 1;
+  }
+  while (bcount != 0) {
+    encode(0);
+  }
+  /* n is written twice as crude cross check*/
+  printf("\nxbtoa End N %d %x E %x S %x R %x\n", n, n, Ceor, Csum, Crot);
+}
+!Funky!Stuff!
+echo x - atob.c
+cat >atob.c <<'!Funky!Stuff!'
+/*
+ * stream filter to change printable ascii from "btoa" back into 8 bit bytes
+ * if bad chars, or Csums do not match: exit(1) [and NO output]
+ * assumes that int is 32 bits
+ *
+ *  Paul Rutter
+ *  philabs!per
+ */
+
+#include <stdio.h>
+
+#define reg register
+
+#define streq(s0, s1)  strcmp(s0, s1) == 0
+
+int Ceor = 0;
+int Csum = 0;
+int Crot = 0;
+int bcount = 0;
+int word = 0;
+
+fatal() {
+  fprintf(stderr, "bad format or Csum to atob\n");
+  exit(1);
+}
+
+#define DE(c) ((c) - ' ')
+
+decode(c) reg c;
+{
+  if (c == 'z') {
+    if (bcount != 0) {
+      fatal();
+    }
+    else {
+      byteout(0);
+      byteout(0);
+      byteout(0);
+      byteout(0);
+    }
+  }
+  else if ((c >= ' ') && (c < (' ' + 85))) {
+    if (bcount == 0) {
+      word = DE(c);
+      ++bcount;
+    }
+    else if (bcount < 4) {
+      word *= 85;
+      word += DE(c);
+      ++bcount;
+    }
+    else {
+      word = ((unsigned) word * (unsigned) 85) + DE(c);
+      byteout((word >> 24) & 255);
+      byteout((word >> 16) & 255);
+      byteout((word >> 8) & 255);
+      byteout(word & 255);
+      word = 0;
+      bcount = 0;
+    }
+  }
+  else {
+    fatal();
+  }
+}
+
+FILE *tmpfile;
+
+byteout(c) reg c;
+{
+  Ceor ^= c;
+  Csum += c;
+  Csum += 1;
+  if ((Crot & 0x80000000)) {
+    Crot <<= 1;
+    Crot += 1;
+  }
+  else {
+    Crot <<= 1;
+  }
+  Crot += c;
+  putc(c, tmpfile);
+}
+
+main(argc, argv) char **argv;
+{
+  reg c, i;
+  char tmpname[100];
+  char buf[100];
+  int n1, n2, oeor, osum, orot;
+  if (argc != 1) {
+    fprintf(stderr,"bad args to %s\n", argv[0]);
+    exit(2);
+  }
+  sprintf(tmpname, "/usr/tmp/atob.%x", getpid());
+  tmpfile = fopen(tmpname, "w+");
+  if (tmpfile == NULL) {
+    fatal();
+  }
+  /*search for header line*/
+  for (;;) {
+    if (fgets(buf, sizeof buf, stdin) == NULL) {
+      fatal();
+    }
+    if (streq(buf, "xbtoa Begin\n")) {
+      break;
+    }
+  }
+
+  while ((c = getchar()) != EOF) {
+    if (c == '\n') {
+      continue;
+    }
+    else if (c == 'x') {
+      break;
+    }
+    else {
+      decode(c);
+
+    }
+  }
+  if (scanf("btoa End N %d %x E %x S %x R %x\n", &n1, &n2, &oeor, &osum, &orot) != 5) {
+    fatal();
+  }
+  if ((n1 != n2) || (oeor != Ceor) || (osum != Csum) || (orot != Crot)) {
+    fatal();
+  }
+  else {
+    /*copy OK tmp file to stdout*/;
+    fseek(tmpfile, 0, 0);
+    for (i = n1; --i >= 0;) {
+      putchar(getc(tmpfile));
+    }
+    unlink(tmpname);
+  }
+}
+!Funky!Stuff!
+echo x - tarmail
+cat >tarmail <<'!Funky!Stuff!'
+#
+#tar up files, pipe through btoa to mail.
+#recieve by saving mail in temp file, then "untarmail temp"
+if ($#argv < 3) then
+  echo "usage:  tarmail  mailpath  subject-string  directory-or-file-name(s)"
+  exit
+else
+  set mailpath = $1
+  echo mailpath = $mailpath
+  shift
+  set subject = $1
+  echo subject-string = $subject
+  shift
+  echo files = $*
+  tar cvf - $* | btoa | mail -s $subject $mailpath
+endif
+!Funky!Stuff!
+echo x - untarmail
+cat >untarmail <<'!Funky!Stuff!'
+#
+#atob and untar mail sent via tarmail
+atob < $1 | tar xvpf -
+mv $1 /usr/tmp/$1.$$
+echo tarmail file moved to: /usr/tmp/$1.$$
+!Funky!Stuff!
+
+
