@@ -121,8 +121,10 @@ int
 db_read_bytes(vm_offset_t addr, size_t size, char *data)
 {
 	// check addr for bounds
+#ifdef XXX
 	for (int i = 0; i < size; i++)
 		data[i] = readByte((Word)addr + i, CSeg);
+#endif
 
 	return 0;
 }

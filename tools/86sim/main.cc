@@ -21,9 +21,7 @@ main(int argc, char *argv[])
 	fprintf(stderr, "Usage: %s <program name>\n", argv[0]);
         exit(0);
     }
-    ram = (Byte*)alloc(0x100000);
-    initialized = (Byte*)alloc(0x20000);
+    mos->init();
     mos->load(argc, argv);
-
-    run(mos);
+    mos->run();
 }
