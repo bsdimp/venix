@@ -610,6 +610,17 @@ venix_fork()
 	pid_t p;
 	venix_pid_t vp;
 
+	/*
+	 * This may be all wrong. We may need to rework things so that we have a
+	 * thread for each proc.  We need to share the state of the file between
+	 * the threads (fd does that) and I think keep a reference count on who
+	 * is using which fd. This suggests that we may need to create a struct
+	 * to hold info about each opened file, that has a ref count and the fd
+	 * to use. The alternative approach, which we do below, is merely to
+	 * fork and hope that the sharing works out in the host's kernel. It's
+	 * unclear which approach is better and will cover more cases.
+	 */
+
 	p = fork();
 	if (p == -1) {
 		sys_error(errno);
