@@ -1,3 +1,5 @@
+#include <unistd.h>
+
 #include "machos.h"
 #ifdef VENIX
 #include "pcvenix.h"
@@ -5,23 +7,45 @@
 #include "pcdos.h"
 #endif
 
-int run(MachineOS *mos);
+const char *prog;
+
+void
+usage()
+{
+	fprintf(stderr, "Usage: %s <program name>\n", prog);
+        exit(0);
+}
 
 int
 main(int argc, char *argv[])
 {
-    MachineOS *mos;
+	MachineOS *mos;
+	int ch;
 
 #ifdef VENIX
-    mos = new Venix();
+	mos = new Venix();
 #else
-    mos = new IBMPC_DOS();
+	mos = new IBMPC_DOS();
 #endif
-    if (argc < 2) {
-	fprintf(stderr, "Usage: %s <program name>\n", argv[0]);
-        exit(0);
-    }
-    mos->init();
-    mos->load(argc, argv);
-    mos->run();
+
+	prog = argv[0];
+	while ((ch = getopt(argc, argv, "b:")) != -1) {
+		switch (ch) {
+		case 'b':
+			mos->set_emu_base(optarg);
+			break;
+		case '?':
+		default:
+			usage();
+		}
+	}
+	argc -= optind;
+	argv += optind;
+
+	if (argc < 2)
+		usage();
+
+	mos->init();
+	mos->load(argc, argv);
+	mos->run();
 }

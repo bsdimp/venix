@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "debug.hh"
 
 typedef unsigned char Byte;
@@ -45,8 +46,9 @@ protected:
 		ip = 0x100;
 		loadSegment = 0x0212;
 		segmentOverride = -1;
+		emu_base = NULL;
 	}
-	virtual ~MachineOS() {}
+	virtual ~MachineOS() { ::free((void *)emu_base); }
 
 public:
 	virtual void load(int argc, char **argv) = 0;
@@ -54,7 +56,9 @@ public:
 	virtual void start_of_instruction() = 0;
 	int run(void);
 	void init(void);
+	void set_emu_base(const char *base)	{ emu_base = ::strdup(base); }
 protected:
+	const char *emu_base;
 	Byte* ram;
 	Byte* initialized;
 	bool wordSize;
