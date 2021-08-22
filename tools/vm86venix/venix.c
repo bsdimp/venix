@@ -36,25 +36,43 @@ __FBSDID("$FreeBSD$");
 #include <sys/param.h>
 #include <sys/mman.h>
 #include <sys/ucontext.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include <machine/cpufunc.h>
 #include <machine/psl.h>
 #include <machine/sysarch.h>
 #include <machine/vm86.h>
 
+#include <assert.h>
 #include <err.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <termios.h>
+#include <sys/stat.h>
 
 #include "debug.h"
 
 typedef uint16_t Word;
 
 static u_int gs;
+
+void venix_to_host_path(char *fn, char *host_fn, size_t len)
+{
+	strlcpy(host_fn, fn, len);
+}
+
+Word callno(ucontext_t *uc) { return uc->uc_mcontext.mc_ebx; }
+Word arg1(ucontext_t *uc) { return uc->uc_mcontext.mc_eax; }
+Word arg2(ucontext_t *uc) { return uc->uc_mcontext.mc_edx; }
+Word arg3(ucontext_t *uc) { return uc->uc_mcontext.mc_ecx; }
+Word arg4(ucontext_t *uc) { return uc->uc_mcontext.mc_esi; }
 
 static const int HOST_MAXPATHLEN = 1025;
 
@@ -205,8 +223,237 @@ _Static_assert(sizeof(struct venix_stat) == 30, "bad venix_stat size");
 #define	VENIX_S_IWRITE	000200	/* write permission, owner */
 #define	VENIX_S_IEXEC	000100	/* execute permission, owner */
 
+mode_t venix_mode_to_host(uint16_t vmode)
+{
+	return vmode;
+}
 
-int copyout(ucontext_t *uc, void *kptr, Word uptr, size_t len);
+uint16_t venix_host_to_mode(mode_t hmode)
+{
+	uint16_t vmode;
+
+	vmode = hmode & 07777;
+	/* No clue what S_ILRG is "large addressing algorithm" ??? */
+	switch (hmode & S_IFMT) {
+	case S_IFDIR:
+		vmode |= VENIX_S_IFDIR;
+		break;
+	case S_IFCHR:
+		vmode |= VENIX_S_IFCHR;
+		break;
+	case S_IFBLK:
+		vmode |= VENIX_S_IFBLK;
+		break;
+	case S_IFREG:
+		vmode |= VENIX_S_IFREG;
+		break;
+	}
+	return vmode;
+}
+
+int venix_o_to_host(int mode)
+{
+	return (mode);
+}
+
+int venix_host_to_speed(speed_t s)
+{
+	static struct {
+		int host;
+		int venix;
+	} speeds[] = {
+		{ B0, VENIX_B0 },
+		{ B50, VENIX_B50 },
+		{ B75, VENIX_B75 },
+		{ B110, VENIX_B110 },
+		{ B134, VENIX_B134 },
+		{ B150, VENIX_B150 },
+		{ B200, VENIX_B200 },
+		{ B300, VENIX_B300 },
+		{ B600, VENIX_B600 },
+		{ B1200, VENIX_B1200 },
+		{ B1800, VENIX_B1800 },
+		{ B2400, VENIX_B2400 },
+		{ B4800, VENIX_B4800 },
+		{ B9600, VENIX_B9600 },
+	};
+
+	for (int i = 0; i < nitems(speeds); i++)
+		if (speeds[i].host == s)
+			return speeds[i].venix;
+
+	return VENIX_B9600;
+}
+
+int venix_host_to_tc_flags(struct termios *attr)
+{
+	int f = 0;
+
+	if (attr->c_iflag & IXOFF)
+		f |= VENIX_TANDEM;
+	if ((attr->c_iflag & (BRKINT | IXON | IMAXBEL)) ||
+	    (attr->c_lflag & (ISIG | IEXTEN)) ||
+	    (attr->c_oflag & OPOST))
+		f |= VENIX_CBREAK;
+	f |= VENIX_LCASE;
+	if (attr->c_lflag & ECHO)
+		f |= VENIX_ECHO;
+	if (attr->c_iflag & ICRNL)
+		f |= VENIX_CRMOD;
+	if (!(attr->c_lflag & ICANON))
+		f |= VENIX_RAW;
+	if (attr->c_cflag & PARODD)
+		f |= VENIX_ODDP;
+	else if (attr->c_cflag & PARENB)
+		f |= VENIX_EVENP;
+	return (f);
+}
+
+void sys_error(ucontext_t *uc, int e)
+{
+	mcontext_t *mc = &uc->uc_mcontext;
+
+	mc->mc_ecx = e;		// cx = errno
+	mc->mc_eax = 0xffff;	// return -1;
+}
+
+int copyinstr(ucontext_t *uc, Word uptr, void *kaddr, size_t len)
+{
+	char ch;
+	char *str = (char *)kaddr;
+	mcontext_t *mc = &uc->uc_mcontext;
+	uint8_t *up = (uint8_t*)(uintptr_t)(uptr + (mc->mc_ds << 4));
+
+	for (int i = 0; i < len; i++) {
+		ch = up[i];
+		str[i] = ch;
+		if (ch == '\0')
+			break;
+	}
+
+	return (0);
+}
+
+int copyin(ucontext_t *uc, Word uptr, void *kaddr, size_t len)
+{
+	char *str = (char *)kaddr;
+	mcontext_t *mc = &uc->uc_mcontext;
+	uint8_t *up = (uint8_t*)(uintptr_t)(uptr + (mc->mc_ds << 4));
+
+	for (int i = 0; i < len; i++) {
+		str[i] = up[i];
+	}
+
+	return (0);
+}
+
+/*
+ * Copy data from the 'kernel' kptr to 'userland' uptr for len bytes.
+ */
+int copyout(ucontext_t *uc, void *kptr, Word uptr, size_t len)
+{
+	mcontext_t *mc = &uc->uc_mcontext;
+	uint8_t *p = kptr;
+	uint8_t *up = (uint8_t*)(uintptr_t)(uptr + (mc->mc_ds << 4));
+
+	for (int i = 0; i < len; i++) {
+		up[i] = p[i];
+	}
+	return 0;
+}
+
+int copyinfn(ucontext_t *uc, Word uptr, char *hostfn, size_t len)
+{
+	char fn[VENIX_PATHSIZ];
+
+	if (copyinstr(uc, uptr, fn, sizeof(fn)) != 0) {
+		sys_error(uc, EFAULT);
+		return 1;
+	}
+	venix_to_host_path(fn, hostfn, len);
+	return 0;
+}
+
+void sys_retval_long(ucontext_t *uc, uint32_t r)
+{
+	mcontext_t *mc = &uc->uc_mcontext;
+
+	if (r == (uint32_t)-1) {
+		sys_error(uc, errno);
+	} else {
+		mc->mc_ecx = 0;			// No errno
+		mc->mc_eax = r & 0xffff;
+		mc->mc_edx = r >> 16;
+	}
+}
+
+void sys_retval_int(ucontext_t *uc, uint16_t r)
+{
+	mcontext_t *mc = &uc->uc_mcontext;
+
+	if (r == (uint16_t)-1) {
+		sys_error(uc, errno);
+	} else {
+		mc->mc_ecx = 0;			// No errno
+		mc->mc_eax = r;
+	}
+}
+
+bool bad_addr(ucontext_t *uc, Word addr)
+{
+	mcontext_t *mc = &uc->uc_mcontext;
+
+	if (stack == 0 && addr > mc->mc_esp)
+		return false;
+	return (addr >= venix_break);
+}
+
+bool bad_fd(int fd)
+{
+	return (fd < 0 || fd >= VENIX_NOFILE || open_fd[fd] == -1);
+}
+
+void host_to_venix_sb(ucontext_t *uc, struct stat *sb, Word usb)
+{
+	struct venix_stat vsb;
+
+	vsb.st_dev = sb->st_dev;
+	vsb.st_ino = sb->st_ino;
+	vsb.st_mode = venix_host_to_mode(sb->st_mode);
+	vsb.st_nlink = sb->st_nlink;
+	vsb.st_uid = sb->st_uid;
+	vsb.st_gid = sb->st_gid;
+	vsb.st_rdev = sb->st_rdev;
+	vsb.st_size = sb->st_size;
+	vsb.st_atime_v = sb->st_atime;
+	vsb.st_mtime_v = sb->st_mtime;
+	vsb.st_ctime_v = sb->st_ctime;
+	copyout(uc, &vsb, usb, sizeof(vsb));
+	sys_retval_int(uc, 0);
+}
+
+//void *u2k(Word addr) { return (&ram[physicalAddress(addr, DSeg, false)]); }
+
+#define TODO(uc) \
+{ \
+	mcontext_t *mc = &uc->uc_mcontext;	\
+						\
+	dump_state(mc);				\
+	errx(1, "TODO %s", __func__);		\
+}
+
+void
+dump_state(mcontext_t *mc)
+{
+	fprintf(stderr, "Dump state:\n");
+	fprintf(stderr, "Executing at %#x:%#x\n", mc->mc_cs, mc->mc_eip);
+	fprintf(stderr, "%%ax %#x %%bx %#x %%cx %#x %%dx %#x\n",
+	    mc->mc_eax, mc->mc_ebx, mc->mc_ecx, mc->mc_edx);
+	fprintf(stderr, "%%di %#x %%si %#x %%bp %#x %%sp %#x\n",
+	    mc->mc_edi, mc->mc_esi, mc->mc_ebp, mc->mc_esp);
+	fprintf(stderr, "%%cs %#x %%ds %#x %%es %#x %%ss %#x\n",
+	    mc->mc_cs, mc->mc_ds, mc->mc_es, mc->mc_ss);
+}
 
 static void
 venix_init(void)
@@ -401,29 +648,934 @@ venix_load(ucontext_t *uc, uint8_t *memory, int argc, char **argv)
 	debug(dbg_load, "sp is %#x\n", mc->mc_esp);
 }
 
+/* 1 _rexit */
+void
+venix_rexit(ucontext_t *uc)
+{
+	pid_t p;
+	venix_pid_t vp;
+	int i;
+
+	p = getpid();
+	for (i = 0; i < VENIX_NPROC; i++) {
+		if (p == pid_host[i]) {
+			vp = pid_venix[i];
+			break;
+		}
+	}
+	assert(i != VENIX_NPROC);
+	pid_venix[i] = -1;
+	debug(dbg_syscall, "venix pid %d exit(%d)\n", vp, arg1(uc));
+	exit(arg1(uc));
+}
+
+/* 2 _fork */
+void
+venix_fork(ucontext_t *uc)
+{
+	pid_t p;
+	venix_pid_t vp;
+
+	p = fork();
+	if (p == -1) {
+		sys_error(uc, errno);
+		return;
+	}
+	if (p == 0) {
+		/* child */
+		sys_retval_int(uc, 0);
+		return;
+	} else {
+		/* parent */
+		vp = pid;
+	again:
+		vp++;
+		if (vp == 0)
+			vp++;
+		if (vp >= VENIX_MAXPROC)
+			vp = 1;
+		for (int i = 0; i < VENIX_NPROC; i++)
+			if (pid_venix[i] == vp)
+				goto again;
+		for (int i = 0; i < VENIX_NPROC; i++) {
+			if (pid_host[i] == -1) {
+				pid_host[i] = p;
+				pid_venix[i] = vp;
+				sys_retval_int(uc, vp);
+				return;
+			}
+		}
+		sys_error(uc, VENIX_EAGAIN);
+	}
+}
+
+typedef ssize_t (rdwr_fn)(int, void *, size_t);
+
+void rdwr(ucontext_t *uc, rdwr_fn *fn, bool isread)
+{
+	int fd = arg1(uc);
+	Word ptr = arg2(uc);
+	Word len = arg3(uc);
+	ssize_t rv;
+	void *buffer;
+
+	debug(dbg_syscall, "%s(%d, %#x, %d)\n", isread ? "read" : "write", fd, ptr, len);
+
+	if (bad_fd(fd)) {
+		sys_error(uc, EBADF);
+		return;
+	}
+	if (bad_addr(uc, ptr)) {
+		sys_error(uc, EFAULT);
+		return;
+	}
+	buffer = malloc(len);
+	if (buffer == NULL)
+		error("Can't malloc");
+	if (!isread) {
+		copyin(uc, ptr, buffer, len);
+	}
+	rv = fn(open_fd[fd], buffer, (size_t)len);
+	if (rv == -1) {
+		sys_error(uc, errno);
+		free(buffer);
+		return;
+	}
+	if (isread)
+		copyout(uc, buffer, ptr, len);
+	sys_retval_int(uc, rv);
+	free(buffer);
+}
+
+/* 3 _read */
+void
+venix_read(ucontext_t *uc)
+{
+	rdwr(uc, read, true);
+}
+
+/* 4 _write */
+void
+venix_write(ucontext_t *uc)
+{
+	rdwr(uc, (rdwr_fn *)write, false);
+}
+
+/* 5 _open */
+void
+venix_open(ucontext_t *uc)
+{
+	char host_fn[HOST_MAXPATHLEN];
+	Word ufn = arg1(uc);
+	Word mode = arg2(uc);
+	int fd, i;
+	int host_mode;
+
+	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
+		return;
+
+	for (i = 0; i < VENIX_NOFILE; i++)
+		if (open_fd[i] == -1)
+			break;
+
+	if (i == VENIX_NOFILE) {
+		debug(dbg_syscall, "open(%s, 0%o) -- EMFILE\n", host_fn, mode);
+		sys_error(uc, EMFILE);
+		return;
+	}
+	host_mode = venix_o_to_host(mode);
+	/*
+	 * XXX directories -- V7 had no readdir and read directories
+	 * and know about the dirent from the v7 filesystem.
+	 * #define	DIRSIZ	14
+	 * struct	direct
+	 * {
+	 * 	ino_t	d_ino;
+	 * 	char	d_name[DIRSIZ];
+	 * };
+	 * If we get a directory open, we'll have to do special things
+	 * on read. Also, 14 character name limit... woof... this affects
+	 * du, ls, etc
+	 */
+	debug(dbg_syscall, "open(%s, 0%o)\n", host_fn, mode);
+	fd = open(host_fn, host_mode);
+	if (fd == -1) {
+		sys_error(uc, errno);
+		return;
+	}
+	open_fd[i] = fd;
+	sys_retval_int(uc, i);
+	debug(dbg_syscall, "-> %d %d\n", i, fd);
+}
+
+/* 6 _close */
+void
+venix_close(ucontext_t *uc)
+{
+	int fd = arg1(uc);
+
+	if (bad_fd(fd)) {
+		sys_error(uc, EBADF);
+		return;
+	}
+	debug(dbg_syscall, "close (%d)\n", fd);
+	if (open_fd[fd] > 2)
+		close(open_fd[fd]);
+	open_fd[fd] = -1;
+	sys_retval_int(uc, 0);
+}
+
+/* 7 _wait */
+void
+venix_wait(ucontext_t *uc)
+{
+	Word status = arg1(uc);
+	Word rv;
+	int mystat;
+	pid_t pid;
+
+//	error("Unimplemented system call 7 _wait\n");
+
+	debug(dbg_syscall, "wait(%#x)\n", status);
+
+	pid = wait(&mystat);
+	rv = mystat;
+	copyout(uc, &rv, status, sizeof(rv));
+	sys_retval_int(uc, pid);//XXX xlate
+}
+
+/* 8 _creat */
+void
+venix_creat(ucontext_t *uc)
+{
+	char host_fn[HOST_MAXPATHLEN];
+	Word ufn = arg1(uc);
+	Word mode = arg2(uc);
+	int fd, i;
+
+	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
+		return;
+	for (i = 0; i < VENIX_NOFILE; i++)
+		if (open_fd[i] == -1)
+			break;
+
+	debug(dbg_syscall, "creat(%#x %s, 0%o)\n", ufn, host_fn, mode);
+	if (i == VENIX_NOFILE) {
+		sys_error(uc, EMFILE);
+		return;
+	}
+	if (strlen(host_fn) == 0) {
+		sys_error(uc, EINVAL);
+		return;
+	}
+	fd = creat(host_fn, mode);
+	if (fd == -1) {
+		sys_error(uc, errno);
+		return;
+	}
+	open_fd[i] = fd;
+	sys_retval_int(uc, i);
+}
+
+/* 9 _link */
+void
+venix_link(ucontext_t *uc)
+{
+	char host_fn1[HOST_MAXPATHLEN];
+	char host_fn2[HOST_MAXPATHLEN];
+	Word ufn1 = arg1(uc);
+	Word ufn2 = arg2(uc);
+
+	if (copyinfn(uc, ufn1, host_fn1, sizeof(host_fn1)))
+		return;
+	if (copyinfn(uc, ufn2, host_fn2, sizeof(host_fn2)))
+		return;
+	sys_retval_int(uc, link(host_fn1, host_fn2));
+}
+
+/* 10 _unlink */
+void
+venix_unlink(ucontext_t *uc)
+{
+	char host_fn[HOST_MAXPATHLEN];
+	Word ufn = arg1(uc);
+
+	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
+		return;
+	sys_retval_int(uc, unlink(host_fn));
+}
+
+/* 11 _exec */
+void
+venix_exec(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 11 _exec\n");
+}
+
+/* 12 _chdir */
+void
+venix_chdir(ucontext_t *uc)
+{
+	char host_fn[HOST_MAXPATHLEN];
+	Word ufn = arg1(uc);
+
+	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
+		return;
+	sys_retval_int(uc, chdir(host_fn));
+}
+
+/* 13 _gtime */
+void
+venix_gtime(ucontext_t *uc)
+{
+	sys_retval_long(uc, time(NULL));
+}
+
+/* 14 _mknod */
+void
+venix_mknod(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 14 _mknod\n");
+}
+
+/* 15 _chmod */
+void
+venix_chmod(ucontext_t *uc)
+{
+	char host_fn[HOST_MAXPATHLEN];
+	Word ufn = arg1(uc);
+	Word mode = arg2(uc);
+
+	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
+		return;
+	sys_retval_int(uc, chmod(host_fn, mode));
+}
+
+/* 16 _chown */
+void
+venix_chown(ucontext_t *uc)
+{
+	char host_fn[HOST_MAXPATHLEN];
+	Word ufn = arg1(uc);
+	Word uid = arg2(uc);
+
+	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
+		return;
+	sys_retval_int(uc, chmod(host_fn, uid));
+}
+
+/* 17 _sbreak */
+void
+venix_sbreak(ucontext_t *uc)
+{
+
+// XXX -- we need to limit this properly. It appears there's
+// a bug in malloc that calls this a lot, so we have to limit
+// it to some sane value...
+//
+// Also, there may be a bug with split I/D space progreams, since that's
+// accounted a bit differently.
+//
+// There's also a bug with the stack. For the assembler, we have:
+// Data from 0x1192:0-0x626f
+// BSS from 0x1192:0x6270-0xe8b5
+// sp is 0xff4c
+// which leaves just 0xe8b6 to 0xff4c or 5782 between the top of bss and
+// the bottom of the stack.... maybe I should trim argv[0] to just the
+// command name rather than the full path... It would save ~30 bytes. But
+// we have no sanity checks and we sbrk into the stack, it seems...
+//
+	Word obrk;
+
+	obrk = venix_break;
+	venix_break = arg1(uc);
+	if (venix_break == 0)
+		venix_break = obrk;
+	debug(dbg_syscall, "sbreak(%#x) %#x\n", arg1(uc), obrk);
+	sys_retval_int(uc, 0);
+}
+
+/* 18 _stat */
+void
+venix_stat(ucontext_t *uc)
+{
+	char host_fn[HOST_MAXPATHLEN];
+	Word ufn = arg1(uc);
+	Word usb = arg2(uc);
+	struct stat sb;
+	int rv;
+
+	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
+		return;
+	debug(dbg_syscall, "stat(%s)\n", host_fn);
+	rv = stat(host_fn, &sb);
+	if (rv == -1) {
+		sys_error(uc, errno);
+		return;
+	}
+	host_to_venix_sb(uc, &sb, usb);
+}
+
+/* 19 _seek */
+void
+venix_seek(ucontext_t *uc)
+{
+	Word fd = arg1(uc);
+	Word off1 = arg2(uc);
+	Word off2 = arg3(uc);
+	Word whence = arg4(uc);
+	off_t off = off1 | (off2 << 16);
+	off_t rv;
+
+	debug(dbg_syscall, "lseek(%d, %ld, %d)\n", fd, (long)off, whence);
+	rv = lseek(open_fd[fd], off, whence);
+	debug(dbg_syscall, "-> rv %#x\n", rv);
+	sys_retval_long(uc, (uint32_t)rv);
+}
+
+/* 20 _getpid */
+void
+venix_getpid(ucontext_t *uc)
+{
+
+	sys_retval_int(uc, getpid());
+}
+
+/* 21 _smount */
+void
+venix_smount(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 21 _smount\n");
+}
+
+/* 22 _sumount */
+void
+venix_sumount(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 22 _sumount\n");
+}
+
+/* 23 _setuid */
+void
+venix_setuid(ucontext_t *uc)
+{
+	Word uid = arg1(uc);
+
+	sys_retval_int(uc, setuid(uid));
+}
+
+/* 24 _getuid */
+void
+venix_getuid(ucontext_t *uc)
+{
+
+	sys_retval_int(uc, getuid());
+}
+
+/* 25 _stime */
+void
+venix_stime(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 25 _stime\n");
+}
+
+/* 26 _ptrace */
+void
+venix_ptrace(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 26 _ptrace\n");
+}
+
+/* 27 _alarm */
+void
+venix_alarm(ucontext_t *uc)
+{
+
+	sys_retval_int(uc, alarm(arg1(uc)));
+}
+
+/* 28 _fstat */
+void
+venix_fstat(ucontext_t *uc)
+{
+	int fd = arg1(uc);
+	Word usb = arg2(uc);
+	struct stat sb;
+	int rv;
+
+	if (bad_fd(fd)) {
+		sys_error(uc, EBADF);
+		return;
+	}
+	debug(dbg_syscall, "fstat(%d)\n", fd);
+	rv = fstat(open_fd[fd], &sb);
+	if (rv == -1) {
+		sys_error(uc, errno);
+		return;
+	}
+	host_to_venix_sb(uc, &sb, usb);
+}
+
+/* 29 _pause */
+void
+venix_pause(ucontext_t *uc)
+{
+
+	pause();
+	errno = EINTR;
+	sys_retval_int(uc, 0xffff);
+}
+
+/* 30 _utime */
+void
+venix_utime(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 30 _utime\n");
+}
+
+/* 33 _saccess */
+void
+venix_saccess(ucontext_t *uc)
+{
+	char host_fn[HOST_MAXPATHLEN];
+	Word ufn = arg1(uc);
+	Word mode = arg2(uc);
+
+	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
+		return;
+	sys_retval_int(uc, access(host_fn, mode));
+}
+
+/* 34 _nice */
+void
+venix_nice(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 34 _nice\n");
+}
+
+/* 35 _ftime */
+void
+venix_ftime(ucontext_t *uc)
+{
+	int rv;
+	struct timeval tv;
+	Word dst = arg1(uc);
+	struct venix_timeb tb;
+
+	rv = gettimeofday(&tv, NULL);
+	if (rv) {
+		sys_error(uc, errno);
+		return;
+	}
+	tb.time = (uint32_t)tv.tv_sec;
+	tb.millitm = (uint16_t)(tv.tv_usec / 1000);
+	tb.timezone = 6 * 60;
+	tb.dstflag = 1;
+	copyout(uc, &tb, dst, sizeof(tb));
+	sys_retval_int(uc, 0);
+	return;
+}
+
+/* 36 _sync */
+void
+venix_sync(ucontext_t *uc)
+{
+
+	sync();
+	sys_retval_int(uc, 0);
+}
+
+/* 37 _kill */
+void
+venix_kill(ucontext_t *uc)
+{
+	Word pid = arg1(uc);
+	Word sig = arg2(uc);
+	int rv;
+
+	if (sig > VENIX_NSIG) {
+		sys_error(uc, EINVAL);
+		return;
+	}
+	rv = kill(pid, sig);
+	if (rv == -1) {
+		sys_error(uc, errno);
+		return;
+	}
+	sys_retval_int(uc, rv);
+}
+
+/* 41 _dup */
+void
+venix_dup(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 41 _dup\n");
+}
+
+/* 42 _pipe */
+void
+venix_pipe(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 42 _pipe\n");
+}
+
+/* 43 _times */
+void
+venix_times(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 43 _times\n");
+}
+
+/* 44 _profil */
+void
+venix_profil(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 44 _profil\n");
+}
+
+/* 45 _syssema */
+void
+venix_syssema(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 45 _syssema\n");
+}
+
+/* 46 _setgid */
+void
+venix_setgid(ucontext_t *uc)
+{
+	Word gid = arg1(uc);
+
+	sys_retval_int(uc, setgid(gid));
+}
+
+/* 47 _getgid */
+void
+venix_getgid(ucontext_t *uc)
+{
+
+	sys_retval_int(uc, getgid());
+}
+
+/* 48 _ssig */
+void
+venix_ssig(ucontext_t *uc)
+{
+	/*
+	 * To implement I have to catch signals and redirect since
+	 * function pointer addresses are relative to usrland I'm
+	 * emulating, not this process. I'll also need to emulating
+	 * delivery of the signal, which I'm currently unsure about.
+	 *
+	 * I also need to arrange so that the signal is delivered
+	 * before we start to fetch the next instruction (though
+	 * after any rep has finished)
+	 */
+	Word sig = arg1(uc);
+	Word fn = arg2(uc);
+	Word oldfn;
+
+	if (sig >= VENIX_NSIG) {
+		sys_error(uc, EINVAL);
+		return;
+	}
+	/*
+	 * XXX -- need to establish signal handlers for at least some of
+	 * the signals.
+	 */
+	oldfn = venix_sighandle[sig];
+	venix_sighandle[sig] = fn;
+	sys_retval_int(uc, oldfn);
+}
+
+/* 49 _sysdata */
+void
+venix_sysdata(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 49 _sysdata\n");
+}
+
+/* 50 _suspend */
+void
+venix_suspend(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 50 _suspend\n");
+}
+
+/* 52 _sysphys */
+void
+venix_sysphys(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 52 _sysphys\n");
+}
+
+/* 53 _syslock */
+void
+venix_syslock(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 53 _syslock\n");
+}
+
+/* 54 _ioctl */
+void
+venix_ioctl(ucontext_t *uc)
+{
+	int fd = arg1(uc);
+	int cmd = arg2(uc);
+	Word arg = arg3(uc);
+	struct venix_sgttyb sg;
+	struct termios attr;
+	int e;
+
+	/* Should validate fd and arg */
+	switch (cmd) {
+	case VENIX_TIOCGETP:
+		debug(dbg_syscall, "ioctl(TIOCGETP, %d %#x %#x)\n", fd, cmd, arg);
+		if (tcgetattr(open_fd[fd], &attr) == -1) {
+			e = errno;
+			debug(dbg_syscall, "error %d\n", e);
+			sys_error(uc, e);
+			break;
+		}
+		sg.sg_ispeed = venix_host_to_speed(cfgetispeed(&attr));
+		sg.sg_ospeed = venix_host_to_speed(cfgetospeed(&attr));
+		sg.sg_erase = attr.c_cc[VERASE];
+		sg.sg_kill = attr.c_cc[VINTR];
+		sg.sg_flags = venix_host_to_tc_flags(&attr);
+		copyout(uc, &sg, arg, sizeof(sg));
+		debug(dbg_syscall, "success!\n");
+		sys_retval_int(uc, 0);
+		break;
+	default:
+		fprintf(stderr, "undefined ioctl fd %d cmd %#x arg %d\n", fd, cmd, arg);
+		error("Unimplemented system call 54 _ioctl\n");
+		break;
+	}
+}
+
+/* 59 _exece */
+void
+venix_exece(ucontext_t *uc)
+{
+	Word name = arg1(uc);
+	Word argv = arg2(uc);
+	Word envp = arg3(uc);
+	char host_name[HOST_MAXPATHLEN];
+	Word args[100];
+	Word envs[100];
+	char *str_args[100];
+	char *str_envs[100];
+	int i;
+
+	if (copyinfn(uc, name, host_name, sizeof(host_name))) {
+		sys_error(uc, EFAULT);
+		return;
+	}
+	debug(dbg_syscall, "exece(%#x %s %#x %#x)\n", name, host_name, argv, envp);
+	memset(args, 0, sizeof(*args));
+	memset(str_args, 0, sizeof(*str_args));
+	memset(envs, 0, sizeof(*envs));
+	memset(str_envs, 0, sizeof(*str_envs));
+	i = 0;
+	do {
+		if (copyin(uc, argv + 2 * i, &args[i], sizeof(Word)))
+			goto errout;
+//		fprintf(stderr, "---args[%d]=%#x\n", i, args[i]);
+		if (args[i] == 0) {
+			i++;
+			break;
+		}
+		str_args[i] = (char *)malloc(1024);
+		if (copyinstr(uc, args[i], str_args[i], 1024))
+			goto errout;
+		fprintf(stderr, "---arg[%d]=\"%s\"\n", i, str_args[i] ? str_args[i] : "NULL");
+		i++;
+	} while (1);
+#if 0
+	i = 0;
+	do {
+		if (copyin(uc, envp + 2 * i, envs + i, sizeof(Word)))
+			goto errout;
+		str_envs[i] = (char *)malloc(1024);
+		if (copyinstr(uc, envs[i], str_envs + i, 1024))
+			goto errout;
+		debug(dbg_syscall, "---env[%d]=\"%s\"\n", i, str_envs[i] ? str_envs[i] : "NULL");
+	} while (envs[i] != 0);
+#endif
+	error("Unimplemented system call 59 _exece\n");
+errout:
+	for (i = 0; str_args[i]; i++)
+		free(str_args[i]);
+	for (i = 0; str_envs[i]; i++)
+		free(str_envs[i]);
+	sys_error(uc, EFAULT);
+}
+
+/* 60 _umask */
+void
+venix_umask(ucontext_t *uc)
+{
+	int numask = arg1(uc);
+
+	sys_retval_int(uc, umask(numask));
+}
+
+/* 61 _chroot */
+void
+venix_chroot(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 61 _chroot\n");
+}
+
+/* 64 _locking */
+void
+venix_locking(ucontext_t *uc)
+{
+
+	error("Unimplemented system call 64 _locking\n");
+}
+
+void
+venix_nosys(ucontext_t *uc)
+{
+	fprintf(stderr, "Venix unimplemented system call %d\n", scall);
+	exit(1);
+}
+
+typedef void (*sysfn)(ucontext_t *uc);
+
+#define NSYS 72
+sysfn sysent[NSYS] = {
+	&venix_nosys,		// 0
+	&venix_rexit,
+	&venix_fork,
+	&venix_read,
+	&venix_write,
+	&venix_open,
+	&venix_close,
+	&venix_wait,
+	&venix_creat,
+	&venix_link,
+	&venix_unlink,		// 10
+	&venix_exec,
+	&venix_chdir,
+	&venix_gtime,
+	&venix_mknod,
+	&venix_chmod,
+	&venix_chown,
+	&venix_sbreak,
+	&venix_stat,
+	&venix_seek,
+	&venix_getpid,		// 20
+	&venix_smount,
+	&venix_sumount,
+	&venix_setuid,
+	&venix_getuid,
+	&venix_stime,
+	&venix_ptrace,
+	&venix_alarm,
+	&venix_fstat,
+	&venix_pause,
+	&venix_utime,		// 30
+	&venix_nosys,		// 31
+	&venix_nosys,		// 32
+	&venix_saccess,
+	&venix_nice,
+	&venix_ftime,
+	&venix_sync,
+	&venix_kill,
+	&venix_nosys,		// 38
+	&venix_nosys,		// 39
+	&venix_nosys,		// 40
+	&venix_dup,
+	&venix_pipe,
+	&venix_times,
+	&venix_profil,
+	&venix_syssema,
+	&venix_setgid,
+	&venix_getgid,
+	&venix_ssig,
+	&venix_sysdata,
+	&venix_suspend,		// 50
+	&venix_nosys,		// 51
+	&venix_sysphys,
+	&venix_syslock,
+	&venix_ioctl,		// 54
+	&venix_nosys,		// 55
+	&venix_nosys,		// 56
+	&venix_nosys,		// 57
+	&venix_nosys,		// 58
+	&venix_exece,
+	&venix_umask,		// 60
+	&venix_chroot,
+	&venix_nosys,		// 62
+	&venix_nosys,		// 63
+	&venix_locking,
+	&venix_nosys,		// 65
+	&venix_nosys,		// 66
+	&venix_nosys,		// 67
+	&venix_nosys,		// 68
+	&venix_nosys,		// 69
+	&venix_nosys,		// 70
+	&venix_nosys,		// 71
+};
+
 void
 venix_cd(ucontext_t *uc)
 {
-	err(1, "TODO");
+	uint8_t *ptr;
+	mcontext_t *mc;
+	uint16_t scall;
+
+	mc = &uc->uc_mcontext;
+	ptr = (uint8_t *)(uintptr_t)((mc->mc_cs << 4) | mc->mc_eip);
+	mc->mc_eip += 2;
+
+	switch (ptr[1]) {
+	case 0xf4:
+		/* Ignore FPU emulation */
+		break;
+	case 0xf3:
+	case 0xf2:
+		printf("abort / emt\n");
+		exit(0);
+	case 0xf1:
+		scall = callno(uc);
+		if (scall == 0)
+			scall = arg1(uc);
+		if (scall < NSYS) {
+//			printf("Calling system call %d\n", scall);
+			(sysent[scall])(uc);
+		} else {
+			printf("Unimplemented system call %d\n", scall);
+			exit(0);
+		}
+		break;
+	default:
+		printf("Unimplemented interrupt %#x\n", ptr[1]);
+		TODO(uc);
+		exit(0);
+	}
 }
 	
-
-/*
- * Copy data from the 'kernel' kptr to 'userland' uptr for len bytes.
- */
-int copyout(ucontext_t *uc, void *kptr, Word uptr, size_t len)
-{
-	uint8_t *p = kptr;
-	mcontext_t *mc = &uc->uc_mcontext;
-	uint8_t *up = (uint8_t*)(uintptr_t)(uptr + (mc->mc_ds << 4));
-
-	for (int i = 0; i < len; i++) {
-		up[i] = p[i];
-	}
-	return 0;
-}
-
-
 
 static void
 sig_handler(int signo, siginfo_t *si __unused, void *ucp)
@@ -444,8 +1596,10 @@ sig_handler(int signo, siginfo_t *si __unused, void *ucp)
 		uint8_t *ptr;
 
 		ptr = (uint8_t *)(uintptr_t)((mc->mc_cs << 4) | mc->mc_eip);
-		if (ptr[0] == 0xcd)
+		if (ptr[0] == 0xcd) {
 			venix_cd(uc);
+			return;
+		}
 	}
 
 	printf("sig %d %%eax %#x %%ecx %#x %%eip %#x:%#x\n", signo,
