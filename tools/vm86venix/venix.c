@@ -62,6 +62,10 @@ __FBSDID("$FreeBSD$");
 typedef uint16_t Word;
 
 static u_int gs;
+struct vm86_init_args va;
+void *load_addr;
+
+#define VENIX_ROOT "."
 
 void venix_to_host_path(char *fn, char *host_fn, size_t len)
 {
@@ -472,7 +476,7 @@ venix_init(void)
 	open_fd[2] = 2;
 	for (int i = 3; i < VENIX_NOFILE; i++)
 		open_fd[i] = -1;
-	
+
 	/*
 	 * Initialize the signal maps to the default
 	 */
@@ -485,20 +489,23 @@ venix_init(void)
 		pid_host[i] = -1;
 }
 
-void
-venix_load(ucontext_t *uc, uint8_t *memory, int argc, char **argv)
+int
+venix_load(ucontext_t *uc, uint8_t *memory, const char *fn, int argc, char **argv, char **envp)
 {
 	struct venix_exec hdr;
 	mcontext_t *mc;
 	Word sp;
 	uint32_t b;
-	char *filename;
+	char fnb[MAXPATHLEN];
 
-	mc = &uc->uc_mcontext;
-	filename = argv[1];
-	FILE* fp = fopen(filename, "rb");
-	if (fp == 0)
-		err(1, "opening");
+	FILE* fp = fopen(fn, "rb");
+	if (*fn == '/' && fp == NULL) {
+		snprintf(fnb, sizeof(fnb), "%s%s", VENIX_ROOT, fn);
+		fp = fopen(fnb, "rb");
+	}
+	if (fp == NULL)
+		return -1;
+
 	uintptr_t loadOffset = (uintptr_t)memory;
 	uintptr_t loadSegment = (uintptr_t)memory >> 4;
 
@@ -513,6 +520,10 @@ venix_load(ucontext_t *uc, uint8_t *memory, int argc, char **argv)
 	if (hdr.a_magic != OMAGIC &&
 	    hdr.a_magic != NMAGIC)
 		err(1, "Unsupported magic number 0%o", hdr.a_magic);
+
+	memset(uc, 0, sizeof(*uc));
+	mc = &uc->uc_mcontext;
+	mc->mc_eflags = PSL_VM | PSL_USER;
 
 	uint32_t ptr = 0;
 	mc->mc_cs = loadSegment;
@@ -558,12 +569,6 @@ venix_load(ucontext_t *uc, uint8_t *memory, int argc, char **argv)
 		debug(dbg_load, "BSS from %#x:%#x-%#x\n", mc->mc_cs, ptr, ptr + hdr.a_bss - 1);
 		memset(memory + ptr, 0, hdr.a_bss);				// bss
 		ptr += hdr.a_bss;
-#if 0
-		if (hdr.a_stack != 0)
-			endMem = (loadOffset + ptr) << 4;
-		else
-			endMem = (loadOffset + 0x10000) << 4;
-#endif
 	} else {
 		/*
 		 * NMAGIC + -z stack layout looks like:
@@ -594,12 +599,6 @@ venix_load(ucontext_t *uc, uint8_t *memory, int argc, char **argv)
 		debug(dbg_load, "BSS from %#x:%#x-%#x\n", mc->mc_ds, ptr, ptr + hdr.a_bss - 1);
 		memset(data + ptr, 0, hdr.a_bss);				// bss
 		ptr += hdr.a_bss;
-#if 0
-		if (hdr.a_stack != 0)
-			endMem = (dataOffset + ptr) << 4;
-		else
-			endMem = (dataOffset + 0x10000) << 4;
-#endif
 	}
 	b = ptr;
 	if (hdr.a_stack != 0)
@@ -620,32 +619,59 @@ venix_load(ucontext_t *uc, uint8_t *memory, int argc, char **argv)
 	 * a pointer to argv, then argc.
 	 */
 	Word args[100];
-	debug(dbg_load, "%d args\n", argc - 1);
-	/* Note: argv[1] is the program name or argv[0] in the target */
-	for (int i = 1; i < argc; i++) {
+	debug(dbg_load, "%d args\n", argc);
+	for (int i = 0; i < argc; i++) {
 		int len;
 
 		len = strlen(argv[i]) + 1;
 		sp -= len;
 		if (sp & 1) sp--;
 		copyout(uc, argv[i], sp, len);
-		args[i - 1] = sp;
-		debug(dbg_load, "argv[%d] = %#x '%s'\n", i - 1, sp, argv[i]);
+		args[i] = sp;
+		debug(dbg_load, "argv[%d] = %#x '%s'\n", i, sp, argv[i]);
 	}
-	args[argc - 1] = 0;
+	args[argc] = 0;
 	if (sp & 1) sp--;
 	Word env = 0;				// Push 1 words for environ
 	sp -= 2;
 	copyout(uc, &env, sp, 2);
 	sp -= argc * 2;
 	copyout(uc, args, sp, argc * 2);
-	Word vargc = argc - 1;
+	Word vargc = argc;
 	sp -= 2;
 	copyout(uc, &vargc, sp, 2);
 
 	mc->mc_esp = sp;
 	debug(dbg_load, "Launching at %#x:0 with ds %#x\n", mc->mc_cs, mc->mc_ds);
 	debug(dbg_load, "sp is %#x\n", mc->mc_esp);
+	return(0);
+}
+
+void
+clear_pid(venix_pid_t vp)
+{
+	int i;
+
+	for (i = 0; i < VENIX_NPROC; i++) {
+		if (vp == pid_venix[i]) {
+			pid_venix[i] = (venix_pid_t)-1;
+			pid_host[i] = (pid_t)-1;
+			break;
+		}
+	}
+}
+
+venix_pid_t
+h2v_pid(pid_t p)
+{
+	int i;
+
+	for (i = 0; i < VENIX_NPROC; i++) {
+		if (p == pid_host[i])
+			return pid_venix[i];
+	}
+
+	return p;
 }
 
 /* 1 _rexit */
@@ -656,15 +682,6 @@ venix_rexit(ucontext_t *uc)
 	venix_pid_t vp;
 	int i;
 
-	p = getpid();
-	for (i = 0; i < VENIX_NPROC; i++) {
-		if (p == pid_host[i]) {
-			vp = pid_venix[i];
-			break;
-		}
-	}
-	assert(i != VENIX_NPROC);
-	pid_venix[i] = -1;
 	debug(dbg_syscall, "venix pid %d exit(%d)\n", vp, arg1(uc));
 	exit(arg1(uc));
 }
@@ -676,6 +693,7 @@ venix_fork(ucontext_t *uc)
 	pid_t p;
 	venix_pid_t vp;
 
+	debug(dbg_syscall, "fork\n");
 	p = fork();
 	if (p == -1) {
 		sys_error(uc, errno);
@@ -684,6 +702,14 @@ venix_fork(ucontext_t *uc)
 	if (p == 0) {
 		/* child */
 		sys_retval_int(uc, 0);
+		/*
+		 * Start the vm86 subsystem...
+		 */
+		memset(&va, 0, sizeof(va));
+		if (i386_vm86(VM86_INIT, &va) == -1)
+			err(1, "VM86_INIT");
+		/* XXX MORE? XXX */
+		debug(dbg_syscall, "child %d\n", getpid());
 		return;
 	} else {
 		/* parent */
@@ -702,10 +728,11 @@ venix_fork(ucontext_t *uc)
 				pid_host[i] = p;
 				pid_venix[i] = vp;
 				sys_retval_int(uc, vp);
+				debug(dbg_syscall, "forked %d vp %d\n", p, vp);
 				return;
 			}
 		}
-		sys_error(uc, VENIX_EAGAIN);
+		sys_error(uc, VENIX_EAGAIN); // XXX WRONG?
 	}
 }
 
@@ -799,6 +826,12 @@ venix_open(ucontext_t *uc)
 	 */
 	debug(dbg_syscall, "open(%s, 0%o)\n", host_fn, mode);
 	fd = open(host_fn, host_mode);
+	if (fd == -1 && host_fn[0] == '/') {
+		strcpy(host_fn, VENIX_ROOT);
+		if (copyinfn(uc, ufn, host_fn + strlen(host_fn), sizeof(host_fn) - strlen(host_fn)))
+			return;//XXX
+		fd = open(host_fn, host_mode);
+	}
 	if (fd == -1) {
 		sys_error(uc, errno);
 		return;
@@ -833,6 +866,7 @@ venix_wait(ucontext_t *uc)
 	Word rv;
 	int mystat;
 	pid_t pid;
+	venix_pid_t vp;
 
 //	error("Unimplemented system call 7 _wait\n");
 
@@ -840,8 +874,16 @@ venix_wait(ucontext_t *uc)
 
 	pid = wait(&mystat);
 	rv = mystat;
-	copyout(uc, &rv, status, sizeof(rv));
-	sys_retval_int(uc, pid);//XXX xlate
+	if (pid != (pid_t)-1) {
+		copyout(uc, &rv, status, sizeof(rv)); // XLATE?
+		vp = h2v_pid(pid);
+		sys_retval_int(uc, vp);
+		debug(dbg_syscall, "wait() status %d pid %d\n", rv, vp);
+		clear_pid(vp);
+	} else {
+		debug(dbg_syscall, "wait() no kids\n");
+		sys_error(uc, ECHILD);
+	}
 }
 
 /* 8 _creat */
@@ -1399,13 +1441,12 @@ venix_exece(ucontext_t *uc)
 			goto errout;
 //		fprintf(stderr, "---args[%d]=%#x\n", i, args[i]);
 		if (args[i] == 0) {
-			i++;
 			break;
 		}
 		str_args[i] = (char *)malloc(1024);
 		if (copyinstr(uc, args[i], str_args[i], 1024))
 			goto errout;
-		fprintf(stderr, "---arg[%d]=\"%s\"\n", i, str_args[i] ? str_args[i] : "NULL");
+		debug(dbg_syscall, "---arg[%d]=\"%s\"\n", i, str_args[i] ? str_args[i] : "NULL");
 		i++;
 	} while (1);
 #if 0
@@ -1415,11 +1456,13 @@ venix_exece(ucontext_t *uc)
 			goto errout;
 		str_envs[i] = (char *)malloc(1024);
 		if (copyinstr(uc, envs[i], str_envs + i, 1024))
+
 			goto errout;
 		debug(dbg_syscall, "---env[%d]=\"%s\"\n", i, str_envs[i] ? str_envs[i] : "NULL");
 	} while (envs[i] != 0);
 #endif
-	error("Unimplemented system call 59 _exece\n");
+	if (venix_load(uc, load_addr, host_name, i, str_args, NULL) == 0)
+		return;
 errout:
 	for (i = 0; str_args[i]; i++)
 		free(str_args[i]);
@@ -1538,6 +1581,81 @@ sysfn sysent[NSYS] = {
 	&venix_nosys,		// 71
 };
 
+const char *sysname[NSYS] = {
+	"sycall",		// 0
+	"rexit",
+	"fork",
+	"read",
+	"write",
+	"open",
+	"close",
+	"wait",
+	"creat",
+	"link",
+	"unlink",		// 10
+	"exec",
+	"chdir",
+	"gtime",
+	"mknod",
+	"chmod",
+	"chown",
+	"sbreak",
+	"stat",
+	"seek",
+	"getpid",		// 20
+	"smount",
+	"sumount",
+	"setuid",
+	"getuid",
+	"stime",
+	"ptrace",
+	"alarm",
+	"fstat",
+	"pause",
+	"utime",		// 30
+	"sys-31",		// 31
+	"sys-32",		// 32
+	"saccess",
+	"nice",
+	"ftime",
+	"sync",
+	"kill",
+	"sys-38",		// 38
+	"sys-39",		// 39
+	"sys-40",		// 40
+	"dup",
+	"pipe",
+	"times",
+	"profil",
+	"syssema",
+	"setgid",
+	"getgid",
+	"ssig",
+	"sysdata",
+	"suspend",		// 50
+	"sys-51",		// 51
+	"sysphys",
+	"syslock",
+	"ioctl",		// 54
+	"sys-55",		// 55
+	"sys-56",		// 56
+	"sys-57",		// 57
+	"sys-58",		// 58
+	"exece",
+	"umask",		// 60
+	"chroot",
+	"sys-62",		// 62
+	"sys-63",		// 63
+	"locking",
+	"sys-65",		// 65
+	"sys-66",		// 66
+	"sys-67",		// 67
+	"sys-68",		// 68
+	"sys-69",		// 69
+	"sys-70",		// 70
+	"sys-71",		// 71
+};
+
 void
 venix_cd(ucontext_t *uc)
 {
@@ -1562,7 +1680,8 @@ venix_cd(ucontext_t *uc)
 		if (scall == 0)
 			scall = arg1(uc);
 		if (scall < NSYS) {
-//			printf("Calling system call %d\n", scall);
+			debug(dbg_syscall, "System call %d %s(%#x, %#x, %#x, %#x)\n", scall,
+			    sysname[scall], arg1(uc), arg2(uc), arg3(uc), arg4(uc));
 			(sysent[scall])(uc);
 		} else {
 			printf("Unimplemented system call %d\n", scall);
@@ -1575,7 +1694,6 @@ venix_cd(ucontext_t *uc)
 		exit(0);
 	}
 }
-	
 
 static void
 sig_handler(int signo, siginfo_t *si __unused, void *ucp)
@@ -1614,10 +1732,8 @@ main(int argc, char **argv)
 {
 	ucontext_t uc;
 	struct sigaction sa;
-	struct vm86_init_args va;
 	stack_t ssa;
 	char *vm86_code;
-	void *load_addr;
 
 	gs = rgs();
 
@@ -1672,9 +1788,7 @@ main(int argc, char **argv)
 	/*
 	 * Now setup the context to start the program.
 	 */
-	memset(&uc, 0, sizeof(uc));
-	uc.uc_mcontext.mc_eflags = PSL_VM | PSL_USER;
-	venix_load(&uc, load_addr, argc, argv);
+	venix_load(&uc, load_addr, argv[1], argc - 1, argv + 1, NULL);
 
 	sigreturn(&uc);
 }

@@ -32,10 +32,12 @@ void debug(enum dbg type, const char *fmt, ...)
 	if (f == NULL) // || type != dbg_load)
 		return;
 #else
-	if (type != dbg_syscall && type != dbg_load)
-		return;
-	if (dbg == NULL)
+//	if (type != dbg_syscall && type != dbg_load)
+//		return;
+	if (dbg == NULL) {
 		dbg = fopen("/tmp/venix.dbg", "w");
+		setvbuf(dbg, NULL, _IONBF, 0);
+	}
 	f = dbg;
 #endif
 	if (f == NULL)
