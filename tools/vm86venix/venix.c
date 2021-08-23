@@ -319,6 +319,7 @@ void sys_error(ucontext_t *uc, int e)
 
 	mc->mc_ecx = e;		// cx = errno
 	mc->mc_eax = 0xffff;	// return -1;
+	debug(dbg_syscall, "returning error %d\n", e);
 }
 
 int copyinstr(ucontext_t *uc, Word uptr, void *kaddr, size_t len)
@@ -388,6 +389,7 @@ void sys_retval_long(ucontext_t *uc, uint32_t r)
 		mc->mc_ecx = 0;			// No errno
 		mc->mc_eax = r & 0xffff;
 		mc->mc_edx = r >> 16;
+		debug(dbg_syscall, "returning long %d %#x\n", r, r);
 	}
 }
 
@@ -400,6 +402,7 @@ void sys_retval_int(ucontext_t *uc, uint16_t r)
 	} else {
 		mc->mc_ecx = 0;			// No errno
 		mc->mc_eax = r;
+		debug(dbg_syscall, "returning int %d %#x\n", r, r);
 	}
 }
 
