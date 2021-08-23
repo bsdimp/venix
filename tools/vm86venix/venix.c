@@ -36,6 +36,7 @@ __FBSDID("$FreeBSD$");
 #include <sys/param.h>
 #include <sys/mman.h>
 #include <sys/ucontext.h>
+#include <sys/times.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
@@ -226,6 +227,19 @@ _Static_assert(sizeof(struct venix_stat) == 30, "bad venix_stat size");
 #define	VENIX_S_IREAD	000400	/* read permission, owner */
 #define	VENIX_S_IWRITE	000200	/* write permission, owner */
 #define	VENIX_S_IEXEC	000100	/* execute permission, owner */
+
+/*
+ * Buffer for the times(2) system call.
+ */
+struct venix_tbuffer
+{
+	int32_t		proc_user_time;
+	int32_t		proc_system_time;
+	int32_t		child_user_time;
+	int32_t		child_system_time;
+};
+_Static_assert(sizeof(struct venix_tbuffer) == 4 * 4, "bad venix_tbuffer size");
+
 
 mode_t venix_mode_to_host(uint16_t vmode)
 {
@@ -755,6 +769,10 @@ void rdwr(ucontext_t *uc, rdwr_fn *fn, bool isread)
 		sys_error(uc, EBADF);
 		return;
 	}
+	if (len == 0) {
+		sys_retval_int(uc, 0);
+		return;
+	}
 	if (bad_addr(uc, ptr)) {
 		sys_error(uc, EFAULT);
 		return;
@@ -1275,11 +1293,42 @@ venix_pipe(ucontext_t *uc)
 }
 
 /* 43 _times */
+/*
+ * From Venix's times(2):
+ * times(buffer)
+ * struct tbuffer *buffer;
+ *
+ * times returns time-accounting information for the current process and for
+ * the terminated child processes of the current process. All times are in
+ * 1/Hz seconds, where Hz = 60.
+ *
+ * the children times are the sum of the children's process times and their
+ * children's times.
+ *
+ * times = 43.
+ * 8086: BX=53; AX=buffer; int 0xf1
+ *
+ * We assume Venix runs at 60Hz, and that the host runs at 1000Hz.
+ */
 void
 venix_times(ucontext_t *uc)
 {
+	struct tms tms;
+	clock_t up;
+	Word dst = arg1(uc);
+	struct venix_tbuffer tbuf;
 
-	error("Unimplemented system call 43 _times\n");
+	up = times(&tms);
+	if (up == (clock_t)-1) {
+		sys_error(uc, errno);
+		return;
+	}
+	tbuf.proc_user_time = tms.tms_utime * 60 / 1000;
+	tbuf.proc_system_time = tms.tms_stime * 60 / 1000;
+	tbuf.child_user_time = tms.tms_cutime * 60 / 1000;
+	tbuf.child_system_time = tms.tms_cstime * 60 / 1000;
+	copyout(uc, &tbuf, dst, sizeof(tbuf));
+	sys_retval_int(uc, 0);
 }
 
 /* 44 _profil */
