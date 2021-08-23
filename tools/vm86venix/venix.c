@@ -470,9 +470,9 @@ venix_init(void)
 	 * there's 20 fd's per process. This is theoretically changeable in sys/param.h
 	 * but it was rare that this was adjusted due to too many other matching constants
 	 * that needed changing. So for this emulator, we'll just do the 20, even though
-	 * we have this #define. Usually there will be a 1:1 match between our fd's and
-	 * the emulator's. Just to be safe, go ahead and have a mapping in case it doesn't
-	 * work out that way.
+	 * we have this #define. We keep a table of FDs so that we can map back and forth
+	 * because other files may be incidentally opened by the host and we want to preserve
+	 * the 'highly packed' properties of the fildes table that many programs depend on.
 	 */
 	open_fd[0] = 0;
 	open_fd[1] = 1;
