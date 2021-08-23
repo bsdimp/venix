@@ -1277,11 +1277,62 @@ venix_kill(ucontext_t *uc)
 }
 
 /* 41 _dup */
+/*
+ * Paraphrased from Venix dup(2):
+ * dup(fildes);
+ * dup2(fildes,fildes2);
+ *
+ * dup opens filedes again with the new value
+ * dup2 closes fildes2 and opens fildes again on fildes2
+ * -1 returned on errors
+ *
+ * 8086: BX=41; AX=fildes; DX=fildes2
+ * the dup2 entry is implemented by adding 0100 (octal) to
+ * fildes.
+ */
 void
 venix_dup(ucontext_t *uc)
 {
+	Word fildes = arg1(uc);
+	Word fildes2 = arg2(uc);
+	int fd;
+	int i;
 
-	error("Unimplemented system call 41 _dup\n");
+	if (fildes & 0100) {
+		/* DUP2 */
+		fildes &= ~0100;
+		if (bad_fd(fildes) || fildes2 > VENIX_NOFILE || fildes2 < 0) {
+			sys_error(uc, EBADF);
+			return;
+		}
+		if (open_fd[fildes2] != -1) {
+			close(open_fd[fildes2]);
+			open_fd[fildes2] = -1;
+		}
+	} else {
+		/* DUP */
+		if (bad_fd(fildes)) {
+			sys_error(uc, EBADF);
+			return;
+		}
+		for (i = 0; i < VENIX_NOFILE; i++) {
+			if (open_fd[i] == -1) {
+				fildes2 = i;
+				break;
+			}
+		}
+		if (i >= VENIX_NOFILE) {
+			sys_error(uc, EMFILE);
+			return;
+		}
+	}
+	fd = dup(open_fd[fildes]);
+	if (fd < 0) {
+		sys_error(uc, errno);
+		return;
+	}
+	open_fd[fildes2] = fd;
+	sys_retval_int(uc, fd);
 }
 
 /* 42 _pipe */
