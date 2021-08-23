@@ -969,6 +969,9 @@ venix_unlink(ucontext_t *uc)
 }
 
 /* 11 _exec */
+/*
+ * Obsolete, see 59 _exece
+ */
 void
 venix_exec(ucontext_t *uc)
 {
@@ -1516,6 +1519,35 @@ venix_ioctl(ucontext_t *uc)
 }
 
 /* 59 _exece */
+/*
+ * Exec with environment
+ * 8086: BX=59; AX=name; DX=argv; CX=envp; int 0xf1
+ *
+ * So with n args and m env vars:
+ * sp ->	nargs
+ *		arg0
+ *		...
+ *		argn
+ *		0
+ *		env0
+ *		...
+ *		envm
+ *		0
+ * arg0:	<arg0\0>
+ *		...
+ * argn:	<argn\0>
+ * env0:	<env0\0>
+ *		...
+ * envm:	<envm\0>
+ *		0
+ *
+ * There's no padding on the stings and apparently an extra '0' word at
+ * the top of the stack.
+ *
+ * NB: env isn't implemented yet, but it should be. It shouldn't be all
+ * of the host's env, though, so I need to figure out how much to filter.
+ * Which likely will depend on what /bin/sh and other shells use.
+ */
 void
 venix_exece(ucontext_t *uc)
 {
