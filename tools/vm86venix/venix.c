@@ -67,6 +67,7 @@ struct vm86_init_args va;
 void *load_addr;
 
 #define VENIX_ROOT "."
+const char *venix_root;
 
 void venix_to_host_path(char *fn, char *host_fn, size_t len)
 {
@@ -504,6 +505,10 @@ venix_init(void)
 	pid_venix[0] = pid++;
 	for (int i = 1; i < VENIX_NPROC; i++)
 		pid_host[i] = -1;
+
+	venix_root = getenv("VENIX_ROOT");
+	if (venix_root == NULL)
+		venix_root = VENIX_ROOT;
 }
 
 int
@@ -514,12 +519,14 @@ venix_load(ucontext_t *uc, uint8_t *memory, const char *fn, int argc, char **arg
 	Word sp;
 	uint32_t b;
 	char fnb[MAXPATHLEN];
+	FILE* fp;
 
-	FILE* fp = fopen(fn, "rb");
-	if (*fn == '/' && fp == NULL) {
-		snprintf(fnb, sizeof(fnb), "%s%s", VENIX_ROOT, fn);
+	if (*fn == '/') {
+		snprintf(fnb, sizeof(fnb), "%s/%s", venix_root, fn);
 		fp = fopen(fnb, "rb");
 	}
+	if (fp == NULL)
+		fp = fopen(fn, "rb");
 	if (fp == NULL)
 		return -1;
 
@@ -846,10 +853,15 @@ venix_open(ucontext_t *uc)
 	 * du, ls, etc
 	 */
 	debug(dbg_syscall, "open(%s, 0%o)\n", host_fn, mode);
-	fd = open(host_fn, host_mode);
-	if (fd == -1 && host_fn[0] == '/') {
-		strcpy(host_fn, VENIX_ROOT);
+	if (host_fn[0] == '/') {
+		strcpy(host_fn, venix_root);
+		strcat(host_fn, "/");
 		if (copyinfn(uc, ufn, host_fn + strlen(host_fn), sizeof(host_fn) - strlen(host_fn)))
+			return;//XXX
+		fd = open(host_fn, host_mode);
+	}
+	if (fd == -1) {
+		if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
 			return;//XXX
 		fd = open(host_fn, host_mode);
 	}
@@ -859,7 +871,7 @@ venix_open(ucontext_t *uc)
 	}
 	open_fd[i] = fd;
 	sys_retval_int(uc, i);
-	debug(dbg_syscall, "-> %d %d\n", i, fd);
+	debug(dbg_syscall, "-> open %s %d %d\n", host_fn, i, fd);
 }
 
 /* 6 _close */
@@ -1599,10 +1611,12 @@ venix_exece(ucontext_t *uc)
 	if (venix_load(uc, load_addr, host_name, i, str_args, NULL) == 0)
 		return;
 errout:
+#if 0
 	for (i = 0; str_args[i]; i++)
 		free(str_args[i]);
 	for (i = 0; str_envs[i]; i++)
 		free(str_envs[i]);
+#endif
 	sys_error(uc, EFAULT);
 }
 
