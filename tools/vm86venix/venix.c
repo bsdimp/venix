@@ -40,6 +40,8 @@ void *load_addr;
 #define VENIX_ROOT "."
 const char *venix_root;
 
+#define EDX uc->uc_mcontext.mc_edx
+
 void venix_to_host_path(char *fn, char *host_fn, size_t len)
 {
 	strlcpy(host_fn, fn, len);
@@ -854,20 +856,17 @@ venix_close(ucontext_t *uc)
 void
 venix_wait(ucontext_t *uc)
 {
-	Word statusp = arg1(uc);
 	Word rv;
 	int mystat;
 	pid_t pid;
 	venix_pid_t vp;
 	int16_t vstat;
 
-	debug(dbg_syscall, "wait(%#x)\n", statusp);
-
 	pid = wait(&mystat);
 	rv = mystat;
 	if (pid != (pid_t)-1) {
 		vstat = (int16_t)rv;
-		copyout(uc, &vstat, statusp, sizeof(vstat)); // XLATE?
+		EDX = vstat;
 		vp = h2v_pid(pid);
 		sys_retval_int(uc, vp);
 		debug(dbg_syscall, "wait() status %d pid %d\n", vstat, vp);
