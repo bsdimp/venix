@@ -112,7 +112,6 @@ static const int VENIX_NPROC=30;
 pid_t pid_host[VENIX_NPROC];
 typedef short venix_pid_t;
 venix_pid_t pid_venix[VENIX_NPROC];
-venix_pid_t pid;
 
 // errno for Venix == Errno for FreeBSD <= 34
 static const int VENIX_EDEADLOCK  = 40;
@@ -471,9 +470,8 @@ venix_init(void)
 	 */
 	for (int i = 0; i < VENIX_NSIG; i++)
 		venix_sighandle[i] = VENIX_SIG_DFL;
-	pid = 2;
 	pid_host[0] = getpid();
-	pid_venix[0] = pid++;
+	pid_venix[0] = pid_host[0] & 0xffff;
 	for (int i = 1; i < VENIX_NPROC; i++)
 		pid_host[i] = -1;
 
@@ -707,16 +705,7 @@ venix_fork(ucontext_t *uc)
 		return;
 	} else {
 		/* parent */
-		vp = pid;
-	again:
-		vp++;
-		if (vp == 0)
-			vp++;
-		if (vp >= VENIX_MAXPROC)
-			vp = 1;
-		for (int i = 0; i < VENIX_NPROC; i++)
-			if (pid_venix[i] == vp)
-				goto again;
+		vp = p & 0xffff;
 		for (int i = 0; i < VENIX_NPROC; i++) {
 			if (pid_host[i] == -1) {
 				pid_host[i] = p;
@@ -872,14 +861,12 @@ venix_wait(ucontext_t *uc)
 	venix_pid_t vp;
 	int16_t vstat;
 
-//	error("Unimplemented system call 7 _wait\n");
-
 	debug(dbg_syscall, "wait(%#x)\n", statusp);
 
 	pid = wait(&mystat);
 	rv = mystat;
 	if (pid != (pid_t)-1) {
-		vstat = (int16_t) rv;
+		vstat = (int16_t)rv;
 		copyout(uc, &vstat, statusp, sizeof(vstat)); // XLATE?
 		vp = h2v_pid(pid);
 		sys_retval_int(uc, vp);
