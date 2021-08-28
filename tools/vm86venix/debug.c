@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include "debug.h"
 bool dodis = true;
 bool dosyscall = false;
@@ -43,6 +44,7 @@ void debug(enum dbg type, const char *fmt, ...)
 	if (f == NULL)
 		return;
 	va_start(ap, fmt);
+	fprintf(f, "%d: ", getpid());
 	vfprintf(f, fmt, ap);
 }
 

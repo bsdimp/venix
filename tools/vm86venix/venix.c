@@ -895,23 +895,25 @@ venix_close(ucontext_t *uc)
 void
 venix_wait(ucontext_t *uc)
 {
-	Word status = arg1(uc);
+	Word statusp = arg1(uc);
 	Word rv;
 	int mystat;
 	pid_t pid;
 	venix_pid_t vp;
+	int16_t vstat;
 
 //	error("Unimplemented system call 7 _wait\n");
 
-	debug(dbg_syscall, "wait(%#x)\n", status);
+	debug(dbg_syscall, "wait(%#x)\n", statusp);
 
 	pid = wait(&mystat);
 	rv = mystat;
 	if (pid != (pid_t)-1) {
-		copyout(uc, &rv, status, sizeof(rv)); // XLATE?
+		vstat = (int16_t) rv;
+		copyout(uc, &vstat, statusp, sizeof(vstat)); // XLATE?
 		vp = h2v_pid(pid);
 		sys_retval_int(uc, vp);
-		debug(dbg_syscall, "wait() status %d pid %d\n", rv, vp);
+		debug(dbg_syscall, "wait() status %d pid %d\n", vstat, vp);
 		clear_pid(vp);
 	} else {
 		debug(dbg_syscall, "wait() no kids\n");
@@ -961,10 +963,12 @@ venix_link(ucontext_t *uc)
 	Word ufn1 = arg1(uc);
 	Word ufn2 = arg2(uc);
 
+	// XXX need VENIX_ROOT here?
 	if (copyinfn(uc, ufn1, host_fn1, sizeof(host_fn1)))
 		return;
 	if (copyinfn(uc, ufn2, host_fn2, sizeof(host_fn2)))
 		return;
+	debug(dbg_syscall, "link(%s, %s)\n", host_fn1, host_fn2);
 	sys_retval_int(uc, link(host_fn1, host_fn2));
 }
 
@@ -975,8 +979,10 @@ venix_unlink(ucontext_t *uc)
 	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1(uc);
 
+	// XXX need VENIX_ROOT here?
 	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
 		return;
+	debug(dbg_syscall, "unlink(%s)\n", host_fn);
 	sys_retval_int(uc, unlink(host_fn));
 }
 
@@ -998,6 +1004,7 @@ venix_chdir(ucontext_t *uc)
 	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1(uc);
 
+	// XXX need VENIX_ROOT here?
 	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
 		return;
 	sys_retval_int(uc, chdir(host_fn));
@@ -1026,6 +1033,7 @@ venix_chmod(ucontext_t *uc)
 	Word ufn = arg1(uc);
 	Word mode = arg2(uc);
 
+	// XXX need VENIX_ROOT here?
 	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
 		return;
 	sys_retval_int(uc, chmod(host_fn, mode));
@@ -1039,6 +1047,7 @@ venix_chown(ucontext_t *uc)
 	Word ufn = arg1(uc);
 	Word uid = arg2(uc);
 
+	// XXX need VENIX_ROOT here?
 	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
 		return;
 	sys_retval_int(uc, chmod(host_fn, uid));
@@ -1085,6 +1094,7 @@ venix_stat(ucontext_t *uc)
 	struct stat sb;
 	int rv;
 
+	// XXX need VENIX_ROOT here?
 	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
 		return;
 	debug(dbg_syscall, "stat(%s)\n", host_fn);
@@ -1225,10 +1235,14 @@ venix_saccess(ucontext_t *uc)
 	char host_fn[HOST_MAXPATHLEN];
 	Word ufn = arg1(uc);
 	Word mode = arg2(uc);
+	int rv;
 
+	// XXX need VENIX_ROOT here?
 	if (copyinfn(uc, ufn, host_fn, sizeof(host_fn)))
 		return;
-	sys_retval_int(uc, access(host_fn, mode));
+	rv = access(host_fn, mode);
+	debug(dbg_syscall, "access(%s, 0%o)\n", host_fn, mode);
+	sys_retval_int(uc, rv);
 }
 
 /* 34 _nice */
@@ -1572,6 +1586,7 @@ venix_exece(ucontext_t *uc)
 	char *str_args[100];
 	char *str_envs[100];
 	int i;
+	int err = EFAULT;
 
 	if (copyinfn(uc, name, host_name, sizeof(host_name))) {
 		sys_error(uc, EFAULT);
@@ -1610,6 +1625,7 @@ venix_exece(ucontext_t *uc)
 #endif
 	if (venix_load(uc, load_addr, host_name, i, str_args, NULL) == 0)
 		return;
+	err = ENOENT;
 errout:
 #if 0
 	for (i = 0; str_args[i]; i++)
@@ -1617,7 +1633,7 @@ errout:
 	for (i = 0; str_envs[i]; i++)
 		free(str_envs[i]);
 #endif
-	sys_error(uc, EFAULT);
+	sys_error(uc, err);
 }
 
 /* 60 _umask */
