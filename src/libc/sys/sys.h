@@ -38,7 +38,7 @@
 #define	S_SYNC		36	/* 0 */
 #define	S_KILL		37	/* 2 */
 /* 38-40 */
-#define	S_DUP		41	/* 2 */
+#define	S_DUP		41	/* 1 dup2 has 2, but to generate right we need only 1 for plain dup */
 #define	S_PIPE		42	/* special 2 returns to a pointer */
 #define	S_TIMES		43	/* 1 */
 #define S_PROFIL	44	/* 4 */
