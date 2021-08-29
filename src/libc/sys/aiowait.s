@@ -1,7 +1,7 @@
 	.globl	_errno
 	.comm	_errno,2
 	.globl	_aiowait
-_aitwait:
+_aiowait:
 	push	bp
 	mov	bp,sp
 	mov	bx,#54			| ioctl
