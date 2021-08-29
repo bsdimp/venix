@@ -1,11 +1,11 @@
 	.comm	_errno,2
 	.globl	_errno
-	.globl	_lseek
-_lseek:
+	.globl	_profil
+_profil:
 	push	bp
 	mov	bp,sp
 	push	si
-	mov	bx,#19
+	mov	bx,#44
 	mov	ax,*4(bp)
 	mov	dx,*6(bp)
 	mov	cx,*8(bp)

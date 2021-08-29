@@ -1,10 +1,11 @@
 	.globl	_errno
 	.comm	_errno,2
+.wait=7
 	.globl	_wait
 _wait:
 	push	bp
 	mov	bp,sp
-	mov	bx,#7
+	mov	bx,#.wait
 	int	0xf1
 	jcxz	L001
 	mov	_errno,cx

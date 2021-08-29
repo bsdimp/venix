@@ -6,10 +6,10 @@ _ptrace:
 	mov	bp,sp
 	push	si
 	mov	bx,#26
-	mov	si,*4(bp)		| si/ax backwards
+	mov	ax,*4(bp)
 	mov	dx,*6(bp)
 	mov	cx,*8(bp)
-	mov	ax,*10(bp)		| ax/si backwards
+	mov	si,*10(bp)
 	int	0xf1
 	jcxz	L001
 	mov	_errno,cx
