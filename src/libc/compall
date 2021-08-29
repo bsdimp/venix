@@ -148,12 +148,3 @@ ${CC} -c $S/sys/unlink.s
 ${CC} -c $S/sys/utime.s
 ${CC} -c $S/sys/wait.s
 ${CC} -c $S/sys/write.s
-${CC} -c $S/crt/aldiv.s
-${CC} -c $S/crt/almul.s
-${CC} -c $S/crt/alrem.s
-${CC} -c $S/crt/cerror.s
-${CC} -c $S/crt/ldiv.s
-${CC} -c $S/crt/lmul.s
-${CC} -c $S/crt/lrem.s
-${CC} -c $S/crt/mcount.s
-${CC} -c $S/crt/csv.s
