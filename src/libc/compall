@@ -37,10 +37,8 @@ ${CC} -c -O $S/stdio/sprintf.c
 ${CC} -c -O $S/stdio/ungetc.c
 ${CC} -c -O $S/stdio/filbuf.c
 ${CC} -c -O $S/stdio/setbuf.c
-${CC} -c $S/stdio/fltpr.s
 ${CC} -c $S/stdio/doprnt.s
 ${CC} -c -O $S/stdio/gcvt.c
-${CC} -c $S/stdio/ffltpr.s
 ${CC} -c -O $S/stdio/strout.c
 ${CC} -c -O $S/stdio/flsbuf.c
 ${CC} -c -O $S/stdio/endopen.c
@@ -68,14 +66,12 @@ ${CC} -c -O $S/gen/malloc.c
 ${CC} -c -O $S/gen/ecvt.c
 ${CC} -c -O $S/gen/errlst.c
 ${CC} -c $S/gen/fakcu.s
-${CC} -c $S/gen/fakfp.s
-${CC} -c $S/gen/frexp11.s
+${CC} -c $S/gen/frexp.s
 ${CC} -c -O $S/gen/isatty.c
 ${CC} -c -O $S/gen/l3.c
-${CC} -c $S/gen/ldexp11.s
-${CC} -c $S/gen/ldfps.s
+${CC} -c $S/gen/ldexp.s
 ${CC} -c -O $S/gen/mktemp.c
-${CC} -c $S/gen/modf11.s
+${CC} -c $S/gen/modf.s
 ${CC} -c -O $S/gen/mon.c
 ${CC} -c -O $S/gen/nlist.c
 ${CC} -c -O $S/gen/qsort.c
