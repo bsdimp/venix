@@ -1,153 +1,157 @@
-cc -c -O /usr/src/libc/stdio/getgrgid.c
-cc -c -O /usr/src/libc/stdio/getgrnam.c
-cc -c -O /usr/src/libc/stdio/getgrent.c
-cc -c -O /usr/src/libc/stdio/getpass.c
-cc -c -O /usr/src/libc/stdio/getpwnam.c
-cc -c -O /usr/src/libc/stdio/getpwuid.c
-cc -c -O /usr/src/libc/stdio/getpwent.c
-cc -c -O /usr/src/libc/stdio/fgetc.c
-cc -c -O /usr/src/libc/stdio/fputc.c
-cc -c -O /usr/src/libc/stdio/getchar.c
-cc -c -O /usr/src/libc/stdio/putchar.c
-cc -c -O /usr/src/libc/stdio/popen.c
-cc -c -O /usr/src/libc/stdio/freopen.c
-cc -c -O /usr/src/libc/stdio/fgets.c
-cc -c -O /usr/src/libc/stdio/fputs.c
-cc -c -O /usr/src/libc/stdio/getpw.c
-cc -c -O /usr/src/libc/stdio/fseek.c
-cc -c -O /usr/src/libc/stdio/ftell.c
-cc -c -O /usr/src/libc/stdio/rew.c
-cc -c -O /usr/src/libc/stdio/rdwr.c
-cc -c -O /usr/src/libc/stdio/system.c
-cc -c -O /usr/src/libc/stdio/fopen.c
-cc -c -O /usr/src/libc/stdio/fdopen.c
-cc -c -O /usr/src/libc/stdio/scanf.c
-cc -c -O /usr/src/libc/stdio/doscan.c
-cc -c -O /usr/src/libc/stdio/fprintf.c
-cc -c -O /usr/src/libc/stdio/gets.c
-cc -c -O /usr/src/libc/stdio/getw.c
-cc -c -O /usr/src/libc/stdio/printf.c
-cc -c -O /usr/src/libc/stdio/puts.c
-cc -c -O /usr/src/libc/stdio/putw.c
-cc -c -O /usr/src/libc/stdio/sprintf.c
-cc -c -O /usr/src/libc/stdio/ungetc.c
-cc -c -O /usr/src/libc/stdio/filbuf.c
-cc -c -O /usr/src/libc/stdio/setbuf.c
-cc -c /usr/src/libc/stdio/fltpr.s
-cc -c /usr/src/libc/stdio/doprnt.s
-cc -c -O /usr/src/libc/stdio/gcvt.c
-cc -c /usr/src/libc/stdio/ffltpr.s
-cc -c -O /usr/src/libc/stdio/strout.c
-cc -c -O /usr/src/libc/stdio/flsbuf.c
-cc -c -O /usr/src/libc/stdio/endopen.c
-cc -c -O /usr/src/libc/stdio/findiop.c
-cc -c -O /usr/src/libc/stdio/clrerr.c
-cc -c -O /usr/src/libc/stdio/data.c
-cc -c /usr/src/libc/gen/cuexit.s
-cc -c -O /usr/src/libc/gen/execvp.c
-cc -c -O /usr/src/libc/gen/getenv.c
-cc -c -O /usr/src/libc/gen/getlogin.c
-cc -c -O /usr/src/libc/gen/perror.c
-cc -c -O /usr/src/libc/gen/sleep.c
-cc -c -O /usr/src/libc/gen/timezone.c
-cc -c -O /usr/src/libc/gen/ttyslot.c
-cc -c -O /usr/src/libc/gen/ttyname.c
-cc -c /usr/src/libc/gen/abort.s
-cc -c -O /usr/src/libc/gen/abs.c
-cc -c -O /usr/src/libc/gen/atof.c
-cc -c -O /usr/src/libc/gen/atoi.c
-cc -c -O /usr/src/libc/gen/atol.c
-cc -c -O /usr/src/libc/gen/crypt.c
-cc -c -O /usr/src/libc/gen/ctime.c
-cc -c -O /usr/src/libc/gen/calloc.c
-cc -c -O /usr/src/libc/gen/malloc.c
-cc -c -O /usr/src/libc/gen/ecvt.c
-cc -c -O /usr/src/libc/gen/errlst.c
-cc -c /usr/src/libc/gen/fakcu.s
-cc -c /usr/src/libc/gen/fakfp.s
-cc -c /usr/src/libc/gen/frexp11.s
-cc -c -O /usr/src/libc/gen/isatty.c
-cc -c -O /usr/src/libc/gen/l3.c
-cc -c /usr/src/libc/gen/ldexp11.s
-cc -c /usr/src/libc/gen/ldfps.s
-cc -c -O /usr/src/libc/gen/mktemp.c
-cc -c /usr/src/libc/gen/modf11.s
-cc -c -O /usr/src/libc/gen/mpx.c
-cc -c -O /usr/src/libc/gen/mon.c
-cc -c -O /usr/src/libc/gen/nlist.c
-cc -c -O /usr/src/libc/gen/qsort.c
-cc -c -O /usr/src/libc/gen/rand.c
-cc -c /usr/src/libc/gen/setjmp.s
-cc -c -O /usr/src/libc/gen/stty.c
-cc -c -O /usr/src/libc/gen/swab.c
-cc -c -O /usr/src/libc/gen/tell.c
-cc -c -O /usr/src/libc/gen/ctype_.c
-cc -c -O /usr/src/libc/gen/index.c
-cc -c -O /usr/src/libc/gen/rindex.c
-cc -c -O /usr/src/libc/gen/strcat.c
-cc -c -O /usr/src/libc/gen/strncat.c
-cc -c -O /usr/src/libc/gen/strcmp.c
-cc -c -O /usr/src/libc/gen/strncmp.c
-cc -c -O /usr/src/libc/gen/strcpy.c
-cc -c -O /usr/src/libc/gen/strncpy.c
-cc -c -O /usr/src/libc/gen/strlen.c
-cc -c /usr/src/libc/sys/access.s
-cc -c /usr/src/libc/sys/acct.s
-cc -c /usr/src/libc/sys/alarm.s
-cc -c /usr/src/libc/sys/chdir.s
-cc -c /usr/src/libc/sys/chroot.s
-cc -c /usr/src/libc/sys/chmod.s
-cc -c /usr/src/libc/sys/chown.s
-cc -c /usr/src/libc/sys/close.s
-cc -c /usr/src/libc/sys/creat.s
-cc -c /usr/src/libc/sys/dup.s
-cc -c /usr/src/libc/sys/execl.s
-cc -c /usr/src/libc/sys/execle.s
-cc -c /usr/src/libc/sys/execv.s
-cc -c /usr/src/libc/sys/execve.s
-cc -c /usr/src/libc/sys/exit.s
-cc -c /usr/src/libc/sys/fork.s
-cc -c /usr/src/libc/sys/fstat.s
-cc -c /usr/src/libc/sys/getgid.s
-cc -c /usr/src/libc/sys/getpid.s
-cc -c /usr/src/libc/sys/getuid.s
-cc -c /usr/src/libc/sys/ioctl.s
-cc -c /usr/src/libc/sys/kill.s
-cc -c /usr/src/libc/sys/link.s
-cc -c /usr/src/libc/sys/lock.s
-cc -c /usr/src/libc/sys/lseek.s
-cc -c /usr/src/libc/sys/mknod.s
-cc -c /usr/src/libc/sys/mount.s
-cc -c /usr/src/libc/sys/mpxcall.s
-cc -c /usr/src/libc/sys/nice.s
-cc -c /usr/src/libc/sys/open.s
-cc -c /usr/src/libc/sys/pause.s
-cc -c /usr/src/libc/sys/phys.s
-cc -c /usr/src/libc/sys/pipe.s
-cc -c /usr/src/libc/sys/profil.s
-cc -c /usr/src/libc/sys/ptrace.s
-cc -c /usr/src/libc/sys/read.s
-cc -c /usr/src/libc/sys/sbrk.s
-cc -c /usr/src/libc/sys/setgid.s
-cc -c /usr/src/libc/sys/setuid.s
-cc -c /usr/src/libc/sys/signal.s
-cc -c /usr/src/libc/sys/stat.s
-cc -c /usr/src/libc/sys/stime.s
-cc -c /usr/src/libc/sys/sync.s
-cc -c /usr/src/libc/sys/time.s
-cc -c /usr/src/libc/sys/times.s
-cc -c /usr/src/libc/sys/umask.s
-cc -c /usr/src/libc/sys/umount.s
-cc -c /usr/src/libc/sys/unlink.s
-cc -c /usr/src/libc/sys/utime.s
-cc -c /usr/src/libc/sys/wait.s
-cc -c /usr/src/libc/sys/write.s
-cc -c /usr/src/libc/crt/aldiv.s
-cc -c /usr/src/libc/crt/almul.s
-cc -c /usr/src/libc/crt/alrem.s
-cc -c /usr/src/libc/crt/cerror.s
-cc -c /usr/src/libc/crt/ldiv.s
-cc -c /usr/src/libc/crt/lmul.s
-cc -c /usr/src/libc/crt/lrem.s
-cc -c /usr/src/libc/crt/mcount.s
-cc -c /usr/src/libc/crt/csv.s
+S=.
+CC="../../tools/vm86venix/venix /bin/cc"
+export VENIX_ROOT=$HOME/git/venix/tools/vm86venix/dist
+set +e
+${CC} -c -O $S/stdio/getgrgid.c
+${CC} -c -O $S/stdio/getgrnam.c
+${CC} -c -O $S/stdio/getgrent.c
+${CC} -c -O $S/stdio/getpass.c
+${CC} -c -O $S/stdio/getpwnam.c
+${CC} -c -O $S/stdio/getpwuid.c
+${CC} -c -O $S/stdio/getpwent.c
+${CC} -c -O $S/stdio/fgetc.c
+${CC} -c -O $S/stdio/fputc.c
+${CC} -c -O $S/stdio/getchar.c
+${CC} -c -O $S/stdio/putchar.c
+${CC} -c -O $S/stdio/popen.c
+${CC} -c -O $S/stdio/freopen.c
+${CC} -c -O $S/stdio/fgets.c
+${CC} -c -O $S/stdio/fputs.c
+${CC} -c -O $S/stdio/getpw.c
+${CC} -c -O $S/stdio/fseek.c
+${CC} -c -O $S/stdio/ftell.c
+${CC} -c -O $S/stdio/rew.c
+${CC} -c -O $S/stdio/rdwr.c
+${CC} -c -O $S/stdio/system.c
+${CC} -c -O $S/stdio/fopen.c
+${CC} -c -O $S/stdio/fdopen.c
+${CC} -c -O $S/stdio/scanf.c
+${CC} -c -O $S/stdio/doscan.c
+${CC} -c -O $S/stdio/fprintf.c
+${CC} -c -O $S/stdio/gets.c
+${CC} -c -O $S/stdio/getw.c
+${CC} -c -O $S/stdio/printf.c
+${CC} -c -O $S/stdio/puts.c
+${CC} -c -O $S/stdio/putw.c
+${CC} -c -O $S/stdio/sprintf.c
+${CC} -c -O $S/stdio/ungetc.c
+${CC} -c -O $S/stdio/filbuf.c
+${CC} -c -O $S/stdio/setbuf.c
+${CC} -c $S/stdio/fltpr.s
+${CC} -c $S/stdio/doprnt.s
+${CC} -c -O $S/stdio/gcvt.c
+${CC} -c $S/stdio/ffltpr.s
+${CC} -c -O $S/stdio/strout.c
+${CC} -c -O $S/stdio/flsbuf.c
+${CC} -c -O $S/stdio/endopen.c
+${CC} -c -O $S/stdio/findiop.c
+${CC} -c -O $S/stdio/clrerr.c
+${CC} -c -O $S/stdio/data.c
+${CC} -c $S/gen/cuexit.s
+${CC} -c -O $S/gen/execvp.c
+${CC} -c -O $S/gen/getenv.c
+${CC} -c -O $S/gen/getlogin.c
+${CC} -c -O $S/gen/perror.c
+${CC} -c -O $S/gen/sleep.c
+${CC} -c -O $S/gen/timezone.c
+${CC} -c -O $S/gen/ttyslot.c
+${CC} -c -O $S/gen/ttyname.c
+${CC} -c $S/gen/abort.s
+${CC} -c -O $S/gen/abs.c
+${CC} -c -O $S/gen/atof.c
+${CC} -c -O $S/gen/atoi.c
+${CC} -c -O $S/gen/atol.c
+${CC} -c -O $S/gen/crypt.c
+${CC} -c -O $S/gen/ctime.c
+${CC} -c -O $S/gen/calloc.c
+${CC} -c -O $S/gen/malloc.c
+${CC} -c -O $S/gen/ecvt.c
+${CC} -c -O $S/gen/errlst.c
+${CC} -c $S/gen/fakcu.s
+${CC} -c $S/gen/fakfp.s
+${CC} -c $S/gen/frexp11.s
+${CC} -c -O $S/gen/isatty.c
+${CC} -c -O $S/gen/l3.c
+${CC} -c $S/gen/ldexp11.s
+${CC} -c $S/gen/ldfps.s
+${CC} -c -O $S/gen/mktemp.c
+${CC} -c $S/gen/modf11.s
+${CC} -c -O $S/gen/mpx.c
+${CC} -c -O $S/gen/mon.c
+${CC} -c -O $S/gen/nlist.c
+${CC} -c -O $S/gen/qsort.c
+${CC} -c -O $S/gen/rand.c
+${CC} -c $S/gen/setjmp.s
+${CC} -c -O $S/gen/stty.c
+${CC} -c -O $S/gen/swab.c
+${CC} -c -O $S/gen/tell.c
+${CC} -c -O $S/gen/ctype_.c
+${CC} -c -O $S/gen/index.c
+${CC} -c -O $S/gen/rindex.c
+${CC} -c -O $S/gen/strcat.c
+${CC} -c -O $S/gen/strncat.c
+${CC} -c -O $S/gen/strcmp.c
+${CC} -c -O $S/gen/strncmp.c
+${CC} -c -O $S/gen/strcpy.c
+${CC} -c -O $S/gen/strncpy.c
+${CC} -c -O $S/gen/strlen.c
+${CC} -c $S/sys/access.s
+${CC} -c $S/sys/acct.s
+${CC} -c $S/sys/alarm.s
+${CC} -c $S/sys/chdir.s
+${CC} -c $S/sys/chroot.s
+${CC} -c $S/sys/chmod.s
+${CC} -c $S/sys/chown.s
+${CC} -c $S/sys/close.s
+${CC} -c $S/sys/creat.s
+${CC} -c $S/sys/dup.s
+${CC} -c $S/sys/execl.s
+${CC} -c $S/sys/execle.s
+${CC} -c $S/sys/execv.s
+${CC} -c $S/sys/execve.s
+${CC} -c $S/sys/exit.s
+${CC} -c $S/sys/fork.s
+${CC} -c $S/sys/fstat.s
+${CC} -c $S/sys/getgid.s
+${CC} -c $S/sys/getpid.s
+${CC} -c $S/sys/getuid.s
+${CC} -c $S/sys/ioctl.s
+${CC} -c $S/sys/kill.s
+${CC} -c $S/sys/link.s
+${CC} -c $S/sys/lock.s
+${CC} -c $S/sys/lseek.s
+${CC} -c $S/sys/mknod.s
+${CC} -c $S/sys/mount.s
+${CC} -c $S/sys/mpxcall.s
+${CC} -c $S/sys/nice.s
+${CC} -c $S/sys/open.s
+${CC} -c $S/sys/pause.s
+${CC} -c $S/sys/phys.s
+${CC} -c $S/sys/pipe.s
+${CC} -c $S/sys/profil.s
+${CC} -c $S/sys/ptrace.s
+${CC} -c $S/sys/read.s
+${CC} -c $S/sys/sbrk.s
+${CC} -c $S/sys/setgid.s
+${CC} -c $S/sys/setuid.s
+${CC} -c $S/sys/signal.s
+${CC} -c $S/sys/stat.s
+${CC} -c $S/sys/stime.s
+${CC} -c $S/sys/sync.s
+${CC} -c $S/sys/time.s
+${CC} -c $S/sys/times.s
+${CC} -c $S/sys/umask.s
+${CC} -c $S/sys/umount.s
+${CC} -c $S/sys/unlink.s
+${CC} -c $S/sys/utime.s
+${CC} -c $S/sys/wait.s
+${CC} -c $S/sys/write.s
+${CC} -c $S/crt/aldiv.s
+${CC} -c $S/crt/almul.s
+${CC} -c $S/crt/alrem.s
+${CC} -c $S/crt/cerror.s
+${CC} -c $S/crt/ldiv.s
+${CC} -c $S/crt/lmul.s
+${CC} -c $S/crt/lrem.s
+${CC} -c $S/crt/mcount.s
+${CC} -c $S/crt/csv.s
