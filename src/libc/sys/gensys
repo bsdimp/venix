@@ -51,6 +51,8 @@ $1 == "#define" && $2 ~ /^S_/ {
     }
 }')
 
+exit
+
 
 V=$HOME/venix/extracted
 E=$HOME/git/venix/tools/86sim/86sim
