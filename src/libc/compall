@@ -76,7 +76,6 @@ ${CC} -c $S/gen/ldexp11.s
 ${CC} -c $S/gen/ldfps.s
 ${CC} -c -O $S/gen/mktemp.c
 ${CC} -c $S/gen/modf11.s
-${CC} -c -O $S/gen/mpx.c
 ${CC} -c -O $S/gen/mon.c
 ${CC} -c -O $S/gen/nlist.c
 ${CC} -c -O $S/gen/qsort.c
@@ -97,7 +96,6 @@ ${CC} -c -O $S/gen/strncpy.c
 ${CC} -c -O $S/gen/strlen.c
 ${CC} -c $S/sys/access.s
 ${CC} -c $S/sys/aiowait.s
-${CC} -c $S/sys/acct.s
 ${CC} -c $S/sys/alarm.s
 ${CC} -c $S/sys/chdir.s
 ${CC} -c $S/sys/chroot.s
@@ -124,7 +122,6 @@ ${CC} -c $S/sys/lock.s
 ${CC} -c $S/sys/lseek.s
 ${CC} -c $S/sys/mknod.s
 ${CC} -c $S/sys/mount.s
-${CC} -c $S/sys/mpxcall.s
 ${CC} -c $S/sys/nice.s
 ${CC} -c $S/sys/open.s
 ${CC} -c $S/sys/pause.s
