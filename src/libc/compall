@@ -134,6 +134,10 @@ ${CC} -c $S/sys/profil.s
 ${CC} -c $S/sys/ptrace.s
 ${CC} -c $S/sys/read.s
 ${CC} -c $S/sys/sbrk.s
+${CC} -c $S/sys/semclear.s
+${CC} -c $S/sys/semset.s
+${CC} -c $S/sys/semtest.s
+${CC} -c $S/sys/semtset.s
 ${CC} -c $S/sys/setgid.s
 ${CC} -c $S/sys/setuid.s
 ${CC} -c $S/sys/signal.s
