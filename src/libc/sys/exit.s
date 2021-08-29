@@ -11,8 +11,8 @@ __exit:
 	mov	bx,#1
 	mov	ax,*4(bp)
 	int	0xf1
-	jcxz	L001
+	jcxz	L1
 	mov	_errno,cx
-L001:
+L1:
 	pop	bp
 	ret
