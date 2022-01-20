@@ -4,10 +4,24 @@
 	.text
 
 	|
-	| jmp_bug is 6 slots.
+	| jmp_buf is 6 slots.
 	|
 	| Compiler does weird things so si/di get saved sometimes
 	| and longjmp seems to know about this.
+	|
+	| [0] BP of calling frame
+	| [1] SP after BP pushed in _setjmp
+	| [2] IP from far call...
+	| [3] contents of location 2???? a pointer?
+	|     This is weird because nothing is in location 2 for
+	|     all binary types. For OMAGIC with -z, the stack is
+	|     located here, so this will be the last bit of the
+	|     environment. For OMAGIC w/o -z, this will be the
+	|     instruction WAIT followed by FLDCW (well the first
+	|     byte of this). And for NMAGIC it will be the floating
+	|     point control word.
+	| [4] *[3]
+	| [5] *([3] + 1)
 _setjmp:
 	push	bp
 	mov	bp,sp
@@ -19,8 +33,8 @@ _setjmp:
 	mov	*2(bp),sp	| SP
 	mov	*4(bp),cx	| IP
 	mov	bx,0x0002
-	mov	*6(bp),bx	| 2 ?why?
-	mov	cx,(bx)		| *2? Why?
+	mov	*6(bp),bx	| see above... only used for NMAGIC
+	mov	cx,(bx)		| 
 	mov	*8(bp),cx	| ???
 	mov	cx,*2(bx)
 	mov	*10(bp),cx	| ???
@@ -52,11 +66,11 @@ L003:
 	mov	cx,cs
 	mov	dx,ds
 	cmp	cx,dx
-	jz	L004		| Simple case when DS == CS
-	mov	bp,*6(bx)	| Restore BP
+	jz	L004		| Simple case when DS == CS -> OMAGIC skip
+	mov	bp,*6(bx)	| read in the saved 8087 control word
 	or	bp,bp
-	jz	L004		| Punt if there isn't one.
-	mov	0x0002,bp	| Again with location 2. WTF?
+	jz	L004		| Punt if there isn't one...
+	mov	0x0002,bp	| Restore its value (for FP emulator?)
 	mov	cx,*8(bx)
 	mov	*0(bp),cx
 	mov	cx,*10(bx)
@@ -64,10 +78,10 @@ L003:
 L004:
 	mov	bp,(bx)		| Restore saved frame pointer
 	mov	sp,*2(bx)	| And stack
-	pop	cx
-	pop	cx		| Pop junk off of it
-	mov	cx,*4(bx)	| But save return address
-	push	cx		| This causes the ret to go there...
-	ret
+	pop	cx		| pop off saved BP and ignore (sp += 2)
+	pop	cx		| pop off return location and ignore (sp += 2)
+	mov	cx,*4(bx)	| restore saved return address
+	push	cx		| to the top of the stack and
+	ret			| return there...
 
 
