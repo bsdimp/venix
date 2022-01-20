@@ -546,6 +546,8 @@ venix_load(ucontext_t *uc, uint8_t *memory, const char *fn, int argc, char **arg
 		 * All the segments are in the file one after the other with
 		 * no padding. HDR TEXT (a_text bytes) DATA (d_data bytes)
 		 * <rest of stuff, reloc, symbols etc>
+		 *
+		 * break is at end of bss.
 		 */
 		mc->mc_ds = mc->mc_es = mc->mc_ss = loadSegment;
 		if (hdr.a_stack != 0) {
@@ -573,6 +575,16 @@ venix_load(ucontext_t *uc, uint8_t *memory, const char *fn, int argc, char **arg
 		 *	data
 		 *	bss
 		 * With separate cs and ds regsiters. ss and es are set to ds.
+		 *
+		 * NMAGIC w/o -z stack layout looks like
+		 * cs :  text (rounded to next 'click' or 512 byte boundary)
+		 * ds:	data
+		 *	bss
+		 *	...
+		 *	stack
+		 * With separate cs and ds regsiters. ss and es are set to ds.
+		 *
+		 * Break at end of bss, even when stack is at top of memory
 		 */
 		debug(dbg_load, "Text from %#x:%#x-%#x\n", mc->mc_cs, ptr, ptr + hdr.a_text - 1);
 		fread(memory + ptr, hdr.a_text, 1, fp);				// text
