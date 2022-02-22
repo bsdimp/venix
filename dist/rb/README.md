@@ -3,6 +3,7 @@ This directory contains the raw floppies from Venix. The images are in
 see. They have been compressed with xz. They don't use teledisk.
 
 They are standard RX-50 disks: 10 sectors per track, single sided.
+They are in physical order, not logical order.
 
 The standard distribution is here, as well as the Boston Software
 Works edition, which has a number of enhancments (it's the one you
