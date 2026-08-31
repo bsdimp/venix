@@ -1,0 +1,6 @@
+MXR com1.dm R 1200 vadic
+MX3 com1.dm unused 1200 mxdirect
+MX2 com1.dm 2P 1200 df03
+DIR com1.dm unused 1200 direct
+DIR com1.dm unused 9600 direct
+DIR com2 unused 9600 direct

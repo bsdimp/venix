@@ -1,0 +1,4 @@
+for file
+	do
+		/usr/dos/copy dos!$file /dev/tty
+	done

@@ -1,0 +1,25 @@
+while :
+do
+        cat p1
+        sleep 10
+	for name in p2?
+	do
+	cat $name
+	sleep 1
+	done
+        sleep 5
+        cat p3a
+        cat p3b
+        sleep 10
+        cat p3c
+        sleep 10
+        cat p3d
+        sleep 10
+        cat p4
+        for file in p5?
+        do
+                cat $file
+                sleep 2
+        done
+	sleep 3
+done

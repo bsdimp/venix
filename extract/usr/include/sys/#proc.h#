@@ -1,0 +1,75 @@
+/*
+ *		VENIX/86	Version 86/1.2
+ *			Edited: 12/12/83
+ *
+ * The proc structures.
+ * One structure allocated per active process.  It
+ * contains all data needed about the process while
+ * the process may be swapped out.  Other per process
+ * data (user.h) is swapped with the process.
+ */
+struct	proc {
+0	unsigned int  p_flag;
+2	unsigned char p_stat;
+3	char	      p_pri;	/* priority, negative is high */
+4	unsigned char p_uid;	/* user id */
+5	unsigned char p_time;	/* resident time for scheduling */
+6	unsigned char p_cpu;	/* cpu usage for scheduling */
+7	char	      p_nice;	/* nice for scheduling */
+8	int	      p_pid;	/* unique process id */
+a	int	      p_ppid;	/* process id of parent */
+c	daddr_t	      p_daddr;	/* address of swappable data (core or disk) */
+e	unsigned int  p_dsize;	/* size of memory resident data */
+10	unsigned int  p_tod;	/* size of swappable data (top of data) */
+12	unsigned int  p_ssize;	/* size of swappable stack (0==stack below) */
+14	char	     *p_textp;	/* pointer to code structure */
+16	char	     *p_datap;	/* pointer to data structure */
+18	unsigned int  p_wchan;	/* event process is awaiting */
+1a	char	     *p_ttyp;	/* control tty, for directing tty signals */
+1c	unsigned long p_sig;	/* signals to this process */
+20	unsigned int  p_alarm;	/* time until alarm clock signal */
+} proc[];
+
+/*
+ * Above structure when used for a ZOMB'ed process.
+ */
+struct zproc {
+	unsigned int  p_flag;
+	unsigned char p_stat;
+	char	      p_pri;
+	unsigned char p_uid;
+	unsigned char p_time;
+	unsigned char p_cpu;
+	char	      p_nice;
+	int	      p_pid;
+	int	      p_ppid;
+	daddr_t	      p_daddr;
+	unsigned int  p_dsize;
+	long	      z_cutime;	/* hold child usr time during ZOMB state */
+	long	      z_cstime;	/* hold child sys time during ZOMB state */
+	unsigned int  p_wchan;
+	char	     *p_ttyp;
+	int	      z_exit;	/* hold exit status during ZOMB state */
+	int	      z_junk;
+	unsigned int  p_alarm;
+};
+
+	/* Stat codes */
+#define	SSLEEP	1		/* sleeping on high priority */
+#define	SWAIT	2		/* sleeping on low priority */
+#define	SRUN	3		/* running */
+#define	SIDL	4		/* intermediate state in process creation */
+#define	SZOMB	5		/* intermediate state in process termination */
+#define	SSTOP	6		/* process being traced */
+#define	SSUSP	0100		/* process suspended (or'd in) */
+
+	/* Flag codes */
+#define	SLOAD	040000		/* in core */
+#define	SSYS	020000		/* scheduling process */
+#define	SSWAP	010000		/* process is being swapped out */
+#define	STRC	004000		/* process is being traced */
+#define	SWTED	002000		/* another tracing flag */
+#define	SWAIO	001000		/* waiting for async i/o */
+#define	SFAST	000400		/* process needs fast response (realtime) */
+#define SSLOCK	000100		/* lock by system call */
+#define	SLOCK	000177		/* locked for raw i/o */

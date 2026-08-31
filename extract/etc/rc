@@ -1,0 +1,28 @@
+# Uncomment this line if you prefer to run your Rainbow monitor in
+# interlaced mode (recommended only on amber monitors, on others it
+# causes too much flicker...)
+#
+#/etc/local/interlace
+echo "System startup in progress..."			>/dev/console
+echo -n "Reboot at: "					>>/etc/bootlog
+date							>>/etc/bootlog
+stty 4800 >/dev/lp
+cp /dev/null /etc/mtab
+cp /dev/null /etc/utmp
+echo -n "Clearing /tmp"					>/dev/console
+/etc/mkfs /dev/w0.tmp  3952
+echo ""							>/dev/console
+mount /dev/w0.tmp /tmp
+mount /dev/w0.usr /usr
+rm -f /usr/tmp/*
+if grep -s '^0[0-9]com1\.m' /etc/ttys 
+then	echo "Dialups are DISABLED"			>/dev/console
+else	echo "Dialups are ENABLED"			>/dev/console 
+fi
+echo -n "Local daemons:"				>/dev/console
+/etc/local/update;		echo -n " update"	>/dev/console
+/etc/local/cron;		echo -n " cron"		>/dev/console
+echo ""							>/dev/console
+rm -f /usr/spool/uucp/LCK.*
+echo -n "The current date is: "				>/dev/console
+date							>/dev/console

@@ -1,0 +1,13 @@
+bind-to-key i-search-forward 
+bind-to-key i-search-forward 
+bind-to-key i-search-reverse 
+bind-to-key quote-character 
+bind-to-key kill-previous-word 
+bind-to-key kill-region 
+bind-to-key insert-file i
+bind-to-key insert-file I
+bind-to-key pause-jove 
+bind-to-key push 
+bind-to-key find-file v
+bind-to-key find-file 
+bind-to-key scroll-up 

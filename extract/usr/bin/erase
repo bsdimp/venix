@@ -1,0 +1,11 @@
+PATH=/bin:/usr/bin
+case $1 in
+-T*)	t=$1
+	shift ;;
+*)	t=-T${GTERM-$TERM}
+esac
+case $t in
+-Ttek|-T4014)						exec erstek $* ;;
+-T|-Trblc|-Trblm|-Trblg|-Trbhc|-Trbhm|-Trbhg|-Tpc|-Trb)	exec erspc $*;;
+*)  echo erase: terminal type $t not known 1>&2; exit 1
+esac

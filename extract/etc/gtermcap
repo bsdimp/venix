@@ -1,0 +1,18 @@
+rbhc| :cw=8 :ch=8 :lh=10 :mw=839 :sw=480 :sh=240 :st=1 :fl=1 :cl=1!
+rbhg| :cw=8 :ch=8 :lh=10 :mw=839 :sw=480 :sh=240 :st=1 :fl=1 :cl=1!
+rbhm| :cw=8 :ch=8 :lh=10 :mw=839 :sw=480 :sh=240 :st=1 :fl=1 :cl=0!
+rblc| :cw=8 :ch=8 :lh=10 :mw=383 :sw=240 :sh=240 :st=1 :fl=1 :cl=1!
+rblg| :cw=8 :ch=8 :lh=10 :mw=383 :sw=240 :sh=240 :st=1 :fl=1 :cl=1!
+rblm| :cw=8 :ch=8 :lh=10 :mw=383 :sw=240 :sh=240 :st=1 :fl=1 :cl=0!
+ids| :cw=9 :ch=10 :lh=18 :mw=799 :sw=639 :sh=639 :st=1 :fl=1 :cl=0 :!
+eps| :cw=9 :ch=10 :lh=18 :mw=719 :sw=599 :sh=479 :st=1 :fl=1 :cl=0 :!
+dec| :cw=9 :ch=10 :lh=18 :mw=639 :sw=480 :sh=959 :st=1 :fl=1 :cl=0 :!
+4014| :cw=53 :ch=59 :lh=78 :mw=4056 :sh=3120 :sw=3120 :st=1 :fl=0 :cl=0 :!
+pc| :cw=8 :ch=8 :lh=10 :mw=620 :sw=480 :sh=200 :st=1 :fl=1 :cl=0 :!
+cpc| :cw=8 :ch=8 :lh=10 :mw=310 :sw=240 :sh=200 :st=1 :fl=1 :cl=1 :!
+gogo| :cw=14 :ch=24 :lh=30 :mw=1023 :sw=512 :sh=512 :st=1 :fl=1 :cl=0 :!
+pro| :cw=12 :ch=7 :lh=10 :mw=960 :sw=640 :sh=239 :st=1 :fl=1 :cl=0 :!
+cpro| :cw=12 :ch=7 :lh=10 :mw=960 :sw=640 :sh=239 :st=1 :fl=1 :cl=1 :!
+hp| :cw=8 :ch=8 :lh=15 :mw=714 :sw=500 :sh=500 :st=0 :fl=0 :cl=1 :!
+lpv| :cw=8 :ch=8 :lh=15 :mw=714 :sw=500 :sh=500 :st=0 :fl=0 :cl=1 :!
+

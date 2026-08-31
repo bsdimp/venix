@@ -1,0 +1,22 @@
+PATH=/bin:/usr/bin
+case $1 in
+-T*)	t=$1
+	shift ;;
+*)	t=-T${GTERM-$TERM}
+esac
+OBJ=$1
+case $t in
+-Tpro|-Tpc)		exec pplot $OBJ ;;
+-Tcpro|-Tpc)		exec cpplot $OBJ;;
+-Ttek|-T4014)		exec tek $OBJ   ;;
+-Thp)			exec hplot $OBJ ;;
+-Tlpv)			exec lplot $OBJ ;;
+-Teps)			exec eplot $OBJ ;;
+-Tids)			exec iplot $OBJ ;;
+-Tver)			exec vplot $OBJ ;;
+-Tdec)			exec dplot $OBJ ;;
+-Trb*)			IFS=T; set $t; GTERM=$1; export GTERM; IFS=" 	
+"
+			exec pplot $OBJ	;;
+*)  echo plot: terminal type $t not known 1>&2; exit 1
+esac

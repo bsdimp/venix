@@ -1,0 +1,15 @@
+: 'This is the "behead" shell script.'
+: 'It removes header lines from the news article(s) named on the command line'
+: '(or from the standard input if the command line is argument free--'
+: 'it thus may be used as a filter).'
+: 'Let us trust that no one will feel compelled to write a C language version.'
+
+case $# in
+	0)	exec sed '1,/^$/d' ;;
+	*)	for i
+		do
+			sed '1,/^$/d' "$i"
+		done ;;
+esac
+
+exit

@@ -1,0 +1,25 @@
+SRC=$1
+DST=$2
+if [ ! "$SRC" ]
+then
+	echo -n "Source drive: "
+	read SRC
+fi
+if [ ! "$DST" ]
+then
+	echo -n "Destination drive: "
+	read DST
+fi
+case $SRC in
+	[aA0]|[aA0]:) SRC=0 ; SRCX=A ;;
+	[bB1]|[bB1]:) SRC=1 ; SRCX=B ;;
+	*) echo "Invalide source drive specification"; exit 1 ;;
+esac
+case $DST in
+	[aA0]|[aA0]:) DST=0 ; DSTX=A ;;
+	[bB1]|[bB1]:) DST=1 ; DSTX=B ;;
+	*) echo "Invalid destination drive specification"; exit 1 ;;
+esac
+echo "Copying floppy $SRCX onto floppy $DSTX"
+dd </dev/rf$SRC.phys >/dev/rf$DST.phys count=1 bs=5120 conv=noerror
+dd </dev/rf$SRC >/dev/rf$DST count=79 bs=5120 conv=noerror

@@ -1,0 +1,2 @@
+stty tabs
+exec DEMO

@@ -1,0 +1,23 @@
+HThese commands are included with the VENIX system ...
+
+ar	      diff	    ln		  nm		sed	      test
+as	      ds	    login	  nohup		sh	      time
+at	      du	    look	  od		size	      touch
+cat	      dump	    lorder	  passwd	sleep	      tr
+cc	      echo	    lp		  pr		sort	      true
+chmod	      ed	    ls		  prep		split	      tsort
+chown	      fcheck	    mail	  prof		strip	      tty
+cmp	      file	    make	  ptx		stty	      umount
+comm	      find	    mesg	  prof		su	      uniq
+cp	      fw	    mkdir	  pwd		sum	      uucp
+csh  	      format	    mount	  quot		suspend	      uulog
+date	      grep	    mv		  restor	tabs	      uux
+dc	      kill	    ncheck	  resume	tail	      vi
+dd	      l		    newgrp	  rm		tar	      who
+df	      ld	    nice	  rmdir		tee	      write
+_____________________________________________________________________________
+Juucp - UNIX-to-UNIX networking, allowing the transferral of files
+	and mail between remote machines.
+uulog - log UNIX-to-UNIX activity.
+uux - execute commands on remote UNIX machine
+

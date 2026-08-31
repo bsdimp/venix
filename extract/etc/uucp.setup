@@ -1,0 +1,46 @@
+if [ "`whoami`" != "root" ]
+then
+	echo " You must be logged in as \"root\" to run this script."
+	exit
+fi
+echo " Setting up uucp files"
+#
+# Delete old (VenturCom) uucp cruft
+#
+rm -f /bin/uucp /bin/uux /bin/uulog
+echo -n " Enter node name for your system (7 characters or less): "
+read NODE
+echo "char myname[] = \"$NODE\";" >/usr/include/ident.h
+echo "#define sysname \"$NODE\"" >/usr/include/whoami.h
+chmod 644 /usr/include/ident.h /usr/include/whoami.h
+#
+# create UUCP directories
+#
+echo " Creating uucp directories"
+OWNER=uucp
+GROUP=uucp
+SPOOL=usr/spool/uucp
+XQTDIR=usr/spool/uucp/XTMP
+# The six subdirs {not counting XTMP}.  The order of the D. files is crucial!
+SUBDIRS="C. D.`uuname -l`X D.`uuname -l` D. X. TM."
+
+if [ ! -d /${XQTDIR} ]; then mkdir /${XQTDIR}; fi
+chmod 755 /${XQTDIR}
+chown ${OWNER} /${XQTDIR}
+chgrp ${GROUP} /${XQTDIR}
+cd /${SPOOL}
+for i in ${SUBDIRS}
+do
+	echo " Creating directory /${SPOOL}/$i"
+	if [ ! -d $i ]; then mkdir $i; fi
+	chown ${OWNER} $i
+	chgrp ${GROUP} $i
+	chmod 755 $i
+done
+echo " Done."
+echo ""
+echo " Now refer to the UUCP documentation, and the sample files in"
+echo " /usr/lib/uucp, to set up your connections.  You'll have to edit"
+echo " /usr/lib/uucp/L.sys to define telephone numbers and login sequences"
+echo " for remote systems you call, and /usr/lib/uucp/L-devices to declare"
+echo " what kind of modem(s) you have and what line they're on."

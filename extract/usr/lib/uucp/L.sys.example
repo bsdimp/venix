@@ -1,0 +1,8 @@
+#
+# Sample L.sys entry for Berkeley UUCP
+#
+maynard Any ACU 1200 16174972066 "" P_ZERO "" ////\d1P\d ogin: uuguest ssword: bonitoflake
+#
+# Sample L.sys entry for System V UUCP
+#
+maynard Any ACU 1200 16174972066 "" ////\d1P\d\c\r ogin: uuguest\c\r ssword: bonitoflake\c\r

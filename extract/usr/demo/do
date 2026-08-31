@@ -1,0 +1,4 @@
+1,$s/crypt/csh  /g
+1,$s/tsh/true/g
+w
+q
